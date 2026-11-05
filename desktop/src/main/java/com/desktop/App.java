@@ -19,6 +19,8 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.prefs.Preferences;
 
 /**
@@ -52,13 +54,25 @@ public class App extends Application {
         stage.setTitle("Güvenli Paylaşım");
         stage.setMinWidth(1120);
         stage.setMinHeight(720);
-        var icon = App.class.getResourceAsStream("/com/desktop/icon.png");
-        if (icon != null) {
-            stage.getIcons().add(new Image(icon));
-        }
+        stage.getIcons().addAll(windowIcons());
         stage.show();
 
         show(new UpdateGate(this::showLogin));
+    }
+
+    /**
+     * Başlık çubuğu ve görev çubuğu için hazır boyutlar: Windows en uygununu seçer. Tek büyük görsel 16 px'e
+     * küçültülünce bulanıklaşır.
+     */
+    static List<Image> windowIcons() {
+        List<Image> icons = new ArrayList<>();
+        for (String name : List.of("icon-16", "icon-24", "icon-32", "icon-48", "icon-64", "icon-128", "icon")) {
+            var stream = App.class.getResourceAsStream("/com/desktop/" + name + ".png");
+            if (stream != null) {
+                icons.add(new Image(stream));
+            }
+        }
+        return icons;
     }
 
     @Override

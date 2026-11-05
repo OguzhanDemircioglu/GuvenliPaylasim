@@ -36,6 +36,7 @@ set "MODULES=java.base,java.compiler,java.datatransfer,java.xml,java.prefs,java.
   --win-menu --win-menu-group "Güvenli Paylaşım" ^
   --win-shortcut ^
   --win-upgrade-uuid 6d1f3c2a-8b4e-4f7a-9c21-5e0b7a3d9f14 ^
+  --icon src\main\jpackage\GuvenliPaylasim.ico ^
   --resource-dir src\main\jpackage ^
   --dest dist || exit /b 1
 

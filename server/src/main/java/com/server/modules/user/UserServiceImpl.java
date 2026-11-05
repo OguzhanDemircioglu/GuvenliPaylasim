@@ -61,6 +61,19 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserCreateRequest, Us
         return super.create(request);
     }
 
+    /** Yetki kontrolü (create) atlanır: istek oturumsuz gelir ve rol her zaman USER'dır. */
+    @Override
+    @Transactional
+    public void register(String email, String fullName, String password, Long unitId, String phone) {
+        UserCreateRequest request = new UserCreateRequest(email, fullName, password, Role.USER, unitId, phone);
+        validateCreate(request);
+        User user = mapper.toEntity(request);
+        prepareCreate(user, request);
+        // Parolayı kullanıcı kendisi seçti; yöneticinin verdiği ilk parola gibi değiştirilmesi gerekmez.
+        user.setMustChangePassword(false);
+        userRepository.saveAndFlush(user);
+    }
+
     @Override
     @Transactional
     public UserResponse update(Long id, UserUpdateRequest request) {

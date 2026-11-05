@@ -10,6 +10,7 @@ public final class AuthMessages {
     public static final String USER_INACTIVE = "auth_user_inactive";
     public static final String SESSION_EXPIRED = "auth_session_expired";
     public static final String LOGIN_BLOCKED = "auth_login_blocked";
+    public static final String REGISTER_BLOCKED = "auth_register_blocked";
     public static final String CURRENT_PASSWORD_INCORRECT = "auth_current_password_incorrect";
     public static final String KEYS_REQUIRED = "auth_keys_required";
 

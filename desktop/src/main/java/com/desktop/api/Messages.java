@@ -23,6 +23,7 @@ public final class Messages {
             Map.entry("auth_user_inactive", "Hesabınız pasif durumda. Yöneticinize başvurun."),
             Map.entry("auth_session_expired", "Oturumunuz sona erdi. Lütfen tekrar giriş yapın."),
             Map.entry("auth_login_blocked", "Çok sayıda hatalı deneme yapıldı. Bir saat sonra tekrar deneyin."),
+            Map.entry("auth_register_blocked", "Bu bilgisayardan çok sayıda kayıt denemesi yapıldı. Bir saat sonra tekrar deneyin."),
             Map.entry("auth_current_password_incorrect", "Mevcut parolanız hatalı."),
 
             Map.entry("user_email_exists", "Bu e-posta adresiyle kayıtlı bir kullanıcı var."),

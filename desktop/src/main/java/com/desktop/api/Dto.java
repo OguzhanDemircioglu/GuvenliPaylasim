@@ -32,6 +32,9 @@ public final class Dto {
     public record ChangePasswordRequest(String currentPassword, String newPassword, KeyBundle keys) {
     }
 
+    public record RegisterRequest(String fullName, String email, String password, Long unitId, String phone) {
+    }
+
     public record Unit(Long id, String name, String description, Long version) {
         @Override
         public String toString() {

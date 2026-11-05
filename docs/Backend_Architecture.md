@@ -862,8 +862,11 @@ Angular client kendi container'ında nginx ile sunulur ve `/api` isteklerini ser
 Bu proje StarterApp şablonundan türetildi. Yukarıdaki kurallar geçerlidir; aşağıdakiler bu projeye özgüdür.
 Şifreleme ayrıntısı: [Crypto_Design.md](Crypto_Design.md).
 
-- **Kaldırılanlar:** herkese açık kayıt (`/api/auth/register`; kullanıcıları yönetici açar), `report` modülü.
-  Şablonun referans modülü `category`, `unit` (birimler) olarak yeniden adlandırıldı.
+- **Kaldırılanlar:** `report` modülü. Şablonun referans modülü `category`, `unit` (birimler) olarak yeniden adlandırıldı.
+- **Herkese açık kayıt:** `POST /api/auth/register` (IP başına hız sınırı, `app.register-protection`) kullanıcıyı
+  USER rolüyle seçtiği birime açar; `must_change_password` `false`'tur, istemci ardından normal girişi yapar ve
+  anahtarlar ilk girişte üretilir. Birim seçimi için `GET /api/auth/units` oturumsuz sadece `id` ve `name` döner.
+  Kimlik doğrulaması yoktur: e-posta adresini yazan herkes hesap açabilir.
 - **Parola:** istemci gerçek parolayı göndermez, paroladan türettiği `authSecret`'ı gönderir (`AuthSecrets`).
   Sunucu bunu diğer parolalar gibi bcrypt'ler. Parola karmaşıklık kuralları istemcidedir. E-posta, türetmenin tuzu
   olduğu için değiştirilemez (422 `user_email_immutable`).

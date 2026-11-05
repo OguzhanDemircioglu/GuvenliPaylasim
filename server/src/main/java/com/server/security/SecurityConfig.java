@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     /** Token gerektirmeyen auth endpoint'leri. */
     private static final Set<String> PUBLIC_AUTH_PATHS = Set.of(
-            "/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/api/auth/dev-login");
+            "/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout", "/api/auth/dev-login");
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, PUBLIC_AUTH_PATHS.toArray(String[]::new)).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/auth/units").permitAll()
                         .requestMatchers("/actuator/health/**", "/error").permitAll()
                         // Swagger yalnızca dev profilinde açıktır (springdoc ayarı); prod'da bu yollar 404 döner.
                         .requestMatchers("/swagger-ui.html", "/swagger-ui/**", "/v3/api-docs/**").permitAll()

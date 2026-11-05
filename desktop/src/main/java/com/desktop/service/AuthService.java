@@ -7,6 +7,8 @@ import com.desktop.crypto.PasswordKeys;
 import com.desktop.crypto.UserKeys;
 import tools.jackson.core.type.TypeReference;
 
+import java.util.List;
+
 /**
  * Giriş ve parola akışları (docs/Crypto_Design.md §2–3).
  * <ol>
@@ -25,7 +27,26 @@ public final class AuthService {
     }
 
     public Session login(String email, char[] password) {
+        return login(email, PasswordKeys.derive(email, password));
+    }
+
+    /** Hesap açılır, ardından normal giriş yapılır; anahtarlar ilk girişte bu bilgisayarda üretilir. */
+    public Session register(String fullName, String email, Long unitId, char[] password) {
         PasswordKeys.Derived derived = PasswordKeys.derive(email, password);
+        new ApiClient(serverUrl).post("/api/auth/register",
+                new Dto.RegisterRequest(fullName.trim(), email.trim(), derived.authSecret(), unitId, null),
+                new TypeReference<Object>() {
+                });
+        return login(email, derived);
+    }
+
+    /** Kayıt formundaki birim listesi; oturum gerektirmez. */
+    public List<Dto.Unit> units() {
+        return new ApiClient(serverUrl).get("/api/auth/units", new TypeReference<>() {
+        });
+    }
+
+    private Session login(String email, PasswordKeys.Derived derived) {
         ApiClient api = new ApiClient(serverUrl);
         Dto.SessionUser user = api.login(email.trim(), derived.authSecret()).user();
 

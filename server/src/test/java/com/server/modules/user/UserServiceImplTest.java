@@ -11,6 +11,7 @@ import com.server.security.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -119,6 +120,42 @@ class UserServiceImplTest {
 
         assertThat(user.isActive()).isFalse();
         verify(sessionRepository).revokeAllByUserId(eq(2L), any());
+    }
+
+    @Test
+    void registerCreatesActiveUserThatKeepsOwnPassword() {
+        when(unitRepository.existsById(UNIT_ID)).thenReturn(true);
+        when(passwordEncoder.encode("secret-derived")).thenReturn("hash");
+
+        service.register(" Yeni@Firma.com ", "Yeni Kişi", "secret-derived", UNIT_ID, "5551234567");
+
+        ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
+        verify(repository).saveAndFlush(saved.capture());
+        User user = saved.getValue();
+        assertThat(user.getEmail()).isEqualTo("yeni@firma.com");
+        assertThat(user.getRole()).isEqualTo(Role.USER);
+        assertThat(user.getUnitId()).isEqualTo(UNIT_ID);
+        assertThat(user.getPassword()).isEqualTo("hash");
+        assertThat(user.isActive()).isTrue();
+        assertThat(user.isMustChangePassword()).isFalse();
+    }
+
+    @Test
+    void registerRejectsExistingEmail() {
+        when(repository.existsByEmail("var@firma.com")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.register("var@firma.com", "Var", "secret-derived", UNIT_ID, null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(UserMessages.EMAIL_EXISTS);
+    }
+
+    @Test
+    void registerRejectsUnknownUnit() {
+        when(unitRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> service.register("u@firma.com", "U", "secret-derived", 99L, null))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(UserMessages.UNIT_NOT_FOUND);
     }
 
     @Test

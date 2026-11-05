@@ -199,12 +199,129 @@
 
 /* ---------- Giriş ---------- */
 
-.login-hero {
-    -fx-background-color:
-        radial-gradient(center 85% 15%, radius 55%, rgba(34, 211, 238, 0.22), transparent),
-        radial-gradient(center 10% 90%, radius 60%, rgba(59, 130, 246, 0.30), transparent),
-        linear-gradient(to bottom right, -gps-navy-900, -gps-navy-700);
-    -fx-padding: 48;
+/* Giriş/kayıt kartı: StarterApp login.css'in karşılığı (LoginView). Lacivert paneller iki temada da aynı kalır. */
+
+.auth-page {
+    -fx-background-color: -color-bg-subtle;
+    -fx-padding: 24;
+}
+
+.auth-brand-title {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-default;
+}
+
+.auth-brand-subtitle,
+.auth-footnote {
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.auth-card {
+    -fx-background-color: -color-bg-default;
+    -fx-background-radius: 12;
+    -fx-border-color: -gps-navy-800;
+    -fx-border-width: 2;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(8, 22, 43, 0.35), 28, 0, 0, 6);
+}
+
+.auth-panel {
+    -fx-fill: -gps-navy-800;
+}
+
+.auth-panel-light {
+    -fx-fill: -color-bg-default;
+}
+
+.auth-title {
+    -fx-font-size: 30px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-default;
+}
+
+.auth-title-bar {
+    -fx-background-color: -color-fg-default;
+    -fx-min-width: 40;
+    -fx-max-width: 40;
+    -fx-min-height: 4;
+    -fx-max-height: 4;
+}
+
+.auth-input,
+.auth-input:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent transparent -color-fg-default transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-padding: 6 2 4 2;
+    -fx-font-size: 15px;
+    -fx-effect: null;
+}
+
+.auth-input:raised {
+    -fx-border-color: transparent transparent -color-accent-emphasis transparent;
+}
+
+.auth-input .ikonli-font-icon {
+    -fx-icon-color: -color-fg-muted;
+}
+
+.auth-input:raised .ikonli-font-icon {
+    -fx-icon-color: -color-accent-emphasis;
+}
+
+.auth-input-label {
+    -fx-font-size: 15px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.auth-input-label:raised {
+    -fx-text-fill: -color-accent-emphasis;
+}
+
+.auth-submit {
+    -fx-background-color: -gps-navy-800;
+    -fx-background-radius: 22;
+    -fx-border-color: transparent;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-pref-height: 44;
+    -fx-cursor: hand;
+}
+
+.auth-submit:hover,
+.auth-submit:focused {
+    -fx-background-color: -gps-navy-700;
+    -fx-effect: dropshadow(gaussian, rgba(8, 22, 43, 0.55), 12, 0, 0, 0);
+}
+
+.auth-link-text {
+    -fx-text-fill: -color-fg-default;
+}
+
+.auth-link {
+    -fx-font-weight: bold;
+    -fx-padding: 0;
+    -fx-border-width: 0;
+}
+
+.auth-progress {
+    -fx-text-fill: -color-fg-muted;
+}
+
+.auth-info-title {
+    -fx-text-fill: white;
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+}
+
+.auth-info-text {
+    -fx-text-fill: -gps-on-navy;
+    -fx-font-size: 15px;
 }
 
 .hero-title {
@@ -218,36 +335,9 @@
     -fx-font-size: 15px;
 }
 
-.hero-feature-title {
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-}
-
 .hero-feature-text {
     -fx-text-fill: -gps-on-navy-muted;
     -fx-font-size: 12.5px;
-}
-
-.hero-feature-icon {
-    -fx-background-color: rgba(255, 255, 255, 0.08);
-    -fx-background-radius: 10;
-    -fx-min-width: 38;
-    -fx-min-height: 38;
-    -fx-max-width: 38;
-    -fx-max-height: 38;
-}
-
-.hero-feature-icon .ikonli-font-icon {
-    -fx-icon-color: -gps-sky;
-}
-
-.hero-footnote {
-    -fx-text-fill: -gps-on-navy-muted;
-    -fx-font-size: 11.5px;
-}
-
-.login-panel {
-    -fx-background-color: -color-bg-default;
 }
 
 .login-form .text-field,
