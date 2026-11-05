@@ -59,6 +59,22 @@ class SecurityErrorResponsesTest {
         assertThat(response.getBody().message()).isEqualTo(GlobalMessages.URL_NOT_FOUND);
     }
 
+    /** Security firewall'unun reddettiği istek (ör. URL'de ';') container tarafından /error'a 400 ile düşer. */
+    @Test
+    void errorControllerMapsFirewallRejectionTo400InvalidRequest() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/error");
+        request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, 400);
+        request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, "/api/units;x=y");
+
+        ResponseEntity<ApiResponse<Void>> response = new ApiErrorController().error(request);
+
+        assertThat(response.getStatusCode().value()).isEqualTo(400);
+        assertThat(response.getBody()).isNotNull();
+        assertThat(response.getBody().success()).isFalse();
+        assertThat(response.getBody().message()).isEqualTo(GlobalMessages.INVALID_REQUEST);
+        assertThat(response.getBody().data()).isNull();
+    }
+
     @Test
     void errorControllerFallsBackTo500() {
         ResponseEntity<ApiResponse<Void>> response = new ApiErrorController().error(new MockHttpServletRequest());

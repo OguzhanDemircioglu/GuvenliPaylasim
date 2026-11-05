@@ -66,7 +66,7 @@ ekranında da gösterilir.
 
 - JDK 25. `run`/`package` betikleri sırayla `%USERPROFILE%\.jdks\*25*` (IntelliJ'nin indirdiği JDK'lar) ve
   `Projeler\.tools\jdk` altında arar, bulduğunu kullanır; sistemdeki `JAVA_HOME` Java 17/21 olabilir.
-- PostgreSQL 18 (yerelde Docker ile açılabilir, aşağıda).
+- PostgreSQL (bilgisayara kurulu ya da Aiven gibi bir bulut veritabanı).
 - Maven gerekmez (wrapper var). Kurum proxy'si için Maven ayarı `~/.m2/settings.xml`'de; HTTPS sertifikası için
   betikler `-Djavax.net.ssl.trustStoreType=Windows-ROOT` verir.
 
@@ -78,15 +78,16 @@ ekranında da gösterilir.
    openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out server/keys/private.pem
    openssl rsa -in server/keys/private.pem -pubout -out server/keys/public.pem
    ```
-2. **PostgreSQL'i hazırla.** Yerelde Docker ile:
-   ```bash
-   docker run -d --name gps-postgres --restart unless-stopped -e POSTGRES_DB=guvenlipaylasim -e POSTGRES_USER=guvenlipaylasim -e POSTGRES_PASSWORD=guvenlipaylasim -p 5433:5432 -v gps-pgdata:/var/lib/postgresql postgres:18
+2. **PostgreSQL'i hazırla.** Kurulu PostgreSQL'de bir kez (`psql -U postgres` ya da pgAdmin):
+   ```sql
+   CREATE USER guvenlipaylasim WITH PASSWORD '...';
+   CREATE DATABASE guvenlipaylasim OWNER guvenlipaylasim;
    ```
    Bağlantı bilgisi `server/.env` dosyasına yazılır (git'e girmez):
    ```properties
-   DB_URL=jdbc:postgresql://localhost:5433/guvenlipaylasim
+   DB_URL=jdbc:postgresql://localhost:5432/guvenlipaylasim
    DB_USERNAME=guvenlipaylasim
-   DB_PASSWORD=guvenlipaylasim
+   DB_PASSWORD=...
    DB_SCHEMA=guvenlipaylasim
    ```
    Aiven gibi bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require` eklenir. Ayrıntılar:
@@ -118,8 +119,8 @@ ekranında da gösterilir.
    değişikliğini ve anahtar üretimini göster.
 
 Demo verisini sıfırlamak için sunucu kapalıyken şemayı silin; bir sonraki açılışta yeniden oluşur:
-```bash
-docker exec gps-postgres psql -U guvenlipaylasim -d guvenlipaylasim -c "DROP SCHEMA guvenlipaylasim CASCADE"
+```sql
+DROP SCHEMA guvenlipaylasim CASCADE;
 ```
 
 ### Testler
@@ -131,7 +132,7 @@ cd server && mvnw.cmd test
 cd desktop && mvnw.cmd test
 ```
 
-Sunucunun veritabanı testleri kendi PostgreSQL 18'ini Testcontainers ile açar; Docker yoksa atlanır. Masaüstü ekranlarının görüntüsü, çalışan dev
+Testler veritabanı ya da Docker gerektirmez. Masaüstü ekranlarının görüntüsü, çalışan dev
 sunucusuna karşı `ScreenshotTour` (test kaynakları) ile pencere açmadan alınabilir.
 
 ### Kurulum dosyası ve sürüm yayımlama

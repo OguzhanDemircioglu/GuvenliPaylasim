@@ -5,6 +5,7 @@ import com.server.modules.auth.UserSessionRepository;
 import com.server.modules.key.UserKeyRepository;
 import com.server.modules.unit.UnitRepository;
 import com.server.modules.user.dto.UserCreateRequest;
+import com.server.modules.user.dto.UserPasswordResetRequest;
 import com.server.modules.user.dto.UserUpdateRequest;
 import com.server.security.CurrentUser;
 import com.server.security.Role;
@@ -23,6 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -169,6 +171,86 @@ class UserServiceImplTest {
         } finally {
             Locale.setDefault(original);
         }
+    }
+
+    @Test
+    void passwordResetRemovesKeysForcesPasswordChangeAndRevokesSessions() {
+        when(currentUser.role()).thenReturn(Role.ADMIN);
+        User user = user(5L, Role.USER, true);
+        when(repository.findById(5L)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("Yeni12345")).thenReturn("new-hash");
+
+        service.resetPassword(5L, new UserPasswordResetRequest("Yeni12345"));
+
+        assertThat(user.getPassword()).isEqualTo("new-hash");
+        assertThat(user.isMustChangePassword()).isTrue();
+        // Özel anahtarlar eski parolayla şifreliydi; kullanıcı ilk girişte yenilerini üretir.
+        verify(keyRepository).deleteById(5L);
+        verify(sessionRepository).revokeAllByUserId(eq(5L), any());
+    }
+
+    @Test
+    void adminCannotResetAnotherAdminsPassword() {
+        when(currentUser.role()).thenReturn(Role.ADMIN);
+        when(repository.findById(6L)).thenReturn(Optional.of(user(6L, Role.ADMIN, true)));
+
+        assertThatThrownBy(() -> service.resetPassword(6L, new UserPasswordResetRequest("Yeni12345")))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(UserMessages.NOT_MANAGEABLE);
+        verify(keyRepository, never()).deleteById(any());
+    }
+
+    @Test
+    void emailCannotChangeBecauseItSaltsTheKeys() {
+        when(currentUser.role()).thenReturn(Role.SUPERADMIN);
+        when(repository.findById(4L)).thenReturn(Optional.of(user(4L, Role.USER, true)));
+
+        assertThatThrownBy(() -> service.update(4L,
+                new UserUpdateRequest("baska@firma.com", "Ayşe", Role.USER, true, UNIT_ID, null, 0L)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(UserMessages.EMAIL_IMMUTABLE);
+    }
+
+    @Test
+    void userRoleNeedsUnitButAdminRolesDoNot() {
+        when(currentUser.role()).thenReturn(Role.SUPERADMIN);
+
+        assertThatThrownBy(() -> service.create(
+                new UserCreateRequest("u@firma.com", "U", "User12345", Role.USER, null, null)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(UserMessages.UNIT_REQUIRED);
+
+        when(passwordEncoder.encode("Admin12345")).thenReturn("hash");
+        when(repository.saveAndFlush(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        service.create(new UserCreateRequest("a@firma.com", "A", "Admin12345", Role.ADMIN, null, null));
+        verify(repository).saveAndFlush(any(User.class));
+    }
+
+    @Test
+    void superadminRoleCanNeitherBeGrantedNorTaken() {
+        when(currentUser.role()).thenReturn(Role.SUPERADMIN);
+
+        assertThatThrownBy(() -> service.create(
+                new UserCreateRequest("s@firma.com", "S", "Super12345", Role.SUPERADMIN, null, null)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(UserMessages.ROLE_NOT_ASSIGNABLE);
+
+        when(repository.findById(1L)).thenReturn(Optional.of(user(1L, Role.SUPERADMIN, true)));
+        assertThatThrownBy(() -> service.update(1L,
+                new UserUpdateRequest("user1@firma.com", "Root", Role.ADMIN, true, null, null, 0L)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(UserMessages.ROLE_NOT_ASSIGNABLE);
+    }
+
+    @Test
+    void adminCannotChangeRoles() {
+        when(currentUser.role()).thenReturn(Role.ADMIN);
+        when(repository.findById(4L)).thenReturn(Optional.of(user(4L, Role.USER, true)));
+
+        assertThatThrownBy(() -> service.update(4L,
+                new UserUpdateRequest("user4@firma.com", "Ayşe", Role.ADMIN, true, UNIT_ID, null, 0L)))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(UserMessages.ROLE_NOT_ASSIGNABLE);
     }
 
     private static User user(Long id, Role role, boolean active) {

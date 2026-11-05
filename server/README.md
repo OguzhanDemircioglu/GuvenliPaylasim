@@ -22,8 +22,7 @@ openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out keys/private.p
 openssl rsa -in keys/private.pem -pubout -out keys/public.pem
 ```
 
-Windows'ta `openssl` Git Bash ile birlikte gelir. Docker'da `keys/` klasörü container'a bağlandığı için Linux'ta
-dosyaların okunabilir olması gerekir: `chmod 644 keys/*.pem`.
+Windows'ta `openssl` Git Bash ile birlikte gelir.
 
 ### 2. PostgreSQL ve `.env`
 
@@ -32,18 +31,20 @@ dosyasına yazılır. Bu dosya git'e girmez ve **sadece dev profilinde** okunur;
 kullanmaz. Ortam değişkenleri her zaman `.env`'den önceliklidir.
 
 ```properties
-DB_URL=jdbc:postgresql://localhost:5433/guvenlipaylasim
+DB_URL=jdbc:postgresql://localhost:5432/guvenlipaylasim
 DB_USERNAME=guvenlipaylasim
-DB_PASSWORD=guvenlipaylasim
+DB_PASSWORD=...
 DB_SCHEMA=guvenlipaylasim
 # ADMIN_EMAIL=admin@firma.com
 # ADMIN_PASSWORD=...
 ```
 
-Yerelde Docker ile bir PostgreSQL 18 açmak için (yukarıdaki `.env` buna göredir):
+Bilgisayara kurulu bir PostgreSQL'de veritabanı ve kullanıcı bir kez oluşturulur (`postgres` kullanıcısıyla, ör.
+pgAdmin ya da `psql -U postgres`):
 
-```bash
-docker run -d --name gps-postgres --restart unless-stopped -e POSTGRES_DB=guvenlipaylasim -e POSTGRES_USER=guvenlipaylasim -e POSTGRES_PASSWORD=guvenlipaylasim -p 5433:5432 -v gps-pgdata:/var/lib/postgresql postgres:18
+```sql
+CREATE USER guvenlipaylasim WITH PASSWORD '...';
+CREATE DATABASE guvenlipaylasim OWNER guvenlipaylasim;
 ```
 
 - Aiven gibi bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require` eklenir. `DB_HOST`/`DB_PORT`/`DB_NAME` okunmaz;
@@ -93,14 +94,8 @@ yapın (`.env` ve `keys/` bu dizine göre aranır).
 ./mvnw test
 ```
 
-- Unit ve kontrat testleri her yerde çalışır.
-- Veritabanı testleri (`DatabaseIntegrationTest`, `AuthFlowIntegrationTest`, `DocumentFlowIntegrationTest`,
-  `RoleAccessIntegrationTest`, `SchemaIsolationIntegrationTest`, `FirewallIntegrationTest`) gerçek bir PostgreSQL 18'i
-  Testcontainers ile açar; **Docker yoksa otomatik atlanır**. `.env`'deki veritabanını kullanmazlar.
-
-## Docker
-
-Sadece server imajı için (`server/` klasöründe): `docker build -t guvenlipaylasim-server .`
+Testler unit ve kontrat testleridir (Mockito); veritabanı ya da Docker gerektirmez, `.env`'i okumaz. Neyin test
+edildiği: [docs/Backend_Architecture.md §17](../docs/Backend_Architecture.md).
 
 Prod'da gereken değişkenlerin listesi [.env.example](.env.example) dosyasındadır.
 

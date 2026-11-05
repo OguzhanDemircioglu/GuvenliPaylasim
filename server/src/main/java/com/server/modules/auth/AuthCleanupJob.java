@@ -10,7 +10,7 @@ import java.time.Instant;
 
 /**
  * Her gece eski login ve kayıt denemelerini, bitmiş oturumları siler.
- * Swarm'da her replica'da ayrı çalışır; sadece eski kayıt sildiği için zararsızdır.
+ * Birden fazla replica varsa her birinde ayrı çalışır; sadece eski kayıt sildiği için zararsızdır.
  */
 @Slf4j
 @Component

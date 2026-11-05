@@ -28,7 +28,7 @@
 | Kod azaltma | Lombok | |
 | API dokümanı | springdoc-openapi 3.x | Boot 4.1 uyumu ilk build'de doğrulanır |
 | JSON | Jackson 3 | Boot 4 ile gelir; paket adı `tools.jackson` |
-| Test | JUnit 6 (Jupiter), Mockito, Testcontainers 2 | Boot ile gelir |
+| Test | JUnit 6 (Jupiter), Mockito | Boot ile gelir |
 
 - Boot 4'te starter adları değişti (örneğin `spring-boot-starter-webmvc`). `pom.xml` start.spring.io'dan üretilir, elle yazılmaz.
 - Lombok, MapStruct ve springdoc'un Java 25 ve Boot 4.1 ile uyumu ilk build'de kontrol edilir. Sorun çıkarsa Java 21'e inmek tek satırlık bir değişikliktir.
@@ -364,7 +364,7 @@ BaseException (abstract: HttpStatus + mesaj anahtarı)
 ### 8.2 Anahtarlar
 
 - RSA private ve public key PEM dosyalarından okunur. Dosya yolları environment variable'dan gelir. Uygulama **anahtar üretmez** ve anahtarlar repoya **konmaz**.
-- Swarm'da anahtarlar Docker secret olarak verilir. Bütün replica'lar aynı anahtarı kullanmak zorundadır.
+- Birden fazla replica varsa hepsi aynı anahtar dosyalarını okur; aynı anahtarı kullanmak zorundadırlar.
 - Anahtar değişimi: Aktif anahtar imzalar. İsteğe bağlı olarak bir önceki public key de tanımlanabilir; doğrulama `kid`'e göre ikisini de kabul eder. Böylece anahtar değiştirildiğinde kullanıcılar oturumdan atılmaz.
 - Geliştirme ortamı için anahtar üreten `openssl` komutları README'de yer alır. Anahtarların durduğu klasör `.gitignore`'dadır.
 
@@ -413,7 +413,7 @@ Her satır bir oturumu temsil eder; bir tarayıcı, bir satır. Refresh token he
 
 **Yerel otomatik giriş — `POST /api/auth/dev-login` (sadece geliştirme)**
 - `DevLoginController`, `ADMIN_EMAIL` kullanıcısıyla şifresiz oturum açar. Şifre koda ya da client'a girmez.
-- Sadece `app.dev-login.enabled=true` iken oluşur. Bu ayar yalnızca `application-dev.yml`'dedir; prod'da adres 404 döner. Compose `DEV_LOGIN_ENABLED=false` verir.
+- Sadece `app.dev-login.enabled=true` iken oluşur. Bu ayar yalnızca `application-dev.yml`'dedir; prod'da adres 404 döner. Dev'de de `DEV_LOGIN_ENABLED=false` ile kapatılabilir.
 - Dev profilli server ağa açık olabileceği için sadece bu makineden (loopback) gelen istekler kabul edilir, diğerleri 404 alır.
 - **Prod ortamı `dev` profiliyle çalıştırılmaz.**
 
@@ -472,7 +472,7 @@ public class CurrentUser {
 }
 ```
 
-- Server session (`HttpSession`) **kullanılmaz**. Uygulama tamamen stateless çalışır; Swarm'da istek hangi replica'ya düşerse düşsün aynı sonuç alınır.
+- Server session (`HttpSession`) **kullanılmaz**. Uygulama tamamen stateless çalışır; birden fazla replica varsa istek hangisine düşerse düşsün aynı sonuç alınır.
 - Audit alanları (`createdBy`, `updatedBy`) `CurrentUser`'dan doldurulur.
 - Token'da olmayan kullanıcı bilgileri gerektiğinde DB'den okunur.
 
@@ -537,7 +537,7 @@ public class CurrentUser {
 
 - Hibernate'in varsayılan davranışı unique constraint'leri her açılışta silip yeniden oluşturmaktır. Bu, `hibernate.schema_update.unique_constraint_strategy=RECREATE_QUIETLY` ile kapatılmıştır: sadece eksikse oluşturulur.
 
-- **Rolling update kuralı (Swarm):** Güncelleme sırasında eski ve yeni sürüm birkaç saniye aynı DB'de çalışır. Bu yüzden yeni eklenen kolonlar **nullable ya da default değerli** olmalıdır; yoksa eski sürümün insert'leri hata verir.
+- **Rolling update kuralı:** Güncelleme sırasında eski ve yeni sürüm birkaç saniye aynı DB'de çalışır. Bu yüzden yeni eklenen kolonlar **nullable ya da default değerli** olmalıdır; yoksa eski sürümün insert'leri hata verir.
 - `spring.jpa.open-in-view=false` olarak ayarlanır. Lazy alanlara controller'da erişilmez.
 - `show-sql` sadece dev profilinde açıktır.
 
@@ -575,12 +575,11 @@ public class CurrentUser {
 
 ### 10.6 Yerel geliştirmede PostgreSQL
 
-- Dev, test ve prod aynı veritabanını (PostgreSQL 18) kullanır; gömülü bir veritabanı yoktur. `DB_URL`,
-  `DB_USERNAME` ve `DB_PASSWORD` her profilde zorunludur ve varsayılanları yoktur. Dev'de `server/.env`'den okunur.
-- Yerelde PostgreSQL 18 Docker ile açılır (komut: `server/README.md`). Paylaşılan bir veritabanı da kullanılabilir;
-  uygulama sadece `DB_SCHEMA` şemasına dokunur (§10.2).
-- Veritabanı testleri kendi PostgreSQL 18'ini Testcontainers ile açar; `.env`'deki veritabanını kullanmaz. Docker yoksa
-  bu testler atlanır.
+- Dev ve prod PostgreSQL kullanır; gömülü bir veritabanı yoktur. `DB_URL`, `DB_USERNAME` ve `DB_PASSWORD` her profilde
+  zorunludur ve varsayılanları yoktur. Dev'de `server/.env`'den okunur.
+- Yerelde bilgisayara kurulu bir PostgreSQL ya da Aiven gibi bir bulut veritabanı kullanılır (`server/README.md`).
+  Paylaşılan bir veritabanı da olabilir; uygulama sadece `DB_SCHEMA` şemasına dokunur (§10.2).
+- Testler veritabanı kullanmaz (§17).
 
 ---
 
@@ -624,7 +623,7 @@ public class V003_InitialMenus implements DataMigration {
 - **Ne zaman çalışır:** Hibernate şemayı oluşturduktan **sonra**, `DataMigrationRunner` (`ApplicationRunner`) tarafından çalıştırılır. Bütün `DataMigration` bean'leri toplanır ve `version()`'a göre sıralanır.
 - **Geçmiş:** Uygulanan her sürüm `data_migration_history` tablosuna kaydedilir (`version`, `description`, `applied_at`). Uygulanmış bir sürüm bir daha çalışmaz. Runner bu tabloyu kendisi oluşturur.
 - **Transaction:** Her sürüm kendi transaction'ında çalışır. Hata olursa o sürümün değişiklikleri geri alınır ve uygulama açılmaz.
-- **Swarm kilidi:** Runner bir PostgreSQL advisory lock altında çalışır. Aynı anda açılan iki replica aynı sürümü iki kez çalıştıramaz.
+- **Replica kilidi:** Runner bir PostgreSQL advisory lock altında çalışır. Aynı anda açılan iki replica aynı sürümü iki kez çalıştıramaz.
 - Aynı `version()` değerine sahip iki class varsa uygulama açılmaz.
 
 **Kurallar:**
@@ -694,12 +693,12 @@ Tablo: `login_attempts`
 - Başarılı girişte kayıt silinir. Engel süresi dolduktan sonraki ilk yanlış denemede sayaç 1'den başlar.
 - Kayıtlı olmayan e-postalarla yapılan denemeler de sayılır.
 - Sayaç artırma tek transaction'da yapılır: satır yoksa `INSERT ... ON CONFLICT DO NOTHING`, ardından sayacı kendi üzerinden artıran `UPDATE`. `UPDATE` satırı kilitlediği için aynı anda gelen denemeler birbirini ezmez.
-- Kayıtlar DB'de tutulduğu için Swarm'daki bütün replica'lar aynı engeli görür ve engeller restart'ta kaybolmaz.
+- Kayıtlar DB'de tutulduğu için bütün replica'lar aynı engeli görür ve engeller restart'ta kaybolmaz.
 
 **İstemci IP'si:**
 - IP her zaman `request.getRemoteAddr()` ile okunur.
 - Uygulama bir reverse proxy arkasındaysa `FORWARD_HEADERS_STRATEGY=native` ayarlanır. Bu durumda Tomcat gerçek IP'yi `X-Forwarded-For` başlığından alır ve yalnızca iç ağdaki proxy'lere güvenir.
-- **Swarm uyarısı:** Swarm'ın ingress routing mesh'i kaynak IP'yi değiştirir. Gerçek IP'yi korumak için en öndeki servis `mode: host` ile yayınlanmalıdır. Aksi halde anahtar fiilen sadece e-posta olur ve bir kullanıcı başkası tarafından kilitlenebilir.
+- **Proxy uyarısı:** Önde bir yük dengeleyici ya da reverse proxy varsa kaynak IP değişir. Gerçek IP `X-Forwarded-For` ile iletilmeli ve `FORWARD_HEADERS_STRATEGY=native` verilmelidir. Aksi halde anahtar fiilen sadece e-posta olur ve bir kullanıcı başkası tarafından kilitlenebilir.
 
 ### 13.2 Kayıt hız sınırı
 
@@ -715,7 +714,7 @@ Tablo: `login_attempts`
 - 1 günden eski `login_attempts` kayıtlarını siler.
 - Süresi dolmuş `user_sessions` kayıtlarını ve 7 günden önce iptal edilmiş olanları siler.
 
-Swarm'da bu iş her replica'da ayrı ayrı çalışır. Bu zararsızdır, çünkü yaptığı tek şey eski kayıtları silmektir.
+Birden fazla replica varsa bu iş her birinde ayrı ayrı çalışır. Bu zararsızdır, çünkü yaptığı tek şey eski kayıtları silmektir.
 
 ---
 
@@ -725,7 +724,7 @@ Swarm'da bu iş her replica'da ayrı ayrı çalışır. Bu zararsızdır, çünk
 - `ApiResponse.traceId` değeri MDC'den okunur.
 - **dev profili:** Okunabilir düz metin, konsola. Her satırda thread adından sonra `[traceId]` bulunur (`logging.pattern.correlation`); istek dışındaki satırlarda boş kalır.
 - **prod profili:** Boot'un yerleşik JSON (structured) log formatı (`logstash`), stdout'a. Log dosyası **yazılmaz**: birden fazla replica aynı dosyaya yazamaz ve logun nereye gideceği uygulamanın değil, kurulumun işidir.
-- **Logların toplanması uygulamanın dışındadır.** `deploy/compose.yml` Docker'ın `json-file` driver'ını container başına 5 x 10 MB ile sınırlar; loglar `docker compose logs` ile okunur. İsteğe bağlı eklenti `deploy/compose.observability.yml` (Alloy → Loki → Grafana) logları toplar, 30 gün saklar ve `traceId` ile aranabilir yapar. Uygulama hangi sistemin kullanıldığını bilmez; başka bir log sistemine geçmek kod değişikliği gerektirmez. Ayrı bir "logger servisi" yazılmaz.
+- **Logların toplanması uygulamanın dışındadır.** Uygulama stdout'a yazar; logları toplamak ve saklamak kurulumun işidir. Uygulama hangi sistemin kullanıldığını bilmez; başka bir log sistemine geçmek kod değişikliği gerektirmez. Ayrı bir "logger servisi" yazılmaz.
 - Audit kayıtları ve kullanım istatistikleri (Security_Roadmap §4.2, §4.11) log değildir; DB'de tutulur.
 - Log zamanları `Europe/Istanbul` saat dilimiyle yazılır.
 - Şifreler, token'lar ve cookie değerleri **loglanmaz**.
@@ -749,7 +748,7 @@ Dosyalar: `application.yml` (ortak), `application-dev.yml`, `application-prod.ym
 | `FORWARD_HEADERS_STRATEGY` | `none` (varsayılan) ya da proxy arkasındaysa `native` |
 | `TZ` | `Europe/Istanbul` |
 
-- Kodda ve repoda secret **bulunmaz**. Repoda değişkenleri listeleyen bir `.env.example` dosyası durur: `server/.env.example` uygulamanın bütün değişkenlerini, `deploy/.env.example` Docker Compose kurulumunun ayarlarını listeler (compose bunlardan server'ın değişkenlerini kurar, §16.1).
+- Kodda ve repoda secret **bulunmaz**. Repoda değişkenleri listeleyen bir `.env.example` dosyası durur: `server/.env.example` uygulamanın bütün değişkenlerini listeler.
 - Lokal geliştirmede değerler `server/.env` dosyasına yazılır (git'e girmez). Bu dosya **sadece dev profilinde** okunur
   (`spring.config.import: optional:file:.env[.properties]`, `application-dev.yml`); testler ve prod onu kullanmaz.
   Profil `.env`'den seçilemez; çalıştırma ayarından verilir.
@@ -757,39 +756,24 @@ Dosyalar: `application.yml` (ortak), `application-dev.yml`, `application-prod.ym
 
 ---
 
-## 16. Docker ve deploy
+## 16. Çalıştırma ve deploy
 
-- **Dockerfile:**
-  - Multi-stage: build aşamasında `maven:3.9-eclipse-temurin-25`, çalışma aşamasında `eclipse-temurin:25-jre` imajı.
-  - Uygulama root olmayan bir kullanıcıyla çalışır.
-  - Container belleğine uyum için `-XX:MaxRAMPercentage=75` verilir.
-- **Healthcheck:** Docker container'a belirli aralıklarla "hazır mısın?" diye sorar. Bunun için `/actuator/health/readiness` kullanılır. Bu endpoint, Hibernate şemayı oluşturup bütün migration'lar bittikten **sonra** "hazırım" der. Swarm rolling update'te yeni sürüm "hazırım" demeden eski sürümü kapatmaz ve yeni sürüme trafik göndermez; böylece güncelleme sırasında kullanıcılar hata görmez. Actuator'da sadece `health` dışarı açılır ve health probe'ları açık olur.
-- **Graceful shutdown:** Boot'ta varsayılan olarak açıktır. `spring.lifecycle.timeout-per-shutdown-phase=30s` ayarlanır; Swarm'daki `stop_grace_period` bundan uzun olmalıdır.
-- **Geliştirme ortamı:** Repo kökündeki `docker-compose.yml`'de `app` profili server'ı ve client'ı çalıştırır. Server, admin bilgilerini ve varsa `DB_URL`'i IDE'den çalıştırmayla aynı `server/.env` dosyasından (`env_file`) alır (§10.6). İsteğe bağlı yerel PostgreSQL 18 `db` profilindedir; PostgreSQL 18'de volume `/var/lib/postgresql` yoluna bağlanır.
-
-### 16.1 Prod kurulumu (`deploy/`)
-
-Template'in varsayılan kurulumu **tek sunucu + Docker Compose**'tur. Kurulum adımları, HTTPS, güncelleme, yedekleme ve
-loglar: `deploy/README.md`.
-
-- `deploy/compose.yml`: `postgres` (18), `server` (`prod` profili), `client` (nginx). Ayarlar `deploy/.env`'den gelir
-  (`deploy/.env.example`); `DB_URL` compose'da postgres servisine göre kurulur.
-- Sadece client'ın portu yayınlanır, varsayılan olarak `127.0.0.1:8080`'e. PostgreSQL ve server dışarı açılmaz.
-- **HTTPS** compose'un içinde değil, sunucudaki reverse proxy'de (Caddy, nginx...) sonlanır. `COOKIE_SECURE=true`
+- Sunucu tek bir JAR olarak çalışır (`./mvnw package` → `target/server-*.jar`, `java -jar`). Prod kurulumu henüz
+  yapılmadı; sunucu, HTTPS ve servis olarak çalıştırma README'de "Henüz yapılmayanlar" altındadır.
+- **Readiness:** `/actuator/health/readiness`, Hibernate şemayı oluşturup bütün migration'lar bittikten **sonra**
+  "hazırım" der. Önündeki yük dengeleyici ya da servis yöneticisi trafiği buna göre açar. Actuator'da sadece `health`
+  dışarı açılır ve health probe'ları açık olur.
+- **Graceful shutdown:** Boot'ta varsayılan olarak açıktır. `spring.lifecycle.timeout-per-shutdown-phase=30s`
+  ayarlanır; servis yöneticisinin durdurma süresi bundan uzun olmalıdır.
+- **HTTPS** uygulamada değil, önündeki reverse proxy'de (Caddy, nginx, IIS...) sonlanır. `COOKIE_SECURE=true`
   olduğu için HTTPS olmadan giriş yapılamaz.
-- JWT anahtarları Compose `secrets` ile `deploy/keys/`'ten `/run/secrets/...`'e bağlanır; Swarm'a geçilirse aynı yollar
-  Docker secret ile kullanılır.
-- `stop_grace_period: 40s`: uygulamanın 30 saniyelik graceful shutdown süresinden uzun.
-- **Boyut ayarı yapılmaz.** JVM belleği container limitine göre ayarlanır (`MaxRAMPercentage`), HikariCP'nin varsayılan
-  havuzu (10) orta ölçeğe kadar yeter. Büyük bir projede gereken birkaç değer o projede değiştirilir; template'e
-  kapasiteye göre parametre eklenmez.
-- Tek instance olduğu için güncellemede server yeniden açılırken kısa bir kesinti olur. Kesintisiz güncelleme ya da
-  yatay ölçekleme gerekirse Swarm'a (ya da birden fazla replica'ya) geçilir; uygulama buna hazırdır (aşağıdaki liste).
+- **Geliştirme ortamı:** Sunucu `server/run-dev.cmd` ya da IDE'den dev profiliyle çalışır; ayarlar `server/.env`'den
+  okunur (§10.6).
 
-### 16.2 Birden fazla replica hazırlığı
+### 16.1 Birden fazla replica hazırlığı
 
-Uygulama tek sunucuda çalışsa da birden fazla replica ile (Swarm) çalışabilecek şekilde yazılır. Bu bölümdeki ve
-§10, §13'teki "Swarm" notları o durum içindir.
+Uygulama tek sunucuda çalışsa da birden fazla replica ile çalışabilecek şekilde yazılır. Bu bölümdeki ve §10, §13'teki
+replica notları o durum içindir.
 
 **Stateless kontrol listesi** (her replica eşit olmalı):
 
@@ -798,29 +782,25 @@ Uygulama tek sunucuda çalışsa da birden fazla replica ile (Swarm) çalışabi
 | `HttpSession` | Kullanılmaz |
 | Refresh token / oturumlar | DB'de (`user_sessions`) |
 | Brute-force kayıtları | DB'de (`login_attempts`) |
-| RSA anahtarları | Secret ya da volume'den gelir, bütün replica'larda aynıdır |
+| RSA anahtarları | Dosyadan okunur, bütün replica'larda aynıdır |
 | Data migration | Advisory lock altında |
 | Loglar | stdout |
-
-**Swarm'a geçilirse ayrıca yapılacaklar:**
-- HTTPS için önüne Traefik gibi bir reverse proxy konur.
-- Gerçek IP'nin korunması (`mode: host`, §13).
-
-Angular client kendi container'ında nginx ile sunulur ve `/api` isteklerini server'a iletir (Frontend_Architecture.md §14). Bu yüzden compose'da server'a `FORWARD_HEADERS_STRATEGY=native` verilir ve CORS kapalıdır.
 
 ---
 
 ## 17. Test
 
+Testler veritabanı ya da Docker gerektirmez; `./mvnw test` her makinede aynı sonucu verir.
+
 | Tür | Kapsam |
 |---|---|
-| Unit (Mockito) | ServiceImpl iş kuralları, menü ağacı kurma |
-| Entegrasyon (Testcontainers + PostgreSQL 18) | Login, refresh rotation, 30 saniyelik pencere, çalınma tespiti, logout; brute-force; soft delete; version çakışması (409); data migration runner |
-| Entegrasyon (Testcontainers + PostgreSQL 18) | Migration'lar, silinmemiş kayıtlara özel unique index, yanlış deneme sayacı, belge akışı, rol erişimi |
-| Kontrat | §5.2'deki her status için response'ta dört alanın bulunduğu ve tiplerinin doğru olduğu kontrol edilir. Formatı bozan bir değişiklik build'i kırar |
+| Unit (Mockito) | Login, refresh rotation, 30 saniyelik pencere, çalınma tespiti, logout, parola değiştirme (`AuthServiceImplTest`); brute-force (`LoginAttemptServiceImplTest`); belge gönderme, açma, silme ve son alıcıda içeriğin yok edilmesi (`DocumentServiceImplTest`); anahtar dizini (`KeyServiceImplTest`); kullanıcı yönetimi ve rol kuralları (`UserServiceImplTest`); birimler ve menü ağacı |
+| Unit | Rol hiyerarşisi (`RoleHierarchyTest`), istemciyle ortak parola türetme (`AuthSecretsTest`), doğrulama anotasyonları |
+| Kontrat | §5.2'deki her status için response'ta dört alanın bulunduğu ve tiplerinin doğru olduğu kontrol edilir (`GlobalExceptionHandlerTest`, `SecurityErrorResponsesTest`). Formatı bozan bir değişiklik build'i kırar |
 
-- Entegrasyon testi Docker yoksa otomatik olarak atlanır (`@Testcontainers(disabledWithoutDocker = true)`).
-- Testler için RSA anahtarları çalışma anında üretilir (`TestJwtKeys`); repoda private key bulunmaz.
+- SQL'e bağlı davranışlar (migration'lar, silinmemiş kayıtlara özel unique index, enum check constraint'leri, şema
+  izolasyonu, yanlış deneme sayacının SQL'i, rotation'ın atomik `UPDATE`'i, JPQL sorguları) unit testle doğrulanamaz;
+  bunlar dev sunucusu açılırken gerçek PostgreSQL'de çalışır ve hata olursa sunucu açılmaz.
 
 ---
 
