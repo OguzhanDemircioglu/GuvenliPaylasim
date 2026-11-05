@@ -1,16 +1,58 @@
-# Güvenli Paylaşım
+<p align="center">
+  <img src="desktop/src/main/resources/com/desktop/icon.png" alt="Güvenli Paylaşım logosu" width="160">
+</p>
+
+<h1 align="center">Güvenli Paylaşım</h1>
+
+<p align="center">
+  Kurum içi, <b>uçtan uca şifreli</b> belge paylaşım sistemi
+</p>
 
 <p align="center">
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v1.0.4/GuvenliPaylasim-1.0.4.msi">
-    <img alt="Windows için indir" src="https://img.shields.io/badge/%E2%AC%87%20%C4%B0ndir-Windows%20kurulum%20(.msi)-0b2545?style=for-the-badge&logo=windows&logoColor=white" height="72">
+    <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Tıklayınca kurulum dosyası doğrudan iner. Yönetici yetkisi istemez; uygulama yeni sürümleri açılışta kendisi kurar.</sub>
+  <sub>Sürüm 1.0.4 · Tıklayınca kurulum dosyası doğrudan iner · Uygulama yeni sürümleri açılışta kendisi kurar ·
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
 </p>
 
-Kurum içi, **uçtan uca şifreli** belge paylaşım sistemi. Eski "Güvenli Bilgi Paylaşım Sistemi"nin (2016) yerini
-alacak prototip: belgeler gönderenin bilgisayarında şifrelenip imzalanır, sadece seçilen alıcıların bilgisayarında
-çözülür. Sunucu dahil hiç kimse içeriği göremez; SMS ile parola gönderilmez.
+---
+
+## Nedir?
+
+Eski "Güvenli Bilgi Paylaşım Sistemi"nin (2016) yerini alacak prototip. Belgeler **gönderenin bilgisayarında**
+şifrelenip imzalanır, sadece **seçilen alıcıların bilgisayarında** çözülür. Sunucu dahil hiç kimse içeriği göremez;
+SMS ile parola gönderilmez.
+
+## Neden güvenli?
+
+| Konu | Eski sistem | Güvenli Paylaşım |
+|---|---|---|
+| Anahtar paylaşımı | Anahtarlar alıcılara **SMS ile açık metin** gider | Paylaşılan parola yok; her kişinin kendi anahtar çifti var |
+| Anahtarın gücü | Kullanıcının yazdığı değer (`123`, `abc`) | Her belgeye rastgele 256 bit AES anahtarı |
+| Alıcıya özel erişim | Aynı anahtar bütün birimlere gider | Belge anahtarı her alıcıya ayrı ayrı sarmalanır |
+| Gönderenin kimliği | Kanıtlanamaz | Ed25519 imzası; sahte ya da değiştirilmiş belge açılmaz |
+| Sunucu ele geçirilirse | İçerik açılabilir | Sunucuda sadece şifreli veri var, açacak anahtar yok |
+| Parola | Sunucuya gönderilir | Bilgisayardan çıkmaz |
+| Silme | İsteğe bağlı | Son alıcı da silince şifreli içerik kalıcı olarak silinir |
+
+Ayrıntılar: [docs/Crypto_Design.md](docs/Crypto_Design.md). Aynı karşılaştırma uygulamada **Neden Güvenli?**
+ekranında da gösterilir.
+
+## Kurulum (kullanıcılar)
+
+1. Yukarıdaki **Windows için indir** butonuna tıklayın ve inen `.msi` dosyasını açın.
+2. Kurulum kullanıcı başınadır, **yönetici yetkisi istemez**. Java ayrıca gerekmez; uygulamanın içinde gelir.
+3. "Güvenli Paylaşım" Başlat menüsüne ve masaüstüne eklenir.
+4. Yeni bir sürüm yayımlandığında uygulama açılışta haber verir; imzasını doğruladıktan sonra kendisi kurar.
+
+> Uygulama varsayılan olarak `http://localhost:8080` adresindeki sunucuya bağlanır. Başka bir sunucu için
+> `GPS_SERVER_URL` ortam değişkeni verilir (ör. `GPS_SERVER_URL=https://paylasim.kurum.local`).
+
+---
+
+## Geliştiriciler için
 
 | Klasör | İçerik |
 |---|---|
@@ -20,32 +62,33 @@ alacak prototip: belgeler gönderenin bilgisayarında şifrelenip imzalanır, sa
 | [docs/Update_Design.md](docs/Update_Design.md) | GitHub üzerinden imzalı, zorunlu güncelleme |
 | [docs/Backend_Architecture.md](docs/Backend_Architecture.md) | Sunucunun bağlayıcı kuralları (StarterApp'ten; §20 bu projeye özgü eklemeler) |
 
-## Gereksinimler
+### Gereksinimler
 
 - JDK 25. `run`/`package` betikleri sırayla `%USERPROFILE%\.jdks\*25*` (IntelliJ'nin indirdiği JDK'lar) ve
-  `Projeler\.tools\jdk` altında arar, bulduğunu kullanır; sistemdeki `JAVA_HOME` Java 17/21 olabilir
+  `Projeler\.tools\jdk` altında arar, bulduğunu kullanır; sistemdeki `JAVA_HOME` Java 17/21 olabilir.
 - Maven gerekmez (wrapper var). Kurum proxy'si için Maven ayarı `~/.m2/settings.xml`'de; HTTPS sertifikası için
   betikler `-Djavax.net.ssl.trustStoreType=Windows-ROOT` verir.
 
-## Demo (tek bilgisayarda)
+### Demo (tek bilgisayarda)
 
-1. **Sunucuyu başlat** (H2, demo birimleri ve kullanıcıları):
+1. **JWT anahtarlarını üret** (sadece ilk sefer; `server/keys/` git'e girmez):
+   ```bash
+   mkdir -p server/keys
+   openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out server/keys/private.pem
+   openssl rsa -in server/keys/private.pem -pubout -out server/keys/public.pem
+   ```
+2. **Sunucuyu başlat** (H2, demo birimleri ve kullanıcıları; http://localhost:8080):
    ```bash
    server\run-dev.cmd
    ```
    PostgreSQL için `server/.env`'e `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` ve `DB_SCHEMA` yazılır (Aiven gibi
    bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require`). `DB_URL` yoksa H2 kullanılır; `DB_HOST`/`DB_PORT`/
    `DB_NAME` okunmaz. Dev profili demo verisini PostgreSQL'e de yazar.
-   İlk sefer için JWT anahtarları gerekir (`server/keys/`, git'e girmez):
-   ```bash
-   openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out server/keys/private.pem
-   openssl rsa -in server/keys/private.pem -pubout -out server/keys/public.pem
-   ```
-2. **İstemciyi iki kez başlat** (iki pencere = iki kullanıcı):
+3. **İstemciyi iki kez başlat** (iki pencere = iki kullanıcı):
    ```bash
    desktop\run.cmd
    ```
-3. Demo hesapları (parola `Demo12345!`):
+4. **Demo hesapları** (parola `Demo12345!`):
 
    | E-posta | Birim |
    |---|---|
@@ -58,14 +101,14 @@ alacak prototip: belgeler gönderenin bilgisayarında şifrelenip imzalanır, sa
    Her kullanıcının anahtarları **ilk girişinde** üretilir; belge gönderilebilmesi için alıcının bir kez giriş
    yapmış olması gerekir.
 
-4. Önerilen sunum akışı: Mehmet ile giriş → **Neden Güvenli?** → **Yeni Gönderi** (Ankara Valiliği'ni seç, şifreleme
-   adımlarını göster) → Ayşe'nin penceresinde bildirim → belgeyi aç (imza doğrulandı) → **Okudum ve sil** →
+5. **Önerilen sunum akışı:** Mehmet ile giriş → **Neden Güvenli?** → **Yeni Gönderi** (Ankara Valiliği'ni seç,
+   şifreleme adımlarını göster) → Ayşe'nin penceresinde bildirim → belgeyi aç (imza doğrulandı) → **Okudum ve sil** →
    Mehmet'te **Gönderilenler**'de "okudu ve sildi". Yönetici hesabıyla yeni kullanıcı açıp ilk girişte zorunlu parola
    değişikliğini ve anahtar üretimini göster.
 
 Demo verisini sıfırlamak için sunucu kapalıyken `server/data/` klasörünü silin.
 
-## Testler
+### Testler
 
 ```bash
 cd server && mvnw.cmd test
@@ -77,7 +120,7 @@ cd desktop && mvnw.cmd test
 Sunucuda Docker gerektiren PostgreSQL testleri Docker yoksa atlanır. Masaüstü ekranlarının görüntüsü, çalışan dev
 sunucusuna karşı `ScreenshotTour` (test kaynakları) ile pencere açmadan alınabilir.
 
-## Kurulum dosyası ve sürüm yayımlama
+### Kurulum dosyası ve sürüm yayımlama
 
 ```bash
 desktop\package.cmd
@@ -85,11 +128,14 @@ desktop\package.cmd
 
 `desktop/dist/GuvenliPaylasim-<sürüm>.msi` üretilir (Java runtime içinde; kullanıcı başına kurulur, yönetici
 yetkisi istemez). Uygulama Windows'ta "Güvenli Paylaşım" adıyla görünür (Başlat menüsü, masaüstü, yüklü
-uygulamalar); Türkçe karakterler için WiX'e Türkçe kod sayfası (1254) `desktop/src/main/jpackage/` altından verilir. WiX 3.14 gerekir (`D:\Projeler\.tools\wix3` ya da PATH). İmzalama ve GitHub'a yükleme:
+uygulamalar); Türkçe karakterler için WiX'e Türkçe kod sayfası (1254) `desktop/src/main/jpackage/` altından verilir.
+WiX 3.14 gerekir (`D:\Projeler\.tools\wix3` ya da PATH). İmzalama ve GitHub'a yükleme:
 [docs/Update_Design.md §4](docs/Update_Design.md). Uygulama güncellemeleri
 `OguzhanDemircioglu/GuvenliPaylasim` deposunun Releases bölümünden okur.
 
-## Henüz yapılmayanlar
+Yeni sürüm yayımlanınca bu README'nin başındaki indirme bağlantısı ve sürüm numarası da güncellenir.
+
+### Henüz yapılmayanlar
 
 - Kurum SMS servisi (`SmsGateway` arayüzü hazır; şimdilik simülasyon).
 - LDAP girişi (bkz. Crypto_Design §6).

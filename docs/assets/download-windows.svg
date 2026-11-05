@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="128" viewBox="0 0 640 128" role="img" aria-label="Windows için indir">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#13315c"/>
+      <stop offset="1" stop-color="#0b2545"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="636" height="124" rx="22" fill="url(#bg)" stroke="#9b1c31" stroke-width="4"/>
+  <g fill="#ffffff" transform="translate(40 34)">
+    <rect x="0" y="0" width="28" height="28"/>
+    <rect x="32" y="0" width="28" height="28"/>
+    <rect x="0" y="32" width="28" height="28"/>
+    <rect x="32" y="32" width="28" height="28"/>
+  </g>
+  <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#ffffff">
+    <text x="128" y="66" font-size="38" font-weight="700">Windows için indir</text>
+    <text x="129" y="96" font-size="18" fill="#c9d6ea">Kurulum dosyası (.msi) · yönetici yetkisi gerekmez</text>
+  </g>
+  <circle cx="570" cy="64" r="38" fill="#9b1c31"/>
+  <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M570 42 V78"/>
+    <path d="M555 64 L570 79 L585 64"/>
+    <path d="M552 88 H588"/>
+  </g>
+</svg>
