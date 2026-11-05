@@ -1,6 +1,8 @@
 # Şifreleme Tasarımı — Güvenli Paylaşım
 
 > **Durum:** v1 — 2026-11-05 (prototip). Kod bu dokümana uyar; tasarım değişecekse önce bu doküman güncellenir.
+> **v2 (2026-11-06, onaylandı, henüz kodlanmadı):** roller, birimler ve e-posta kalkıyor; kimlik telefon, ilk temas
+> davet koduyla. Bkz. [§7](#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu). §1–§6 kodlanana kadar mevcut kodu anlatır.
 > İstemci: `desktop/src/main/java/com/desktop/crypto/`. Sunucu: `server/.../modules/key`, `server/.../modules/document`.
 
 ## 1. Neden değiştirdik? (eski sistemle karşılaştırma)
@@ -109,3 +111,142 @@ AAD sarmalanmış anahtarı **o belgeye** bağlar; başka bir belgenin anahtarı
   bağlanana kadar `SimulatedSmsGateway` mesajı loglar, istemci bildirimi uygulama içinde gösterir.
 - Bütün algoritmalar JDK 25'in içindedir (X25519, Ed25519, AES-GCM, PBKDF2, HKDF — `javax.crypto.KDF`);
   harici kripto kütüphanesi yoktur.
+
+## 7. v2: herkes kullanıcı, telefon ve davet kodu
+
+> Planlandı (2026-11-06). Kodlanınca §2–§6'daki ilgili kısımlar bu bölüme göre güncellenir.
+
+### 7.1 Amaç ve kapsam
+
+Kimsenin açamayacağı bir kutuya dosya ya da mesaj konur; kutu sadece alıcının bilgisayarında açılır. Bunun için:
+
+- **Rol yok.** Herkes `USER`. Yönetici, süper yönetici, owner rolleri; yönetim ekranları ve API'leri
+  (`/api/users` yönetimi, `/api/units`, rol tabanlı menüler) silinir.
+- **Birim yok.** Alıcı bir kişidir; birime gönderim kalkar.
+- **E-posta yok.** Kayıt ve giriş telefonla yapılır. E-posta hiçbir yerde istenmez ve tutulmaz.
+- Sunucu internete açık çalışacak şekilde tasarlanır (tek ağa bağlı değildir).
+
+### 7.2 Kayıt ve telefon doğrulama
+
+- Kayıtta istenenler: **ad soyad, cep telefonu, parola**.
+- Telefon 10 hane girilir: `5XXXXXXXXX` (başında `0` ve `+90` yok; doğrulama `^5\d{9}$`).
+  Veritabanında E.164 olarak tutulur: `+905XXXXXXXXX`. Benzersizdir.
+- Numara **SMS koduyla doğrulanmadan** hesap açılmaz. Doğrulama olmasaydı biri başkasının numarasıyla kayıt olup
+  o numaraya bırakılan kutuları almaya çalışabilirdi.
+  - `POST /api/auth/register/start {phone}` → 6 haneli SMS kodu (5 dk geçerli, en fazla 3 deneme).
+  - `POST /api/auth/register/complete {phone, smsCode, fullName, authSecret, keyBundle}` → hesap açılır.
+- Anahtarlar **kayıtta** üretilir (v1'de ilk girişteydi). Böylece "anahtarı olmayan kullanıcı" durumu kalkar.
+- SMS için Vonage kullanılır (`SmsGateway` arayüzünün yeni uygulaması). Erişim bilgileri sadece ortam
+  değişkeninden okunur, repoya girmez. Dev'de `SimulatedSmsGateway` kalır.
+- `register/start` numaranın zaten kayıtlı olup olmadığını **söylemez**; kayıtlı numaraya SMS gitmez ama yanıt aynıdır.
+
+### 7.3 Parola türetme (§2 değişikliği)
+
+Tuz e-posta yerine telefon olur:
+```
+master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXXX", 600.000 tur, 256 bit)
+```
+`authSecret` ve `kek` §2'deki gibi türetilir. Tuz telefon olduğu için **telefon numarası değiştirilemez** (v2'de).
+İleride değiştirilebilir: istemci parolayı bildiği için yeni numarayla `authSecret`'ı ve özel anahtar paketini yeniden
+üretebilir; bu ayrı bir iş olarak bırakılır.
+
+### 7.4 Giriş
+
+- Telefon + parola. Sunucuya `authSecret` gider (§2), parola bilgisayardan çıkmaz.
+- **TOTP** (Authenticator uygulaması) ikinci adım olarak eklenecek; v2'nin ilk parçasında yok. SMS ile giriş kodu
+  kullanılmaz (ücretli ve SIM kopyalamaya açık).
+
+### 7.5 Parola sıfırlama
+
+- Telefon + SMS kodu ile yeni parola belirlenir. İstemci **yeni anahtar çifti** üretir.
+- Eski özel anahtarlar eski parolayla kilitliydi, yeni anahtarla açılamaz. Bu yüzden sıfırlamada:
+  - kullanıcıya gelmiş bütün kutular silinir (sarmalı anahtarlar silinir, son alıcıysa içerik purge edilir, §4.5),
+  - bütün oturumları kapatılır,
+  - **kişi listesi kalır**,
+  - kullanıcının telefonuna bırakılmış, henüz **kodu girilmemiş davetler kalır** (onlar kodla kilitli, §7.6).
+- Kişilerine ilk gönderimde "anahtarı değişti" uyarısı çıkar (§7.8).
+
+### 7.6 İlk temas: davet kodu
+
+Birbirini kişi olarak eklememiş iki kişi arasında ilk kutu **davet kodu** ile gider. Kod hem izin hem anahtardır.
+
+**Gönderen:**
+1. Dosyayı ya da mesajı seçer, alıcının telefonunu girer, geçerlilik süresini seçer: 1 saat, 1 gün, 3 gün, 7 gün
+   (en fazla 7 gün).
+2. İstemci rastgele **16 karakterlik kod** üretir (Crockford Base32, 80 bit), ör. `K7M2-Q9XA-4TPB-W8RC`.
+3. Kutu bilgisayarda kodla kilitlenir:
+   ```
+   K           = rastgele 256 bit; payload ve imza §4.1'deki gibi
+   kodKey      = HKDF-SHA256(kod, tuz = "", bilgi = "gps-invite-key/v1", 32 bayt)
+   doğrulayıcı = HKDF-SHA256(kod, tuz = "", bilgi = "gps-invite-verify/v1", 32 bayt)
+   sarmalı     = 0x01 | AES-256-GCM(kodKey, K || gönderenin parmak izi, AAD = SHA-256(payload))
+   ```
+4. Sunucuya gidenler: alıcı telefonu, son geçerlilik zamanı, `payload`, imza, `sarmalı`, `SHA-256(doğrulayıcı)`.
+   Kodun kendisi ve `kodKey` sunucuya **gitmez**.
+5. Kod gönderenin ekranında gösterilir (SMS ile gönderilmez). Gönderen kodu kendi kanalıyla (yüz yüze, telefon,
+   başka bir mesajlaşma uygulaması) alıcıya iletir.
+
+**Alıcı:**
+1. Süre dolmadan kayıt olur (ya da zaten kayıtlıdır) ve **"Kod ile al"** ekranına kodu girer.
+2. İstemci `doğrulayıcı`'yı hesaplayıp sunucuya gönderir. Sunucu sadece **bu telefona** bırakılmış, süresi dolmamış
+   davetler arasında `SHA-256(doğrulayıcı)` eşleşmesi arar.
+3. Eşleşirse sunucu kutuyu verir; istemci `kodKey` ile `K`'yı açar, imzayı doğrular, gönderenin sunucudan gelen açık
+   anahtarlarının parmak izini kutunun içindekiyle karşılaştırır. Tutmazsa kutu açılmaz (sunucu araya sahte anahtar
+   koymuş demektir).
+4. İstemci `K`'yı kendi açık anahtarına yeniden sarmalar (§4.2) ve kaydeder; davetteki `sarmalı` silinir.
+5. İki taraf birbirinin **kişi listesine** eklenir (§7.7).
+
+**Kurallar:**
+- Kod girilene kadar alıcı **hiçbir şey görmez**: sunucu "bekleyen kutunuz var" bilgisini vermez, bildirim göndermez.
+- Gönderen, numaranın kayıtlı olup olmadığını öğrenmez; davet oluşturma her iki durumda aynı yanıtı verir.
+- Yanlış kod: kullanıcı başına 5 hatalı denemeden sonra 1 saat bekleme.
+- Süre dolan davetler (içerikleriyle birlikte) zamanlanmış işle **kalıcı olarak silinir**.
+- Kod 80 bit olduğu için sunucuyu ele geçiren biri de `SHA-256(doğrulayıcı)`'dan ya da şifreli kutudan kodu deneme
+  yoluyla bulamaz. Bu yüzden kod kısaltılmaz (6 haneli bir kod saniyeler içinde bulunurdu).
+
+### 7.7 Kişiler
+
+- Kod girilince iki yönlü kayıt oluşur: A'nın listesinde B, B'nin listesinde A.
+  Kayıtta karşı tarafın **o anki parmak izi** de tutulur.
+- Kişiye gönderim kodsuzdur: §4.2'deki gibi alıcının açık anahtarına sarmalanır, kutu doğrudan gelen kutusuna
+  düşer, uygulama içi bildirim gider. Sunucu gönderimi sadece kişi kaydı varsa kabul eder.
+- Kişilere SMS bildirimi gönderilmez (SMS sadece doğrulama ve sıfırlama içindir).
+- Bir taraf kişiyi silerse kayıt **iki yönde de** silinir. Tekrar göndermek için yeni davet kodu gerekir.
+
+### 7.8 Anahtar değişikliği uyarısı
+
+Kişinin güncel parmak izi kayıttaki parmak izinden farklıysa (parolasını sıfırlamıştır) istemci ilk gönderimden önce
+"X'in anahtarı değişti" uyarısı gösterir ve onay ister. Onaydan sonra kayıttaki parmak izi güncellenir.
+Bu, numarası kopyalanıp (SIM swap) parolası sıfırlanan birine kişilerinin farkında olmadan dosya göndermesini önler.
+
+Sınır: kayıttaki parmak izi sunucuda tutulur; kötü niyetli bir sunucu bunu da değiştirebilir. Kesin doğrulama için
+parmak izi telefonda karşılaştırılmaya devam eder (§3).
+
+### 7.9 Kötüye kullanım sınırları
+
+| Konu | Sınır |
+|---|---|
+| SMS (kayıt, sıfırlama) | numara başına saatte 3, IP başına saatte 10 |
+| SMS kodu | 5 dk geçerli, 3 deneme |
+| Davet oluşturma | kullanıcı başına günde 20 |
+| Kod girme | kullanıcı başına 5 hatalı deneme → 1 saat bekleme |
+| Giriş | mevcut brute-force koruması (`LoginAttemptService`) |
+
+### 7.10 Sunucunun gördükleri (v2)
+
+| Görür | Göremez |
+|---|---|
+| Kimin kime (kişiler arası) kutu gönderdiği, zamanı | İçerik ve dosya adı |
+| Davetin hangi numaraya bırakıldığı | Davet kodu, `kodKey` |
+| Kişi listeleri | Özel anahtarlar, parolalar |
+| Ad soyad, telefon | E-posta (tutulmaz) |
+
+### 7.11 Veri geçişi
+
+v1 verisi (e-posta tuzlu parolalar, birimler, roller) v2'ye dönüştürülemez: tuz değiştiği için eski `authSecret`
+ve özel anahtar paketleri yeni türetmeyle açılmaz. Henüz prod verisi olmadığı için geçişte şema sıfırlanır
+(`DROP SCHEMA guvenlipaylasim CASCADE`); demo verisi (`V007`) v2'ye göre yeniden yazılır.
+
+### 7.12 Kapsam dışı (sonraki parçalar)
+
+- TOTP (§7.4), gizli gönderen, süreli / tek okumalık kutu, büyük dosyalar için parçalı yükleme.
