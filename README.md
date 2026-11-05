@@ -4,6 +4,12 @@ Kurum içi, **uçtan uca şifreli** belge paylaşım sistemi. Eski "Güvenli Bil
 alacak prototip: belgeler gönderenin bilgisayarında şifrelenip imzalanır, sadece seçilen alıcıların bilgisayarında
 çözülür. Sunucu dahil hiç kimse içeriği göremez; SMS ile parola gönderilmez.
 
+## İndir
+
+**[⬇ Windows kurulum dosyasını indir (en son sürüm)](https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/latest)**:
+açılan sayfada `GuvenliPaylasim-<sürüm>.msi` dosyasına tıklayın. Kurulum kullanıcı başınadır, yönetici yetkisi
+istemez; uygulama yeni sürümleri kendisi bulup kurar. Eski sürümler: [Releases](https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases).
+
 | Klasör | İçerik |
 |---|---|
 | [server/](server/) | Spring Boot 4.1, Java 25. StarterApp şablonundan türetildi; yerelde H2. Birimler, kullanıcılar, anahtar dizini, şifreli belgeler |
