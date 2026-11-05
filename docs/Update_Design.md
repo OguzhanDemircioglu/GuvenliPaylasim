@@ -48,7 +48,10 @@
 # 2) İmzala: release.json kurulum dosyasının yanına yazılır
 java -cp desktop/target/classes com.desktop.update.ReleaseTool sign dist/GuvenliPaylasim-1.1.0.msi 1.1.0 release-keys/update-private-key.txt
 # 3) GitHub'da v1.1.0 etiketiyle release aç; kurulum dosyasını ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
+# 4) README'nin en üstündeki "İndir" düğmesinin bağlantısındaki iki sürüm numarasını (v1.1.0, GuvenliPaylasim-1.1.0.msi) güncelle.
 ```
+
+Adım 4 unutulursa düğme bir önceki sürümü indirir; o da açılışta yeni sürüme güncellenir, yani ilk kurulum bozulmaz.
 
 Zorunlu (süre tanınmayan) güncelleme için `sign` komutuna `--mandatory` eklenir.
 

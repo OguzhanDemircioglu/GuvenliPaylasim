@@ -1,14 +1,16 @@
 # Güvenli Paylaşım
 
+<p align="center">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v1.0.4/GuvenliPaylasim-1.0.4.msi">
+    <img alt="Windows için indir" src="https://img.shields.io/badge/%E2%AC%87%20%C4%B0ndir-Windows%20kurulum%20(.msi)-0b2545?style=for-the-badge&logo=windows&logoColor=white" height="48">
+  </a>
+  <br>
+  <sub>Tıklayınca kurulum dosyası doğrudan iner. Yönetici yetkisi istemez; uygulama yeni sürümleri açılışta kendisi kurar.</sub>
+</p>
+
 Kurum içi, **uçtan uca şifreli** belge paylaşım sistemi. Eski "Güvenli Bilgi Paylaşım Sistemi"nin (2016) yerini
 alacak prototip: belgeler gönderenin bilgisayarında şifrelenip imzalanır, sadece seçilen alıcıların bilgisayarında
 çözülür. Sunucu dahil hiç kimse içeriği göremez; SMS ile parola gönderilmez.
-
-## İndir
-
-**[⬇ Windows kurulum dosyasını indir (en son sürüm)](https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/latest)**:
-açılan sayfada `GuvenliPaylasim-<sürüm>.msi` dosyasına tıklayın. Kurulum kullanıcı başınadır, yönetici yetkisi
-istemez; uygulama yeni sürümleri kendisi bulup kurar. Eski sürümler: [Releases](https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases).
 
 | Klasör | İçerik |
 |---|---|
