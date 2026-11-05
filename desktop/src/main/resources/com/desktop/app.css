@@ -1,0 +1,612 @@
+/*
+ * Güvenli Paylaşım — tasarım dili.
+ * Renkler AtlantaFX'in tema değişkenlerinden gelir (-color-*); açık ve koyu temada aynı CSS çalışır.
+ * Marka alanları (kenar çubuğu, giriş ekranının sol paneli) iki temada da koyu lacivert kalır.
+ */
+
+.root {
+    -gps-navy-900: #08162b;
+    -gps-navy-800: #0c2140;
+    -gps-navy-700: #12305a;
+    -gps-sky: #5aa9ff;
+    -gps-sky-soft: rgba(90, 169, 255, 0.16);
+    -gps-on-navy: #d6e2f3;
+    -gps-on-navy-muted: #8aa1c2;
+    -fx-font-family: "Segoe UI", "Inter", system-ui, sans-serif;
+    -fx-font-size: 13.5px;
+}
+
+.content-area {
+    -fx-background-color: -color-bg-subtle;
+}
+
+.page {
+    -fx-padding: 28 32 28 32;
+}
+
+.page-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -color-fg-default;
+}
+
+.page-subtitle {
+    -fx-font-size: 13.5px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.surface {
+    -fx-background-color: -color-bg-default;
+    -fx-background-radius: 14;
+    -fx-border-color: -color-border-muted;
+    -fx-border-radius: 14;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(gaussian, rgba(15, 30, 60, 0.07), 18, 0, 0, 4);
+}
+
+.section-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+}
+
+.dialog {
+    -fx-background-color: -color-bg-default;
+    -fx-background-radius: 14;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.28), 40, 0, 0, 12);
+}
+
+/* ---------- Kenar çubuğu ---------- */
+
+.sidebar {
+    -fx-background-color: linear-gradient(to bottom, -gps-navy-900, -gps-navy-800);
+    -fx-padding: 22 14 16 14;
+    -fx-min-width: 248;
+    -fx-pref-width: 248;
+    -fx-max-width: 248;
+}
+
+.brand-title {
+    -fx-text-fill: white;
+    -fx-font-size: 15.5px;
+    -fx-font-weight: bold;
+}
+
+.brand-subtitle {
+    -fx-text-fill: -gps-on-navy-muted;
+    -fx-font-size: 11px;
+}
+
+.brand-mark {
+    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #22d3ee);
+    -fx-background-radius: 11;
+    -fx-min-width: 38;
+    -fx-min-height: 38;
+    -fx-max-width: 38;
+    -fx-max-height: 38;
+}
+
+.brand-mark .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.nav-section {
+    -fx-text-fill: -gps-on-navy-muted;
+    -fx-font-size: 10.5px;
+    -fx-font-weight: bold;
+    -fx-padding: 18 12 6 12;
+}
+
+.nav-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 9;
+    -fx-text-fill: -gps-on-navy;
+    -fx-font-size: 13.5px;
+    -fx-padding: 9 12 9 12;
+    -fx-alignment: center-left;
+    -fx-graphic-text-gap: 12;
+    -fx-cursor: hand;
+    -fx-border-width: 0;
+    -fx-max-width: infinity;
+}
+
+.nav-button .ikonli-font-icon {
+    -fx-icon-color: -gps-on-navy-muted;
+}
+
+.nav-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.06);
+}
+
+.nav-button:selected {
+    -fx-background-color: -gps-sky-soft;
+    -fx-text-fill: white;
+}
+
+.nav-button:selected .ikonli-font-icon {
+    -fx-icon-color: -gps-sky;
+}
+
+.nav-button .label {
+    -fx-text-fill: -gps-on-navy;
+}
+
+.nav-button:selected .label {
+    -fx-text-fill: white;
+}
+
+.nav-button .nav-badge {
+    -fx-text-fill: -gps-navy-900;
+}
+
+.nav-badge {
+    -fx-background-color: -gps-sky;
+    -fx-background-radius: 10;
+    -fx-text-fill: -gps-navy-900;
+    -fx-font-size: 10.5px;
+    -fx-font-weight: bold;
+    -fx-padding: 1 7 1 7;
+}
+
+.user-card {
+    -fx-background-color: rgba(255, 255, 255, 0.05);
+    -fx-background-radius: 12;
+    -fx-padding: 10;
+}
+
+.user-name {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.user-unit {
+    -fx-text-fill: -gps-on-navy-muted;
+    -fx-font-size: 11.5px;
+}
+
+.sidebar-icon-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 8;
+    -fx-padding: 6;
+    -fx-cursor: hand;
+}
+
+.sidebar-icon-button .ikonli-font-icon {
+    -fx-icon-color: -gps-on-navy-muted;
+}
+
+.sidebar-icon-button:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-icon-button:hover .ikonli-font-icon {
+    -fx-icon-color: white;
+}
+
+.secure-pill {
+    -fx-background-color: rgba(34, 197, 94, 0.14);
+    -fx-background-radius: 20;
+    -fx-padding: 5 10 5 10;
+}
+
+.secure-pill .label {
+    -fx-text-fill: #86efac;
+    -fx-font-size: 11px;
+}
+
+.secure-pill .ikonli-font-icon {
+    -fx-icon-color: #86efac;
+}
+
+/* ---------- Giriş ---------- */
+
+.login-hero {
+    -fx-background-color:
+        radial-gradient(center 85% 15%, radius 55%, rgba(34, 211, 238, 0.22), transparent),
+        radial-gradient(center 10% 90%, radius 60%, rgba(59, 130, 246, 0.30), transparent),
+        linear-gradient(to bottom right, -gps-navy-900, -gps-navy-700);
+    -fx-padding: 48;
+}
+
+.hero-title {
+    -fx-text-fill: white;
+    -fx-font-size: 34px;
+    -fx-font-weight: bold;
+}
+
+.hero-text {
+    -fx-text-fill: -gps-on-navy;
+    -fx-font-size: 15px;
+}
+
+.hero-feature-title {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.hero-feature-text {
+    -fx-text-fill: -gps-on-navy-muted;
+    -fx-font-size: 12.5px;
+}
+
+.hero-feature-icon {
+    -fx-background-color: rgba(255, 255, 255, 0.08);
+    -fx-background-radius: 10;
+    -fx-min-width: 38;
+    -fx-min-height: 38;
+    -fx-max-width: 38;
+    -fx-max-height: 38;
+}
+
+.hero-feature-icon .ikonli-font-icon {
+    -fx-icon-color: -gps-sky;
+}
+
+.hero-footnote {
+    -fx-text-fill: -gps-on-navy-muted;
+    -fx-font-size: 11.5px;
+}
+
+.login-panel {
+    -fx-background-color: -color-bg-default;
+}
+
+.login-form .text-field,
+.login-form .password-field {
+    -fx-pref-height: 40;
+}
+
+.login-form .button.accent {
+    -fx-pref-height: 42;
+    -fx-font-weight: bold;
+}
+
+.field-label {
+    -fx-font-weight: bold;
+    -fx-font-size: 12.5px;
+    -fx-text-fill: -color-fg-default;
+}
+
+.form-error {
+    -fx-text-fill: -color-danger-fg;
+}
+
+/* ---------- Ortak parçalar ---------- */
+
+.avatar-text {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.icon-badge {
+    -fx-background-radius: 12;
+}
+
+.tone-accent {
+    -fx-background-color: -color-accent-subtle;
+}
+
+.tone-accent .ikonli-font-icon {
+    -fx-icon-color: -color-accent-fg;
+}
+
+.tone-success {
+    -fx-background-color: -color-success-subtle;
+}
+
+.tone-success .ikonli-font-icon {
+    -fx-icon-color: -color-success-fg;
+}
+
+.tone-danger {
+    -fx-background-color: -color-danger-subtle;
+}
+
+.tone-danger .ikonli-font-icon {
+    -fx-icon-color: -color-danger-fg;
+}
+
+.tone-warning {
+    -fx-background-color: -color-warning-subtle;
+}
+
+.tone-warning .ikonli-font-icon {
+    -fx-icon-color: -color-warning-fg;
+}
+
+.tone-neutral {
+    -fx-background-color: -color-neutral-subtle;
+}
+
+.chip {
+    -fx-background-radius: 20;
+    -fx-padding: 3 10 3 10;
+    -fx-font-size: 11.5px;
+    -fx-font-weight: bold;
+}
+
+.chip.tone-accent {
+    -fx-text-fill: -color-accent-fg;
+}
+
+.chip.tone-success {
+    -fx-text-fill: -color-success-fg;
+}
+
+.chip.tone-danger {
+    -fx-text-fill: -color-danger-fg;
+}
+
+.chip.tone-warning {
+    -fx-text-fill: -color-warning-fg;
+}
+
+.chip.tone-neutral {
+    -fx-text-fill: -color-fg-muted;
+}
+
+.mono {
+    -fx-font-family: "Cascadia Mono", "Consolas", monospace;
+}
+
+.fingerprint {
+    -fx-font-family: "Cascadia Mono", "Consolas", monospace;
+    -fx-font-size: 19px;
+    -fx-text-fill: -color-fg-default;
+    -fx-letter-spacing: 1;
+}
+
+/* ---------- Gelen kutusu ---------- */
+
+.inbox-list {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.inbox-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 8 0;
+}
+
+.inbox-item {
+    -fx-background-color: -color-bg-default;
+    -fx-background-radius: 12;
+    -fx-border-color: -color-border-muted;
+    -fx-border-radius: 12;
+    -fx-padding: 12 14 12 14;
+    -fx-cursor: hand;
+}
+
+.inbox-item:hover {
+    -fx-border-color: -color-border-default;
+}
+
+.inbox-list .list-cell:selected .inbox-item {
+    -fx-border-color: -color-accent-emphasis;
+    -fx-background-color: -color-accent-subtle;
+}
+
+.inbox-sender {
+    -fx-font-weight: bold;
+    -fx-font-size: 13.5px;
+}
+
+.unread-dot {
+    -fx-fill: -color-accent-emphasis;
+}
+
+.signature-ok {
+    -fx-background-color: -color-success-subtle;
+    -fx-background-radius: 10;
+    -fx-padding: 10 14 10 14;
+}
+
+.signature-ok .label {
+    -fx-text-fill: -color-success-fg;
+}
+
+.signature-ok .ikonli-font-icon {
+    -fx-icon-color: -color-success-fg;
+}
+
+.signature-unknown {
+    -fx-background-color: -color-warning-subtle;
+    -fx-background-radius: 10;
+    -fx-padding: 10 14 10 14;
+}
+
+.signature-unknown .label {
+    -fx-text-fill: -color-warning-fg;
+}
+
+.signature-unknown .ikonli-font-icon {
+    -fx-icon-color: -color-warning-fg;
+}
+
+.document-text {
+    -fx-font-size: 14px;
+}
+
+.locked-panel {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 12;
+    -fx-border-color: -color-border-muted;
+    -fx-border-radius: 12;
+    -fx-border-style: segments(6, 4);
+    -fx-padding: 28;
+}
+
+/* ---------- Yeni gönderi ---------- */
+
+.drop-zone {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 14;
+    -fx-border-color: -color-border-default;
+    -fx-border-style: segments(7, 5);
+    -fx-border-width: 1.5;
+    -fx-border-radius: 14;
+    -fx-padding: 32;
+    -fx-cursor: hand;
+}
+
+.drop-zone:hover,
+.drop-zone.drag-over {
+    -fx-border-color: -color-accent-emphasis;
+    -fx-background-color: -color-accent-subtle;
+}
+
+.file-card {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 12;
+    -fx-padding: 14;
+}
+
+.unit-list {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: -color-border-muted transparent -color-border-muted transparent;
+    -fx-padding: 4 0 4 0;
+}
+
+.unit-list .list-cell {
+    -fx-padding: 7 6 7 6;
+    -fx-background-color: transparent;
+}
+
+.unit-list .list-cell:filled:hover {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 8;
+}
+
+.recipient-summary {
+    -fx-background-color: -color-accent-subtle;
+    -fx-background-radius: 10;
+    -fx-padding: 10 12 10 12;
+}
+
+.recipient-summary .label {
+    -fx-text-fill: -color-accent-fg;
+}
+
+.send-button {
+    -fx-pref-height: 44;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+/* Şifreleme adımları animasyonu */
+.step-row {
+    -fx-padding: 8 4 8 4;
+}
+
+.step-row .step-title {
+    -fx-text-fill: -color-fg-subtle;
+}
+
+.step-row.active .step-title,
+.step-row.done .step-title {
+    -fx-text-fill: -color-fg-default;
+    -fx-font-weight: bold;
+}
+
+.step-row .step-detail {
+    -fx-text-fill: -color-fg-subtle;
+    -fx-font-size: 12px;
+}
+
+.step-icon {
+    -fx-icon-color: -color-fg-subtle;
+}
+
+.step-row.active .step-icon {
+    -fx-icon-color: -color-accent-fg;
+}
+
+.step-row.done .step-icon {
+    -fx-icon-color: -color-success-fg;
+}
+
+.cipher-preview {
+    -fx-font-family: "Cascadia Mono", "Consolas", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: -color-fg-muted;
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 8;
+    -fx-padding: 10;
+}
+
+/* ---------- Neden güvenli ---------- */
+
+.why-hero {
+    -fx-background-color:
+        radial-gradient(center 90% 0%, radius 70%, rgba(34, 211, 238, 0.25), transparent),
+        linear-gradient(to right, -gps-navy-900, -gps-navy-700);
+    -fx-background-radius: 16;
+    -fx-padding: 30 34 30 34;
+}
+
+.why-hero .hero-title {
+    -fx-font-size: 26px;
+}
+
+.compare-header {
+    -fx-font-weight: bold;
+    -fx-font-size: 12px;
+    -fx-text-fill: -color-fg-muted;
+}
+
+.compare-row {
+    -fx-border-color: -color-border-muted transparent transparent transparent;
+    -fx-padding: 12 0 12 0;
+}
+
+.compare-topic {
+    -fx-font-weight: bold;
+}
+
+.old-way .ikonli-font-icon {
+    -fx-icon-color: -color-danger-fg;
+}
+
+.new-way .ikonli-font-icon {
+    -fx-icon-color: -color-success-fg;
+}
+
+.flow-step {
+    -fx-background-color: -color-bg-default;
+    -fx-background-radius: 12;
+    -fx-border-color: -color-border-muted;
+    -fx-border-radius: 12;
+    -fx-padding: 14;
+}
+
+.flow-arrow {
+    -fx-icon-color: -color-fg-subtle;
+}
+
+.stat-value {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+}
+
+/* ---------- Güncelleme ---------- */
+
+.update-gate {
+    -fx-background-color: linear-gradient(to bottom right, -gps-navy-900, -gps-navy-700);
+}
+
+.update-card {
+    -fx-background-color: -color-bg-default;
+    -fx-background-radius: 16;
+    -fx-padding: 32;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.35), 40, 0, 0, 12);
+}
+
+/* ---------- Tablolar ---------- */
+
+.table-view {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}

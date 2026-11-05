@@ -854,3 +854,31 @@ Angular client kendi container'ında nginx ile sunulur ve `/api` isteklerini ser
 - CI pipeline.
 - E-posta doğrulama (şifre sıfırlama ve 2FA'dan önce gerekecek).
 - Dosya yükleme, cache, kullanıcı başına birden fazla rol.
+
+---
+
+## 20. Güvenli Paylaşım'a özgü eklemeler
+
+Bu proje StarterApp şablonundan türetildi. Yukarıdaki kurallar geçerlidir; aşağıdakiler bu projeye özgüdür.
+Şifreleme ayrıntısı: [Crypto_Design.md](Crypto_Design.md).
+
+- **Kaldırılanlar:** herkese açık kayıt (`/api/auth/register`; kullanıcıları yönetici açar), `report` modülü.
+  Şablonun referans modülü `category`, `unit` (birimler) olarak yeniden adlandırıldı.
+- **Parola:** istemci gerçek parolayı göndermez, paroladan türettiği `authSecret`'ı gönderir (`AuthSecrets`).
+  Sunucu bunu diğer parolalar gibi bcrypt'ler. Parola karmaşıklık kuralları istemcidedir. E-posta, türetmenin tuzu
+  olduğu için değiştirilemez (422 `user_email_immutable`).
+- **Kullanıcı:** `unit_id` (USER rolünde zorunlu, 422 `user_unit_required`), `phone`, `must_change_password`
+  (yöneticinin açtığı kullanıcıda `true`; parola değişince `false`). Birimde kullanıcı varsa birim silinemez
+  (422 `unit_in_use`). Birim ekleme/değiştirme/silme `ADMIN`'e özeldir.
+- **`key` modülü** (`user_keys`, teknik tablo): açık anahtarlar ve istemcide şifrelenmiş özel anahtar paketi.
+  `GET/POST /api/keys/me`, `GET /api/keys/recipients?unitIds=`. Parola değişikliği (`PUT /api/auth/password`)
+  yeniden şifrelenmiş paketi de taşır ve ikisi aynı transaction'da kaydedilir. Yönetici parolayı sıfırlarsa
+  kullanıcının anahtarları silinir.
+- **`document` modülü** (`documents`, `document_recipients`, teknik tablolar, soft delete yok): şifreli içerik
+  (`bytea`) ve alıcı başına sarmalanmış anahtar. `POST /api/documents`, `GET /api/documents/inbox`,
+  `GET /api/documents/sent`, `GET /api/documents/{id}` (ilk açılışta okundu), `DELETE /api/documents/{id}`
+  ("okudum ve sil"; son alıcıda içerik kalıcı silinir). Alıcı olmayan biri belgeyi göremez (404).
+- **`notification` modülü:** `SmsGateway`; kurum servisi bağlanana kadar `SimulatedSmsGateway` (sadece log, telefon
+  maskeli). SMS'te anahtar ya da parola yoktur.
+- **Dev verisi:** `V007_DemoData` sadece `dev` profilinde çalışır (birimler ve demo kullanıcıları).
+- `byte[]` içerik için `@Lob` kullanılmaz: H2'nin PostgreSQL modu `BLOB` tanımaz; kolon `bytea` olarak tanımlanır.

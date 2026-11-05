@@ -24,7 +24,10 @@ import java.util.Base64;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.everyItem;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -115,7 +118,10 @@ class DocumentFlowIntegrationTest {
         mockMvc.perform(withToken(get("/api/documents/sent"), sender))
                 .andExpect(jsonPath("$.data[0].purgedAt").isNotEmpty())
                 .andExpect(jsonPath("$.data[0].recipients", hasSize(2)))
-                .andExpect(jsonPath("$.data[0].recipients[0].readAt").isNotEmpty());
+                // Alıcılar ada göre sıralı ve adlar rastgele; sadece alice belgeyi açtı, ikisi de sildi.
+                .andExpect(jsonPath("$.data[0].recipients[?(@.userId == " + aliceId + ")].readAt", everyItem(notNullValue())))
+                .andExpect(jsonPath("$.data[0].recipients[?(@.userId == " + bobId + ")].readAt", everyItem(nullValue())))
+                .andExpect(jsonPath("$.data[0].recipients[*].deletedAt", everyItem(notNullValue())));
     }
 
     @Test
