@@ -50,7 +50,8 @@ class SchemaIsolationIntegrationTest {
         assertThat(tables("public")).containsExactly("units", "users");
 
         assertThat(tables("starterapp")).containsExactly(
-                "units", "data_migration_history", "login_attempts", "menus", "user_sessions", "users");
+                "data_migration_history", "document_recipients", "documents", "login_attempts", "menus", "units",
+                "user_keys", "user_sessions", "users");
     }
 
     private List<String> columns(String schema, String table) {

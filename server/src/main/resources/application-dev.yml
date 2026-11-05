@@ -5,11 +5,8 @@ spring:
     # Ortam değişkenleri her zaman .env'den önceliklidir. (.env git'e girmez.)
     import: optional:file:.env[.properties]
   datasource:
-    # Varsayılan: kurulum gerektirmeyen, dosyada kalıcı H2 (server/data/, git'e girmez).
-    # MODE=PostgreSQL prod ile aynı SQL'in çalışması içindir. PostgreSQL'e bağlanmak için .env'de DB_URL verilir.
-    url: ${DB_URL:jdbc:h2:file:./data/guvenlipaylasim;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS ${DB_SCHEMA:guvenlipaylasim}}
-    username: ${DB_USERNAME:sa}
-    password: ${DB_PASSWORD:}
+    # PostgreSQL bağlantısı (DB_URL, DB_USERNAME, DB_PASSWORD) application.yml'den gelir ve zorunludur;
+    # dev'de .env'e yazılır. Şemanın dev'de varsayılanı vardır.
     hikari:
       schema: ${DB_SCHEMA:guvenlipaylasim}
   jpa:

@@ -11,6 +11,9 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -20,21 +23,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
- * Dev profilindeki H2 ayarlarıyla (bellekte) açılır: PostgreSQL'den farklı davranan yerlerin H2'de çalıştığını gösterir.
- * Docker gerektirmez.
+ * Migration'lar, silinmemiş kayıtlara özel unique index ve yanlış deneme sayacı gerçek PostgreSQL 18 üzerinde.
+ * Docker yoksa otomatik olarak atlanır.
  */
 @SpringBootTest
-class H2IntegrationTest {
+@Testcontainers(disabledWithoutDocker = true)
+class DatabaseIntegrationTest {
 
     private static final int MAX_ATTEMPTS = 3;
 
+    @Container
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
+
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> "jdbc:h2:mem:starterapp;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;"
-                + "DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1;"
-                + "INIT=CREATE SCHEMA IF NOT EXISTS starterapp");
-        registry.add("spring.datasource.username", () -> "sa");
-        registry.add("spring.datasource.password", () -> "");
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("DB_SCHEMA", () -> "starterapp");
         registry.add("app.admin.email", () -> "admin@test.local");
         registry.add("app.admin.password", () -> "Admin12345");
@@ -71,8 +76,8 @@ class H2IntegrationTest {
         // Yeni migration'lar admin_only'yi yazmak zorunda değil (V006 varsayılan verdi).
         jdbc.update("""
                 INSERT INTO menus (parent_id, title_key, route, icon, sort_order, roles, version, deleted, created_at)
-                VALUES (NULL, 'menu_h2_test', NULL, NULL, 50, 'SUPERADMIN', 0, false, now())""");
-        assertThat(menuRoles("menu_h2_test")).isEqualTo("SUPERADMIN");
+                VALUES (NULL, 'menu_pg_test', NULL, NULL, 50, 'SUPERADMIN', 0, false, now())""");
+        assertThat(menuRoles("menu_pg_test")).isEqualTo("SUPERADMIN");
     }
 
     @Test
@@ -88,7 +93,7 @@ class H2IntegrationTest {
 
     @Test
     void failuresAreCountedThenBlockedAndResetAfterBlockExpires() {
-        String key = "h2-test-key";
+        String key = "pg-test-key";
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
         Instant blockedUntil = now.plus(1, ChronoUnit.HOURS);
 

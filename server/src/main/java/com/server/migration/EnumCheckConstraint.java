@@ -8,8 +8,7 @@ import java.util.stream.Collectors;
 /**
  * Hibernate enum kolonlarına (EnumType.STRING) {@code check (kolon in (...))} constraint'i koyar ve enum'a değer
  * eklendiğinde bu constraint'i güncellemez (Backend_Architecture §10.1). Bu yardımcı, kolonun mevcut check
- * constraint'ini (adı veritabanına göre değişir) bulup siler ve verilen değerlerle yeniden oluşturur.
- * PostgreSQL ve H2'de aynı şekilde çalışır.
+ * constraint'ini bulup siler ve verilen değerlerle yeniden oluşturur.
  */
 public final class EnumCheckConstraint {
 

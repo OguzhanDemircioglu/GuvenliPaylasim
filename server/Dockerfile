@@ -15,8 +15,6 @@ RUN apt-get update \
     && useradd --system --gid app --no-create-home app
 WORKDIR /app
 COPY --from=build /build/target/server-*.jar app.jar
-# Dev profilindeki H2 dosyaları burada durur; compose buraya bir volume bağlar.
-RUN mkdir data && chown app:app data
 USER app
 
 ENV TZ=Europe/Istanbul \

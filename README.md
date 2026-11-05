@@ -56,7 +56,7 @@ ekranında da gösterilir.
 
 | Klasör | İçerik |
 |---|---|
-| [server/](server/) | Spring Boot 4.1, Java 25. StarterApp şablonundan türetildi; yerelde H2. Birimler, kullanıcılar, anahtar dizini, şifreli belgeler |
+| [server/](server/) | Spring Boot 4.1, Java 25, PostgreSQL 18. StarterApp şablonundan türetildi. Birimler, kullanıcılar, anahtar dizini, şifreli belgeler |
 | [desktop/](desktop/) | JavaFX 27 + AtlantaFX masaüstü istemci. Şifreleme, imza ve zorunlu güncelleme burada |
 | [docs/Crypto_Design.md](docs/Crypto_Design.md) | Şifreleme tasarımı ve eski sistemle karşılaştırma |
 | [docs/Update_Design.md](docs/Update_Design.md) | GitHub üzerinden imzalı, zorunlu güncelleme |
@@ -66,6 +66,7 @@ ekranında da gösterilir.
 
 - JDK 25. `run`/`package` betikleri sırayla `%USERPROFILE%\.jdks\*25*` (IntelliJ'nin indirdiği JDK'lar) ve
   `Projeler\.tools\jdk` altında arar, bulduğunu kullanır; sistemdeki `JAVA_HOME` Java 17/21 olabilir.
+- PostgreSQL 18 (yerelde Docker ile açılabilir, aşağıda).
 - Maven gerekmez (wrapper var). Kurum proxy'si için Maven ayarı `~/.m2/settings.xml`'de; HTTPS sertifikası için
   betikler `-Djavax.net.ssl.trustStoreType=Windows-ROOT` verir.
 
@@ -77,18 +78,28 @@ ekranında da gösterilir.
    openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out server/keys/private.pem
    openssl rsa -in server/keys/private.pem -pubout -out server/keys/public.pem
    ```
-2. **Sunucuyu başlat** (H2, demo birimleri ve kullanıcıları; http://localhost:8080):
+2. **PostgreSQL'i hazırla.** Yerelde Docker ile:
+   ```bash
+   docker run -d --name gps-postgres --restart unless-stopped -e POSTGRES_DB=guvenlipaylasim -e POSTGRES_USER=guvenlipaylasim -e POSTGRES_PASSWORD=guvenlipaylasim -p 5433:5432 -v gps-pgdata:/var/lib/postgresql postgres:18
+   ```
+   Bağlantı bilgisi `server/.env` dosyasına yazılır (git'e girmez):
+   ```properties
+   DB_URL=jdbc:postgresql://localhost:5433/guvenlipaylasim
+   DB_USERNAME=guvenlipaylasim
+   DB_PASSWORD=guvenlipaylasim
+   DB_SCHEMA=guvenlipaylasim
+   ```
+   Aiven gibi bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require` eklenir. Ayrıntılar:
+   [server/README.md](server/README.md).
+3. **Sunucuyu başlat** (demo birimleri ve kullanıcıları ilk açılışta oluşur; http://localhost:8080):
    ```bash
    server\run-dev.cmd
    ```
-   PostgreSQL için `server/.env`'e `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` ve `DB_SCHEMA` yazılır (Aiven gibi
-   bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require`). `DB_URL` yoksa H2 kullanılır; `DB_HOST`/`DB_PORT`/
-   `DB_NAME` okunmaz. Dev profili demo verisini PostgreSQL'e de yazar.
-3. **İstemciyi iki kez başlat** (iki pencere = iki kullanıcı):
+4. **İstemciyi iki kez başlat** (iki pencere = iki kullanıcı):
    ```bash
    desktop\run.cmd
    ```
-4. **Demo hesapları** (parola `Demo12345!`):
+5. **Demo hesapları** (parola `Demo12345!`):
 
    | E-posta | Birim |
    |---|---|
@@ -101,12 +112,15 @@ ekranında da gösterilir.
    Her kullanıcının anahtarları **ilk girişinde** üretilir; belge gönderilebilmesi için alıcının bir kez giriş
    yapmış olması gerekir.
 
-5. **Önerilen sunum akışı:** Mehmet ile giriş → **Neden Güvenli?** → **Yeni Gönderi** (Ankara Valiliği'ni seç,
+6. **Önerilen sunum akışı:** Mehmet ile giriş → **Neden Güvenli?** → **Yeni Gönderi** (Ankara Valiliği'ni seç,
    şifreleme adımlarını göster) → Ayşe'nin penceresinde bildirim → belgeyi aç (imza doğrulandı) → **Okudum ve sil** →
    Mehmet'te **Gönderilenler**'de "okudu ve sildi". Yönetici hesabıyla yeni kullanıcı açıp ilk girişte zorunlu parola
    değişikliğini ve anahtar üretimini göster.
 
-Demo verisini sıfırlamak için sunucu kapalıyken `server/data/` klasörünü silin.
+Demo verisini sıfırlamak için sunucu kapalıyken şemayı silin; bir sonraki açılışta yeniden oluşur:
+```bash
+docker exec gps-postgres psql -U guvenlipaylasim -d guvenlipaylasim -c "DROP SCHEMA guvenlipaylasim CASCADE"
+```
 
 ### Testler
 
@@ -117,7 +131,7 @@ cd server && mvnw.cmd test
 cd desktop && mvnw.cmd test
 ```
 
-Sunucuda Docker gerektiren PostgreSQL testleri Docker yoksa atlanır. Masaüstü ekranlarının görüntüsü, çalışan dev
+Sunucunun veritabanı testleri kendi PostgreSQL 18'ini Testcontainers ile açar; Docker yoksa atlanır. Masaüstü ekranlarının görüntüsü, çalışan dev
 sunucusuna karşı `ScreenshotTour` (test kaynakları) ile pencere açmadan alınabilir.
 
 ### Kurulum dosyası ve sürüm yayımlama
@@ -139,5 +153,5 @@ Yeni sürüm yayımlanınca bu README'nin başındaki indirme bağlantısı ve s
 
 - Kurum SMS servisi (`SmsGateway` arayüzü hazır; şimdilik simülasyon).
 - LDAP girişi (bkz. Crypto_Design §6).
-- Prod sunucusuna kurulum. `prod` profili PostgreSQL ile açılıyor (ortam değişkenleri `server/.env.example`'daki
-  liste; prod `.env` okumaz), ama sunucu, HTTPS ve servis olarak çalıştırma henüz yok.
+- Prod sunucusuna kurulum. Ortam değişkenleri `server/.env.example`'daki liste (prod `.env` okumaz), ama sunucu,
+  HTTPS ve servis olarak çalıştırma henüz yok.

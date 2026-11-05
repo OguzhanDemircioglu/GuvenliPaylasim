@@ -12,7 +12,7 @@ public interface LoginAttemptRepository extends JpaRepository<LoginAttempt, Stri
     /**
      * Yanlış denemeyi atomik olarak sayar. Engel süresi dolmuşsa sayaç 1'den başlar;
      * sayaç maxAttempts'e ulaşınca blocked_until yazılır.
-     * İki adımdır çünkü H2 "ON CONFLICT DO UPDATE" desteklemez; UPDATE satırı kilitlediği için sayım yine ezilmez.
+     * İki adımdır (önce satır yoksa eklenir, sonra güncellenir); UPDATE satırı kilitlediği için sayım ezilmez.
      */
     @Transactional
     default void recordFailure(String key, Instant now, Instant blockedUntil, int maxAttempts) {

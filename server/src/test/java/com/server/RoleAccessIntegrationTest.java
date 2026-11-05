@@ -17,6 +17,9 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.postgresql.PostgreSQLContainer;
 
 import java.util.UUID;
 
@@ -31,11 +34,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Rol hiyerarşisi, yol kuralları ve yönetim kapsamı uçtan uca (bellekte H2; Docker gerektirmez).
+ * Rol hiyerarşisi, yol kuralları ve yönetim kapsamı uçtan uca (PostgreSQL 18; Docker yoksa atlanır).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@Testcontainers(disabledWithoutDocker = true)
 class RoleAccessIntegrationTest {
+
+    @Container
+    static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
 
     private static final String SUPERADMIN_EMAIL = "superadmin@test.local";
     private static final String PASSWORD = "User12345";
@@ -43,11 +50,9 @@ class RoleAccessIntegrationTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", () -> "jdbc:h2:mem:roleaccess;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;"
-                + "DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_ON_EXIT=FALSE;DB_CLOSE_DELAY=-1;"
-                + "INIT=CREATE SCHEMA IF NOT EXISTS starterapp");
-        registry.add("spring.datasource.username", () -> "sa");
-        registry.add("spring.datasource.password", () -> "");
+        registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
+        registry.add("spring.datasource.username", POSTGRES::getUsername);
+        registry.add("spring.datasource.password", POSTGRES::getPassword);
         registry.add("DB_SCHEMA", () -> "starterapp");
         registry.add("app.admin.email", () -> SUPERADMIN_EMAIL);
         registry.add("app.admin.password", () -> PASSWORD);

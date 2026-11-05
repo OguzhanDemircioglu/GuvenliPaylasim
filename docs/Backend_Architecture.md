@@ -21,7 +21,7 @@
 | Spring Boot | 4.1.x (başlangıç: 4.1.1) | Kurulumda son patch alınır |
 | Java | 25 (LTS) | |
 | Build | Maven (wrapper ile) | |
-| Veritabanı | PostgreSQL 18 | Yerel geliştirmede (dev profili) H2, PostgreSQL uyumluluk modunda (§10.6) |
+| Veritabanı | PostgreSQL 18 | Dev, test ve prod'da aynı veritabanı (§10.6) |
 | ORM | Hibernate 7 | Boot ile gelir |
 | Güvenlik | Spring Security + OAuth2 Resource Server | JWT, RS256 |
 | Mapper | MapStruct | Lombok ile birlikte `lombok-mapstruct-binding` gerekir |
@@ -287,7 +287,7 @@ Frontend'de çok sayıda grafik olacak. Grafikler ham kayıtlarla değil, backen
 - **Toplama SQL'de yapılır** (`GROUP BY`, `COUNT`, `SUM`). Ham satırlar frontend'e çekilip orada toplanmaz. Bu sayede rapor endpoint'leri az satır döner ve "sayfalama yok" kuralıyla çelişmez.
 - **Gün, hafta ve ay gruplaması Türkiye saatine göre yapılır.** Tarihler UTC saklandığı için düz `date_trunc('day', created_at)` gece 00:00–03:00 arasındaki kayıtları bir önceki güne yazar. Doğrusu:
   `date_trunc('day', created_at AT TIME ZONE 'Europe/Istanbul')`
-- **Boş günler** de cevapta 0 değeriyle bulunur: SQL toplamayı yapar, sonuçta olmayan günleri serviste 0 ile doldurur (`generate_series` H2'de olmadığı için, §10.6). Böylece grafiğin zaman ekseninde boşluk oluşmaz.
+- **Boş günler** de cevapta 0 değeriyle bulunur: SQL toplamayı yapar, sonuçta olmayan günleri serviste 0 ile doldurur. Böylece grafiğin zaman ekseninde boşluk oluşmaz.
 - **Soft delete filtresi:** Rapor sorguları native SQL olduğunda `deleted = false` koşulu elle yazılır; Hibernate'in otomatik filtresi native SQL'de çalışmaz.
 - **Dönüş tipleri** her rapor için record olarak yazılır (`PeriodValue(String period, long value)` gibi); `ApiResponse` formatı aynen geçerlidir.
 
@@ -564,7 +564,7 @@ public class CurrentUser {
   - Serviste `existsBy...` kontrolü yapılır; sorun varsa 422 döner.
   - DB'de silinmemiş kayıtlara özel bir unique index, migration class'ında `SoftDeleteUniqueIndex` ile oluşturulur:
     `SoftDeleteUniqueIndex.create(jdbc, "ux_users_email", "users", "email");`
-    PostgreSQL'de bu `CREATE UNIQUE INDEX ... WHERE deleted = false` üretir (§10.6).
+    Bu `CREATE UNIQUE INDEX ... WHERE deleted = false` (partial index) üretir.
 - **Kullanılan kayıtlar:** Başka bir kaydın referans verdiği bir kayıt silinmez. Bu kontrol modülün `validateDelete` metodunda yapılır ve 422 döner.
 
 ### 10.5 Tarih ve saat
@@ -573,21 +573,14 @@ public class CurrentUser {
 - JVM saat dilimi uygulama açılışında (`ServerApplication.main`) `Europe/Istanbul` olarak ayarlanır; container'da ayrıca `TZ=Europe/Istanbul` verilir. Loglar Türkiye saatiyle yazılır.
 - Kullanıcıya saat gösterilirken frontend değeri kullanıcının saat dilimine çevirir.
 
-### 10.6 Yerel geliştirmede H2
+### 10.6 Yerel geliştirmede PostgreSQL
 
-- Dev profili, `DB_URL` verilmezse kurulum gerektirmeyen gömülü H2 ile açılır. Veri `server/data/` klasöründe kalıcıdır (git'e girmez). Compose'daki server bunu `h2data` volume'ünde tutar; IDE'den çalıştırmayla aynı dosyayı paylaşmaz.
-- Prod ve Testcontainers testleri PostgreSQL 18'de kalır. H2 birden çok replica'yı desteklemediği için prod'da kullanılmaz; `DB_URL` prod'da zorunludur ve varsayılanı yoktur.
-- URL'deki `MODE=PostgreSQL` ve `DATABASE_TO_LOWER=TRUE` aynı SQL'in iki veritabanında da çalışmasını sağlar. Uyumluluk tam değildir; SQL yazılırken iki veritabanında ortak olan söz dizimi kullanılır:
-
-| PostgreSQL'e özgü | Bu projede yerine geçen |
-|---|---|
-| `generate_series` | Boş günler serviste doldurulur (§5.5) |
-| `ON CONFLICT DO UPDATE` | `ON CONFLICT DO NOTHING` + ayrı `UPDATE`, tek transaction'da |
-| `TIMESTAMPTZ` | `TIMESTAMP WITH TIME ZONE` |
-| Partial unique index | `SoftDeleteUniqueIndex`: H2'de üretilmiş `active_<kolon>` kolonu üzerinde unique index |
-| Advisory lock | H2'de alınmaz; dosyayı tek süreç açabildiği için gerekmez |
-
-- Yeni SQL'in H2 davranışı `H2IntegrationTest`, PostgreSQL davranışı Testcontainers testleriyle doğrulanır.
+- Dev, test ve prod aynı veritabanını (PostgreSQL 18) kullanır; gömülü bir veritabanı yoktur. `DB_URL`,
+  `DB_USERNAME` ve `DB_PASSWORD` her profilde zorunludur ve varsayılanları yoktur. Dev'de `server/.env`'den okunur.
+- Yerelde PostgreSQL 18 Docker ile açılır (komut: `server/README.md`). Paylaşılan bir veritabanı da kullanılabilir;
+  uygulama sadece `DB_SCHEMA` şemasına dokunur (§10.2).
+- Veritabanı testleri kendi PostgreSQL 18'ini Testcontainers ile açar; `.env`'deki veritabanını kullanmaz. Docker yoksa
+  bu testler atlanır.
 
 ---
 
@@ -631,7 +624,7 @@ public class V003_InitialMenus implements DataMigration {
 - **Ne zaman çalışır:** Hibernate şemayı oluşturduktan **sonra**, `DataMigrationRunner` (`ApplicationRunner`) tarafından çalıştırılır. Bütün `DataMigration` bean'leri toplanır ve `version()`'a göre sıralanır.
 - **Geçmiş:** Uygulanan her sürüm `data_migration_history` tablosuna kaydedilir (`version`, `description`, `applied_at`). Uygulanmış bir sürüm bir daha çalışmaz. Runner bu tabloyu kendisi oluşturur.
 - **Transaction:** Her sürüm kendi transaction'ında çalışır. Hata olursa o sürümün değişiklikleri geri alınır ve uygulama açılmaz.
-- **Swarm kilidi:** Runner bir PostgreSQL advisory lock altında çalışır. Aynı anda açılan iki replica aynı sürümü iki kez çalıştıramaz. Dev'deki gömülü H2'de kilit alınmaz (§10.6).
+- **Swarm kilidi:** Runner bir PostgreSQL advisory lock altında çalışır. Aynı anda açılan iki replica aynı sürümü iki kez çalıştıramaz.
 - Aynı `version()` değerine sahip iki class varsa uygulama açılmaz.
 
 **Kurallar:**
@@ -746,7 +739,7 @@ Dosyalar: `application.yml` (ortak), `application-dev.yml`, `application-prod.ym
 | Environment variable | Açıklama |
 |---|---|
 | `SPRING_PROFILES_ACTIVE` | `dev` ya da `prod`. **Varsayılan profil yoktur**: unutulursa uygulama dev ayarlarıyla (güvensiz cookie, bilinen admin şifresi) açılmaz, eksik değişkenler yüzünden hiç açılmaz |
-| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | PostgreSQL bağlantısı (dev profilinde verilmezse H2, §10.6) |
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` | **Zorunlu.** PostgreSQL bağlantısı (§10.6) |
 | `DB_SCHEMA` | **Zorunlu.** Uygulamanın şeması, küçük harf (§10.2) |
 | `JWT_PRIVATE_KEY_PATH`, `JWT_PUBLIC_KEY_PATH`, `JWT_KEY_ID` | Aktif RSA anahtarı |
 | `JWT_PREVIOUS_PUBLIC_KEY_PATH`, `JWT_PREVIOUS_KEY_ID` | İsteğe bağlı; anahtar değişimi sırasında bir önceki public key |
@@ -772,7 +765,7 @@ Dosyalar: `application.yml` (ortak), `application-dev.yml`, `application-prod.ym
   - Container belleğine uyum için `-XX:MaxRAMPercentage=75` verilir.
 - **Healthcheck:** Docker container'a belirli aralıklarla "hazır mısın?" diye sorar. Bunun için `/actuator/health/readiness` kullanılır. Bu endpoint, Hibernate şemayı oluşturup bütün migration'lar bittikten **sonra** "hazırım" der. Swarm rolling update'te yeni sürüm "hazırım" demeden eski sürümü kapatmaz ve yeni sürüme trafik göndermez; böylece güncelleme sırasında kullanıcılar hata görmez. Actuator'da sadece `health` dışarı açılır ve health probe'ları açık olur.
 - **Graceful shutdown:** Boot'ta varsayılan olarak açıktır. `spring.lifecycle.timeout-per-shutdown-phase=30s` ayarlanır; Swarm'daki `stop_grace_period` bundan uzun olmalıdır.
-- **Geliştirme ortamı:** Repo kökündeki `docker-compose.yml`'de `app` profili server'ı ve client'ı çalıştırır. Server, admin bilgilerini ve varsa `DB_URL`'i IDE'den çalıştırmayla aynı `server/.env` dosyasından (`env_file`) alır; `DB_URL` yoksa H2'yi `h2data` volume'ünde tutar (§10.6). İsteğe bağlı yerel PostgreSQL 18 `db` profilindedir; PostgreSQL 18'de volume `/var/lib/postgresql` yoluna bağlanır.
+- **Geliştirme ortamı:** Repo kökündeki `docker-compose.yml`'de `app` profili server'ı ve client'ı çalıştırır. Server, admin bilgilerini ve varsa `DB_URL`'i IDE'den çalıştırmayla aynı `server/.env` dosyasından (`env_file`) alır (§10.6). İsteğe bağlı yerel PostgreSQL 18 `db` profilindedir; PostgreSQL 18'de volume `/var/lib/postgresql` yoluna bağlanır.
 
 ### 16.1 Prod kurulumu (`deploy/`)
 
@@ -823,7 +816,7 @@ Angular client kendi container'ında nginx ile sunulur ve `/api` isteklerini ser
 |---|---|
 | Unit (Mockito) | ServiceImpl iş kuralları, menü ağacı kurma |
 | Entegrasyon (Testcontainers + PostgreSQL 18) | Login, refresh rotation, 30 saniyelik pencere, çalınma tespiti, logout; brute-force; soft delete; version çakışması (409); data migration runner |
-| Entegrasyon (bellekte H2) | Migration'lar, silinmemiş kayıtlara özel unique index, yanlış deneme sayacı, rapor sorgusu |
+| Entegrasyon (Testcontainers + PostgreSQL 18) | Migration'lar, silinmemiş kayıtlara özel unique index, yanlış deneme sayacı, belge akışı, rol erişimi |
 | Kontrat | §5.2'deki her status için response'ta dört alanın bulunduğu ve tiplerinin doğru olduğu kontrol edilir. Formatı bozan bir değişiklik build'i kırar |
 
 - Entegrasyon testi Docker yoksa otomatik olarak atlanır (`@Testcontainers(disabledWithoutDocker = true)`).
@@ -884,4 +877,4 @@ Bu proje StarterApp şablonundan türetildi. Yukarıdaki kurallar geçerlidir; a
 - **`notification` modülü:** `SmsGateway`; kurum servisi bağlanana kadar `SimulatedSmsGateway` (sadece log, telefon
   maskeli). SMS'te anahtar ya da parola yoktur.
 - **Dev verisi:** `V007_DemoData` sadece `dev` profilinde çalışır (birimler ve demo kullanıcıları).
-- `byte[]` içerik için `@Lob` kullanılmaz: H2'nin PostgreSQL modu `BLOB` tanımaz; kolon `bytea` olarak tanımlanır.
+- `byte[]` içerik için `@Lob` kullanılmaz; kolon `bytea` olarak tanımlanır.

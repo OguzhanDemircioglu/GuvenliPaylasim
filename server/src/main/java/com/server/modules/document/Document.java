@@ -35,9 +35,7 @@ public class Document {
     private DocumentKind kind;
 
     /**
-     * AES-256-GCM ile şifrelenmiş içerik (istemcinin biçimi). Silindiğinde null olur.
-     * {@code bytea} hem PostgreSQL'de hem H2'de geçerlidir; Hibernate'in büyük byte[] için seçtiği BLOB'u H2'nin
-     * PostgreSQL modu tanımaz.
+     * AES-256-GCM ile şifrelenmiş içerik (istemcinin biçimi). Silindiğinde null olur. PostgreSQL {@code bytea}.
      */
     @Column(name = "payload", columnDefinition = "bytea")
     private byte[] payload;
