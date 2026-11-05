@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v1.0.4/GuvenliPaylasim-1.0.4.msi">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v1.0.5/GuvenliPaylasim-1.0.5.msi">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Sürüm 1.0.4 · Tıklayınca kurulum dosyası doğrudan iner · Uygulama yeni sürümleri açılışta kendisi kurar ·
+  <sub>Sürüm 1.0.5 · Tıklayınca kurulum dosyası doğrudan iner · Uygulama yeni sürümleri açılışta kendisi kurar ·
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
 </p>
 
