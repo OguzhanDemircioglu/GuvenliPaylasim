@@ -72,7 +72,8 @@ desktop\package.cmd
 ```
 
 `desktop/dist/GuvenliPaylasim-<sürüm>.msi` üretilir (Java runtime içinde; kullanıcı başına kurulur, yönetici
-yetkisi istemez). WiX 3.14 gerekir (`D:\Projeler\.tools\wix3` ya da PATH). İmzalama ve GitHub'a yükleme:
+yetkisi istemez). Uygulama Windows'ta "Güvenli Paylaşım" adıyla görünür (Başlat menüsü, masaüstü, yüklü
+uygulamalar); Türkçe karakterler için WiX'e Türkçe kod sayfası (1254) `desktop/src/main/jpackage/` altından verilir. WiX 3.14 gerekir (`D:\Projeler\.tools\wix3` ya da PATH). İmzalama ve GitHub'a yükleme:
 [docs/Update_Design.md §4](docs/Update_Design.md). Uygulama güncellemeleri
 `OguzhanDemircioglu/GuvenliPaylasim` deposunun Releases bölümünden okur.
 
