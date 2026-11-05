@@ -14,7 +14,8 @@ alacak prototip: belgeler gönderenin bilgisayarında şifrelenip imzalanır, sa
 
 ## Gereksinimler
 
-- JDK 25 (bu makinede `D:\Projeler\.tools\jdk`; `run` betikleri varsa onu kullanır, sistemdeki `JAVA_HOME` Java 17 olabilir)
+- JDK 25. `run`/`package` betikleri sırayla `%USERPROFILE%\.jdks\*25*` (IntelliJ'nin indirdiği JDK'lar) ve
+  `Projeler\.tools\jdk` altında arar, bulduğunu kullanır; sistemdeki `JAVA_HOME` Java 17/21 olabilir
 - Maven gerekmez (wrapper var). Kurum proxy'si için Maven ayarı `~/.m2/settings.xml`'de; HTTPS sertifikası için
   betikler `-Djavax.net.ssl.trustStoreType=Windows-ROOT` verir.
 
@@ -24,6 +25,9 @@ alacak prototip: belgeler gönderenin bilgisayarında şifrelenip imzalanır, sa
    ```bash
    server\run-dev.cmd
    ```
+   PostgreSQL için `server/.env`'e `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` ve `DB_SCHEMA` yazılır (Aiven gibi
+   bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require`). `DB_URL` yoksa H2 kullanılır; `DB_HOST`/`DB_PORT`/
+   `DB_NAME` okunmaz. Dev profili demo verisini PostgreSQL'e de yazar.
    İlk sefer için JWT anahtarları gerekir (`server/keys/`, git'e girmez):
    ```bash
    openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out server/keys/private.pem
@@ -81,4 +85,5 @@ uygulamalar); Türkçe karakterler için WiX'e Türkçe kod sayfası (1254) `des
 
 - Kurum SMS servisi (`SmsGateway` arayüzü hazır; şimdilik simülasyon).
 - LDAP girişi (bkz. Crypto_Design §6).
-- PostgreSQL ile prod kurulumu.
+- Prod sunucusuna kurulum. `prod` profili PostgreSQL ile açılıyor (ortam değişkenleri `server/.env.example`'daki
+  liste; prod `.env` okumaz), ama sunucu, HTTPS ve servis olarak çalıştırma henüz yok.

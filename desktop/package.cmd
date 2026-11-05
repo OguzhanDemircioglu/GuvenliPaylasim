@@ -6,6 +6,8 @@ rem Urun adi Turkce karakterlidir; WiX icin Turkce kod sayfasi (1254) src\main\j
 rem Bu dosya UTF-8 kaydedilir; chcp 65001 Turkce karakterlerin dogru okunmasini saglar.
 setlocal
 chcp 65001 >nul
+rem IntelliJ'nin indirdigi JDK 25 (%USERPROFILE%\.jdks) de kullanilir; Projeler\.tools\jdk varsa o onceliklidir.
+for /d %%d in ("%USERPROFILE%\.jdks\*25*") do if exist "%%d\bin\java.exe" set "JAVA_HOME=%%d"
 if exist "%~dp0..\..\.tools\jdk\bin\java.exe" set "JAVA_HOME=%~dp0..\..\.tools\jdk"
 if exist "%~dp0..\..\.tools\wix3\candle.exe" set "PATH=%~dp0..\..\.tools\wix3;%PATH%"
 set "MAVEN_OPTS=-Djavax.net.ssl.trustStoreType=Windows-ROOT %MAVEN_OPTS%"
