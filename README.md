@@ -65,10 +65,19 @@ cd desktop && mvnw.cmd test
 Sunucuda Docker gerektiren PostgreSQL testleri Docker yoksa atlanır. Masaüstü ekranlarının görüntüsü, çalışan dev
 sunucusuna karşı `ScreenshotTour` (test kaynakları) ile pencere açmadan alınabilir.
 
+## Kurulum dosyası ve sürüm yayımlama
+
+```bash
+desktop\package.cmd
+```
+
+`desktop/dist/GuvenliPaylasim-<sürüm>.msi` üretilir (Java runtime içinde; kullanıcı başına kurulur, yönetici
+yetkisi istemez). WiX 3.14 gerekir (`D:\Projeler\.tools\wix3` ya da PATH). İmzalama ve GitHub'a yükleme:
+[docs/Update_Design.md §4](docs/Update_Design.md). Uygulama güncellemeleri
+`OguzhanDemircioglu/GuvenliPaylasim` deposunun Releases bölümünden okur.
+
 ## Henüz yapılmayanlar
 
-- Windows kurulum dosyası (jpackage + WiX) ve ilk GitHub sürümü. Güncelleme kodu hazır; `update.repository` boş
-  olduğu için kontrol şimdilik kapalı.
 - Kurum SMS servisi (`SmsGateway` arayüzü hazır; şimdilik simülasyon).
 - LDAP girişi (bkz. Crypto_Design §6).
 - PostgreSQL ile prod kurulumu.

@@ -5,4 +5,4 @@ rem Projeler\.tools\jdk (JDK 25) varsa o kullanilir; sistemdeki JAVA_HOME Java 1
 if exist "%~dp0..\..\.tools\jdk\bin\java.exe" set "JAVA_HOME=%~dp0..\..\.tools\jdk"
 set "MAVEN_OPTS=-Djavax.net.ssl.trustStoreType=Windows-ROOT %MAVEN_OPTS%"
 cd /d "%~dp0"
-call mvnw.cmd -B -q javafx:run
+call "%~dp0mvnw.cmd" -B -q javafx:run

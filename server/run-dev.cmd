@@ -5,4 +5,4 @@ if exist "%~dp0..\..\.tools\jdk\bin\java.exe" set "JAVA_HOME=%~dp0..\..\.tools\j
 rem Kurum proxy'si HTTPS'i kendi sertifikasiyla imzaliyor; Maven bagimliliklari icin Windows sertifika deposu.
 set "MAVEN_OPTS=-Djavax.net.ssl.trustStoreType=Windows-ROOT %MAVEN_OPTS%"
 cd /d "%~dp0"
-call mvnw.cmd -B spring-boot:run -Dspring-boot.run.profiles=dev
+call "%~dp0mvnw.cmd" -B spring-boot:run -Dspring-boot.run.profiles=dev
