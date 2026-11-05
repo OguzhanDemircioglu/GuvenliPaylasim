@@ -26,8 +26,8 @@
   - imzasız ya da değiştirilmiş bir kurulum dosyası kurdurulamaz,
   - eski bir sürüm "yeni" diye kurdurulamaz,
   - güncelleme sahte yere "zorunlu" yapılamaz.
-- **Özel anahtar repoda değildir.** Bu makinede `D:\Projeler\GuvenliPaylasim-release-keys\` altında üretildi;
-  yedeklenmeli ve sadece sürüm yayımlayanda durmalıdır. Kaybolursa yeni anahtar üretilir ve uygulamanın bir sonraki
+- **Özel anahtar repoda değildir.** Proje klasöründeki `release-keys\` altında durur; bu klasör `.gitignore`'dadır.
+  Yedeklenmeli ve sadece sürüm yayımlayanda durmalıdır. Kaybolursa yeni anahtar üretilir ve uygulamanın bir sonraki
   sürümü yeni açık anahtarla elle dağıtılır.
 - Açık anahtar: `desktop/src/main/resources/com/desktop/update-public-key.txt`.
 
@@ -46,7 +46,7 @@
 ```bash
 # 1) Sürümü pom.xml'de artır (desktop/pom.xml → <version>), kurulum dosyasını üret (jpackage, README).
 # 2) İmzala: release.json kurulum dosyasının yanına yazılır
-java -cp desktop/target/classes com.desktop.update.ReleaseTool sign dist/GuvenliPaylasim-1.1.0.msi 1.1.0 ../GuvenliPaylasim-release-keys/update-private-key.txt
+java -cp desktop/target/classes com.desktop.update.ReleaseTool sign dist/GuvenliPaylasim-1.1.0.msi 1.1.0 release-keys/update-private-key.txt
 # 3) GitHub'da v1.1.0 etiketiyle release aç; kurulum dosyasını ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
 ```
 

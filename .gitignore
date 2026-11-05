@@ -35,3 +35,6 @@ Thumbs.db
 # Prod kurulumu: sunucudaki ayarlar ve JWT anahtarları
 deploy/.env
 deploy/keys/
+
+# Güncelleme imza anahtarları (özel anahtar asla repoya girmez)
+release-keys/

@@ -18,6 +18,10 @@ if "%VERSION%"=="" exit /b 1
 copy /y "target\desktop-%VERSION%.jar" "target\libs\" >nul
 if exist dist rmdir /s /q dist
 
+rem jpackage'in varsayilan modul kumesi + jdk.crypto.mscapi. Launcher Windows-ROOT sertifika deposunu kullanir;
+rem bu modul olmadan HTTPS istemcisi kurulamaz ve uygulama "Failed to launch JVM" ile acilmaz.
+set "MODULES=java.base,java.compiler,java.datatransfer,java.xml,java.prefs,java.desktop,java.instrument,java.logging,java.management,java.security.sasl,java.naming,java.rmi,java.management.rmi,java.net.http,java.scripting,java.security.jgss,java.smartcardio,java.transaction.xa,java.sql,java.sql.rowset,java.xml.crypto,jdk.accessibility,jdk.internal.jvmstat,jdk.attach,jdk.internal.opt,jdk.zipfs,jdk.compiler,jdk.dynalink,jdk.httpserver,jdk.incubator.vector,jdk.internal.ed,jdk.internal.le,jdk.internal.md,jdk.jartool,jdk.javadoc,jdk.management,jdk.management.agent,jdk.jconsole,jdk.jdwp.agent,jdk.jdi,jdk.jfr,jdk.jshell,jdk.jsobject,jdk.management.jfr,jdk.net,jdk.nio.mapmode,jdk.sctp,jdk.security.auth,jdk.security.jgss,jdk.unsupported,jdk.unsupported.desktop,jdk.xml.dom,jdk.crypto.mscapi"
+
 "%JAVA_HOME%\bin\jpackage" --type msi ^
   --name "Güvenli Paylaşım" ^
   --app-version %VERSION% ^
@@ -26,6 +30,7 @@ if exist dist rmdir /s /q dist
   --input target\libs ^
   --main-jar desktop-%VERSION%.jar ^
   --main-class com.desktop.Launcher ^
+  --add-modules %MODULES% ^
   --java-options "--enable-native-access=ALL-UNNAMED" ^
   --win-per-user-install ^
   --win-menu --win-menu-group "Güvenli Paylaşım" ^
