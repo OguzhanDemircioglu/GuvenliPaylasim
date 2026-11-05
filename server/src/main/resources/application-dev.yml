@@ -1,0 +1,45 @@
+# Geliştirme ortamı. Değerler server/.env dosyasından ya da environment variable'dan gelir.
+spring:
+  config:
+    # .env sadece dev profilinde okunur: testler ve prod gerçek DB bilgilerini yanlışlıkla kullanamaz.
+    # Ortam değişkenleri her zaman .env'den önceliklidir. (.env git'e girmez.)
+    import: optional:file:.env[.properties]
+  datasource:
+    # Varsayılan: kurulum gerektirmeyen, dosyada kalıcı H2 (server/data/, git'e girmez).
+    # MODE=PostgreSQL prod ile aynı SQL'in çalışması içindir. PostgreSQL'e bağlanmak için .env'de DB_URL verilir.
+    url: ${DB_URL:jdbc:h2:file:./data/starterapp;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS ${DB_SCHEMA:starterapp}}
+    username: ${DB_USERNAME:sa}
+    password: ${DB_PASSWORD:}
+    hikari:
+      schema: ${DB_SCHEMA:starterapp}
+  jpa:
+    show-sql: true
+    properties:
+      hibernate.default_schema: ${DB_SCHEMA:starterapp}
+
+logging:
+  pattern:
+    # Her satıra isteğin traceId'si (TraceIdFilter → MDC) yazılır; istek dışındaki satırlarda boş kalır.
+    correlation: "%correlationId{traceId(16)}"
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+app:
+  dev-login:
+    # Yerelde login ekranını atlar (DevLoginController). Compose bunu kapatır.
+    enabled: ${DEV_LOGIN_ENABLED:true}
+  jwt:
+    key-id: ${JWT_KEY_ID:dev-key}
+    private-key-path: ${JWT_PRIVATE_KEY_PATH:keys/private.pem}
+    public-key-path: ${JWT_PUBLIC_KEY_PATH:keys/public.pem}
+  session:
+    cookie-secure: ${COOKIE_SECURE:false}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
+  admin:
+    email: ${ADMIN_EMAIL:admin@starterapp.local}
+    password: ${ADMIN_PASSWORD:Admin12345}

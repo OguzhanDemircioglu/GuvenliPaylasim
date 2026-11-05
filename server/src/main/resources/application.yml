@@ -1,0 +1,68 @@
+# Ortak ayarlar. Profil bilerek varsayılan verilmez: SPRING_PROFILES_ACTIVE (dev | prod) açıkça seçilmelidir.
+spring:
+  application:
+    name: server
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      # Bağlantının search_path'i: JdbcTemplate/native SQL'ler (migration'lar dahil) bu şemada çalışır.
+      schema: ${DB_SCHEMA}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      # Hibernate sadece bu şemadaki tablolara bakar ve onları günceller; şema yoksa oluşturur.
+      # DB_SCHEMA küçük harf olmalıdır (PostgreSQL tırnaksız adları küçük harfe çevirir).
+      hibernate.default_schema: ${DB_SCHEMA}
+      hibernate.hbm2ddl.create_namespaces: true
+      # Varsayılan davranış unique constraint'leri her açılışta silip yeniden oluşturur; bunun yerine sadece eksikse oluştur.
+      hibernate.schema_update.unique_constraint_strategy: RECREATE_QUIETLY
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+
+server:
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+app:
+  jwt:
+    issuer: starterapp
+    access-token-ttl: 15m
+    key-id: ${JWT_KEY_ID}
+    private-key-path: ${JWT_PRIVATE_KEY_PATH}
+    public-key-path: ${JWT_PUBLIC_KEY_PATH}
+    previous-key-id: ${JWT_PREVIOUS_KEY_ID:}
+    previous-public-key-path: ${JWT_PREVIOUS_PUBLIC_KEY_PATH:}
+  session:
+    refresh-token-ttl: 90d
+    reuse-grace-period: 30s
+    cookie-secure: ${COOKIE_SECURE:true}
+  login-protection:
+    max-attempts: 5
+    block-duration: 1h
+  register-protection:
+    max-attempts: 10
+    block-duration: 1h
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  admin:
+    email: ${ADMIN_EMAIL:}
+    password: ${ADMIN_PASSWORD:}

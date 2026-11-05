@@ -1,0 +1,5 @@
+# Prod ortamı. Bütün bağlantı bilgileri ve secret'lar environment variable'dan gelir (bkz. .env.example).
+logging:
+  structured:
+    format:
+      console: logstash
