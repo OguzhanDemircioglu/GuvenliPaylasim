@@ -58,6 +58,7 @@ ekranında da gösterilir.
 |---|---|
 | [server/](server/) | Spring Boot 4.1, Java 25, PostgreSQL 18. StarterApp şablonundan türetildi. Birimler, kullanıcılar, anahtar dizini, şifreli belgeler |
 | [desktop/](desktop/) | JavaFX 27 + AtlantaFX masaüstü istemci. Şifreleme, imza ve zorunlu güncelleme burada |
+| [docs/Devam_Rehberi.md](docs/Devam_Rehberi.md) | Nerede kaldık, sırada ne var (v2 yol haritası) |
 | [docs/Crypto_Design.md](docs/Crypto_Design.md) | Şifreleme tasarımı ve eski sistemle karşılaştırma |
 | [docs/Update_Design.md](docs/Update_Design.md) | GitHub üzerinden imzalı, zorunlu güncelleme |
 | [docs/Backend_Architecture.md](docs/Backend_Architecture.md) | Sunucunun bağlayıcı kuralları (StarterApp'ten; §20 bu projeye özgü eklemeler) |
