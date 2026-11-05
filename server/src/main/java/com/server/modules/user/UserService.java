@@ -10,10 +10,4 @@ public interface UserService extends BaseService<UserCreateRequest, UserUpdateRe
 
     /** Admin'in bir kullanıcının şifresini sıfırlaması; kullanıcının bütün oturumları kapanır. */
     void resetPassword(Long id, UserPasswordResetRequest request);
-
-    /**
-     * Kayıt formundan gelen kullanıcı: rolü her zaman USER'dır. Giriş yapmış biri olmadığı için {@link #create}'teki
-     * yönetim kapsamı kontrolü yapılmaz.
-     */
-    UserResponse register(String email, String fullName, String password);
 }

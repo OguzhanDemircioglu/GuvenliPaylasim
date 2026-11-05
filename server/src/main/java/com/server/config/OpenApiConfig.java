@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
  * Swagger UI (sadece dev): /swagger-ui.html. "Authorize" ile access token girilir.
  */
 @Configuration
-@OpenAPIDefinition(info = @Info(title = "StarterApp API", version = "v1"), security = @SecurityRequirement(name = "bearer"))
+@OpenAPIDefinition(info = @Info(title = "Güvenli Paylaşım API", version = "v1"), security = @SecurityRequirement(name = "bearer"))
 @SecurityScheme(name = "bearer", type = SecuritySchemeType.HTTP, scheme = "bearer", bearerFormat = "JWT")
 public class OpenApiConfig {
 }

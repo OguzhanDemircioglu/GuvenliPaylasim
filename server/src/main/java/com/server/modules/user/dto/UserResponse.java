@@ -10,6 +10,9 @@ public record UserResponse(
         String fullName,
         Role role,
         boolean active,
+        Long unitId,
+        String phone,
+        boolean mustChangePassword,
         Long version,
         Instant createdAt,
         Instant updatedAt) {

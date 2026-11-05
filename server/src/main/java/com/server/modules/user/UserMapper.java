@@ -16,9 +16,11 @@ public interface UserMapper extends BaseMapper<User, UserCreateRequest, UserUpda
     @Override
     @Mapping(target = "password", ignore = true)
     @Mapping(target = "active", constant = "true")
+    @Mapping(target = "mustChangePassword", constant = "true")
     User toEntity(UserCreateRequest request);
 
     @Override
     @Mapping(target = "password", ignore = true)
+    @Mapping(target = "mustChangePassword", ignore = true)
     void update(UserUpdateRequest request, @MappingTarget User entity);
 }

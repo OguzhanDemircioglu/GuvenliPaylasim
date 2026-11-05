@@ -4,9 +4,7 @@ import com.server.common.message.GlobalMessages;
 import com.server.common.response.ApiResponse;
 import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
-import com.server.modules.auth.dto.RegisterRequest;
 import com.server.modules.auth.dto.SessionInfo;
-import com.server.modules.user.UserService;
 import com.server.security.CurrentUser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -21,7 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * login, register, refresh ve logout herkese açıktır; password giriş yapmış kullanıcı içindir.
+ * login, refresh ve logout herkese açıktır; password giriş yapmış kullanıcı içindir.
+ * Kurum içi sistem olduğu için herkese açık kayıt yoktur; kullanıcıları yönetici açar.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -29,8 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
 
     private final AuthService authService;
-    private final UserService userService;
-    private final RegisterRateLimiter registerRateLimiter;
     private final RefreshCookies refreshCookies;
     private final CurrentUser currentUser;
 
@@ -38,13 +35,6 @@ public class AuthController {
     public ApiResponse<SessionInfo> login(@Valid @RequestBody LoginRequest request,
                                           HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
         return respond(authService.login(request, ClientInfo.from(httpRequest)), httpResponse);
-    }
-
-    @PostMapping("/register")
-    public ApiResponse<Void> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
-        registerRateLimiter.acquire(ClientInfo.from(httpRequest).ip());
-        userService.register(request.email(), request.fullName(), request.password());
-        return ApiResponse.success(GlobalMessages.RECORD_CREATED, null);
     }
 
     @PostMapping("/refresh")

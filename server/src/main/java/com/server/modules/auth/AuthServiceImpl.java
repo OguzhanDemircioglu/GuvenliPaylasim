@@ -8,6 +8,7 @@ import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
 import com.server.modules.auth.dto.SessionInfo;
 import com.server.modules.auth.dto.SessionUser;
+import com.server.modules.key.KeyService;
 import com.server.modules.menu.MenuService;
 import com.server.modules.user.User;
 import com.server.modules.user.UserRepository;
@@ -34,13 +35,14 @@ public class AuthServiceImpl implements AuthService {
     private final AccessTokenIssuer accessTokenIssuer;
     private final PasswordEncoder passwordEncoder;
     private final SessionProperties properties;
+    private final KeyService keyService;
     /** Kayıtlı olmayan e-postalarda da şifre kontrolü yapılır; cevap süresinden kullanıcının varlığı anlaşılmasın. */
     private final String dummyPasswordHash;
 
     public AuthServiceImpl(UserRepository userRepository, UserSessionRepository sessionRepository,
                            LoginAttemptService loginAttemptService, MenuService menuService,
                            AccessTokenIssuer accessTokenIssuer, PasswordEncoder passwordEncoder,
-                           SessionProperties properties) {
+                           SessionProperties properties, KeyService keyService) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.loginAttemptService = loginAttemptService;
@@ -48,6 +50,7 @@ public class AuthServiceImpl implements AuthService {
         this.accessTokenIssuer = accessTokenIssuer;
         this.passwordEncoder = passwordEncoder;
         this.properties = properties;
+        this.keyService = keyService;
         this.dummyPasswordHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
@@ -133,6 +136,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         }
         user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.setMustChangePassword(false);
+        keyService.saveOnPasswordChange(userId, request.keys());
         sessionRepository.revokeAllByUserIdExcept(userId, currentSessionId, Instant.now());
     }
 

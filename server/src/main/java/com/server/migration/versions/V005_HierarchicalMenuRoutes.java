@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * Menü route'ları frontend'in klasör ve URL ağacıyla aynı hale gelir (Frontend_Architecture.md §3):
- * /categories → /definitions/categories, /users → /administration/users.
+ * /units → /definitions/units, /users → /administration/users.
  * Anasayfa da menüye eklenir; sidebar tamamen DB'den gelir.
  * Menü ikonları NG-ZORRO'nun kullandığı Ant Design ikon adlarına çevrilir.
  */
@@ -26,7 +26,7 @@ public class V005_HierarchicalMenuRoutes implements DataMigration {
     @Override
     public void migrate(JdbcTemplate jdbc) {
         updateMenu(jdbc, "menu_definitions", "/definitions", "setting");
-        updateMenu(jdbc, "menu_categories", "/definitions/categories", "tag");
+        updateMenu(jdbc, "menu_units", "/definitions/units", "tag");
         updateMenu(jdbc, "menu_administration", "/administration", "safety-certificate");
         updateMenu(jdbc, "menu_users", "/administration/users", "team");
 

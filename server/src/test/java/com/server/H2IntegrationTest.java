@@ -2,8 +2,6 @@ package com.server;
 
 import com.server.modules.auth.LoginAttempt;
 import com.server.modules.auth.LoginAttemptRepository;
-import com.server.modules.report.PeriodValue;
-import com.server.modules.report.ReportService;
 import com.server.support.TestJwtKeys;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +13,6 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -51,9 +47,6 @@ class H2IntegrationTest {
     @Autowired
     private LoginAttemptRepository attempts;
 
-    @Autowired
-    private ReportService reports;
-
     @Test
     void migrationsAreApplied() {
         List<Integer> versions = jdbc.queryForList("SELECT version FROM data_migration_history ORDER BY version", Integer.class);
@@ -84,13 +77,13 @@ class H2IntegrationTest {
 
     @Test
     void uniqueIndexAppliesOnlyToNotDeletedRows() {
-        insertCategory("Aynı Ad");
-        assertThatThrownBy(() -> insertCategory("Aynı Ad")).isInstanceOf(DuplicateKeyException.class);
+        insertUnit("Aynı Ad");
+        assertThatThrownBy(() -> insertUnit("Aynı Ad")).isInstanceOf(DuplicateKeyException.class);
 
-        jdbc.update("UPDATE categories SET deleted = true WHERE name = 'Aynı Ad'");
-        insertCategory("Aynı Ad");
+        jdbc.update("UPDATE units SET deleted = true WHERE name = 'Aynı Ad'");
+        insertUnit("Aynı Ad");
 
-        assertThat(jdbc.queryForObject("SELECT count(*) FROM categories WHERE name = 'Aynı Ad'", Integer.class)).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM units WHERE name = 'Aynı Ad'", Integer.class)).isEqualTo(2);
     }
 
     @Test
@@ -113,20 +106,6 @@ class H2IntegrationTest {
                 .isEqualTo(1);
     }
 
-    @Test
-    void reportReturnsEveryDayAndCountsToday() {
-        insertCategory("Rapor Kategorisi");
-
-        List<PeriodValue> values = reports.categoriesCreatedPerDay(7);
-
-        LocalDate today = LocalDate.now(ZoneId.of("Europe/Istanbul"));
-        assertThat(values).hasSize(7);
-        assertThat(values.getFirst().period()).isEqualTo(today.minusDays(6).toString());
-        assertThat(values.getFirst().value()).isZero();
-        assertThat(values.getLast().period()).isEqualTo(today.toString());
-        assertThat(values.getLast().value()).isPositive();
-    }
-
     private LoginAttempt attempt(String key) {
         return attempts.findById(key).orElseThrow();
     }
@@ -141,7 +120,7 @@ class H2IntegrationTest {
         return jdbc.queryForObject("SELECT roles FROM menus WHERE title_key = ? AND deleted = false", String.class, titleKey);
     }
 
-    private void insertCategory(String name) {
-        jdbc.update("INSERT INTO categories (name, version, deleted, created_at) VALUES (?, 0, false, now())", name);
+    private void insertUnit(String name) {
+        jdbc.update("INSERT INTO units (name, version, deleted, created_at) VALUES (?, 0, false, now())", name);
     }
 }

@@ -2,8 +2,8 @@ package com.server.common.exception;
 
 import com.server.common.message.GlobalMessages;
 import com.server.common.web.TraceIdFilter;
-import com.server.modules.category.CategoryMessages;
-import com.server.modules.category.dto.CategoryCreateRequest;
+import com.server.modules.unit.UnitMessages;
+import com.server.modules.unit.dto.UnitCreateRequest;
 import jakarta.validation.Valid;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -50,7 +50,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void validationErrorReturnsFirstFieldKey() throws Exception {
         expectError(post("/test/validated").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"\"}"),
-                400, CategoryMessages.NAME_REQUIRED);
+                400, UnitMessages.NAME_REQUIRED);
     }
 
     @Test
@@ -117,7 +117,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void businessExceptionReturns422() throws Exception {
-        expectError(get("/test/throw").param("type", "business"), 422, CategoryMessages.NAME_EXISTS);
+        expectError(get("/test/throw").param("type", "business"), 422, UnitMessages.NAME_EXISTS);
     }
 
     @Test
@@ -146,7 +146,7 @@ class GlobalExceptionHandlerTest {
     static class FailingController {
 
         @PostMapping("/test/validated")
-        void validated(@Valid @RequestBody CategoryCreateRequest request) {
+        void validated(@Valid @RequestBody UnitCreateRequest request) {
         }
 
         @GetMapping("/test/typed")
@@ -162,7 +162,7 @@ class GlobalExceptionHandlerTest {
                 case "conflict" -> throw new ConflictException(GlobalMessages.RECORD_MODIFIED);
                 case "optimisticLock" -> throw new ObjectOptimisticLockingFailureException(Object.class, 1L);
                 case "integrity" -> throw new DataIntegrityViolationException("duplicate key value");
-                case "business" -> throw new BusinessException(CategoryMessages.NAME_EXISTS);
+                case "business" -> throw new BusinessException(UnitMessages.NAME_EXISTS);
                 case "blocked" -> throw new LoginBlockedException("auth_login_blocked");
                 default -> throw new NullPointerException("boom");
             }

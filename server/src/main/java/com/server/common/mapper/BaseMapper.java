@@ -7,7 +7,7 @@ import org.mapstruct.MappingTarget;
  * Modül mapper'larının atası. Modül tarafında sadece interface yazılır, kodu MapStruct üretir:
  * <pre>
  * &#64;Mapper(config = MapperSettings.class)
- * public interface CategoryMapper extends BaseMapper&lt;Category, CategoryCreateRequest, CategoryUpdateRequest, CategoryResponse&gt; {}
+ * public interface UnitMapper extends BaseMapper&lt;Unit, UnitCreateRequest, UnitUpdateRequest, UnitResponse&gt; {}
  * </pre>
  */
 public interface BaseMapper<E extends BaseEntity, CREATE, UPDATE, RESPONSE> {

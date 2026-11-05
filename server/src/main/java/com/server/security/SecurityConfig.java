@@ -31,7 +31,7 @@ public class SecurityConfig {
 
     /** Token gerektirmeyen auth endpoint'leri. */
     private static final Set<String> PUBLIC_AUTH_PATHS = Set.of(
-            "/api/auth/login", "/api/auth/register", "/api/auth/refresh", "/api/auth/logout", "/api/auth/dev-login");
+            "/api/auth/login", "/api/auth/refresh", "/api/auth/logout", "/api/auth/dev-login");
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
@@ -54,8 +54,6 @@ public class SecurityConfig {
                         // Yol kuralı ilk katmandır; controller'lar ayrıca @PreAuthorize taşır (çift katman).
                         .requestMatchers("/api/system/**").hasRole(Role.SUPERADMIN.name())
                         .requestMatchers("/api/insights/**").hasRole(Role.OWNER.name())
-                        // Toplu raporlar sahibe de açıktır.
-                        .requestMatchers("/api/reports/**").hasAnyRole(Role.USER.name(), Role.OWNER.name())
                         // Varsayılan: USER (hiyerarşiyle ADMIN ve SUPERADMIN). OWNER buraya giremez.
                         .anyRequest().hasRole(Role.USER.name()))
                 .oauth2ResourceServer(oauth2 -> oauth2

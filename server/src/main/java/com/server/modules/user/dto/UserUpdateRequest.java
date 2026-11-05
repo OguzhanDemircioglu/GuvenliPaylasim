@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/** E-posta değiştirilemez: parola türetmesinin tuzu e-postadır (UserMessages.EMAIL_IMMUTABLE). */
 public record UserUpdateRequest(
         @NotBlank(message = UserMessages.EMAIL_REQUIRED)
         @Email(message = UserMessages.EMAIL_INVALID)
@@ -25,6 +26,11 @@ public record UserUpdateRequest(
 
         @NotNull(message = UserMessages.ACTIVE_REQUIRED)
         Boolean active,
+
+        Long unitId,
+
+        @Size(max = 20, message = UserMessages.PHONE_TOO_LONG)
+        String phone,
 
         @NotNull(message = GlobalMessages.VERSION_REQUIRED)
         Long version) implements VersionedRequest {

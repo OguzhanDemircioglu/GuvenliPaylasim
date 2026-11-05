@@ -55,7 +55,7 @@ class FirewallIntegrationTest {
         HttpResponse<String> response;
         try (HttpClient client = HttpClient.newHttpClient()) {
             // StrictHttpFirewall URL'de ';' kabul etmez.
-            URI uri = URI.create("http://localhost:" + port + "/api/categories;x=y");
+            URI uri = URI.create("http://localhost:" + port + "/api/units;x=y");
             response = client.send(HttpRequest.newBuilder(uri).GET().build(), HttpResponse.BodyHandlers.ofString());
         }
 
@@ -67,6 +67,6 @@ class FirewallIntegrationTest {
         assertThat(body.get("traceId").asString())
                 .isNotBlank()
                 .isEqualTo(response.headers().firstValue(TraceIdFilter.HEADER).orElseThrow());
-        assertThat(output).contains("400 " + GlobalMessages.INVALID_REQUEST + " GET /api/categories;x=y");
+        assertThat(output).contains("400 " + GlobalMessages.INVALID_REQUEST + " GET /api/units;x=y");
     }
 }

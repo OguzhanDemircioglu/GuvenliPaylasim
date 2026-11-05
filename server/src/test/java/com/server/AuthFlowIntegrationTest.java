@@ -4,8 +4,8 @@ import com.jayway.jsonpath.JsonPath;
 import com.server.common.message.GlobalMessages;
 import com.server.modules.auth.AuthMessages;
 import com.server.modules.auth.RefreshCookies;
-import com.server.modules.category.CategoryMessages;
-import com.server.modules.user.UserMessages;
+import com.server.modules.unit.UnitMessages;
+import com.server.security.AuthSecrets;
 import com.server.support.TestJwtKeys;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.Test;
@@ -49,6 +49,7 @@ class AuthFlowIntegrationTest {
 
     private static final String ADMIN_EMAIL = "admin@test.local";
     private static final String ADMIN_PASSWORD = "Admin12345";
+    private static final String ADMIN_SECRET = AuthSecrets.derive(ADMIN_EMAIL, ADMIN_PASSWORD);
 
     @Container
     static final PostgreSQLContainer POSTGRES = new PostgreSQLContainer("postgres:18");
@@ -80,7 +81,7 @@ class AuthFlowIntegrationTest {
 
     @Test
     void loginReturnsSessionInfoAndRefreshCookie() throws Exception {
-        MockHttpServletResponse response = login(ADMIN_EMAIL.toUpperCase(), ADMIN_PASSWORD)
+        MockHttpServletResponse response = login(ADMIN_EMAIL.toUpperCase(), ADMIN_SECRET)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", aMapWithSize(4)))
                 .andExpect(jsonPath("$.success").value(true))
@@ -93,8 +94,8 @@ class AuthFlowIntegrationTest {
                 .andExpect(jsonPath("$.data.menus[1].titleKey").value("menu_definitions"))
                 .andExpect(jsonPath("$.data.menus[1].route").value("/definitions"))
                 .andExpect(jsonPath("$.data.menus[1].icon").value("setting"))
-                .andExpect(jsonPath("$.data.menus[1].children[0].titleKey").value("menu_categories"))
-                .andExpect(jsonPath("$.data.menus[1].children[0].route").value("/definitions/categories"))
+                .andExpect(jsonPath("$.data.menus[1].children[0].titleKey").value("menu_units"))
+                .andExpect(jsonPath("$.data.menus[1].children[0].route").value("/definitions/units"))
                 .andReturn().getResponse();
 
         assertThat(response.getHeader(HttpHeaders.SET_COOKIE)).contains("HttpOnly", "SameSite=Strict", "Path=/api/auth");
@@ -107,41 +108,8 @@ class AuthFlowIntegrationTest {
     }
 
     @Test
-    void registerCreatesPlainUserAndIgnoresRoleInRequest() throws Exception {
-        String email = "new-" + UUID.randomUUID() + "@test.local";
-
-        register("{\"fullName\":\"New User\",\"email\":\"" + email + "\",\"password\":\"User12345\",\"role\":\"ADMIN\"}")
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.message").value(GlobalMessages.RECORD_CREATED));
-
-        login(email, "User12345")
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.user.fullName").value("New User"))
-                .andExpect(jsonPath("$.data.user.role").value("USER"));
-    }
-
-    @Test
-    void registerRejectsExistingEmailAndShortPassword() throws Exception {
-        expectError(register("{\"fullName\":\"X\",\"email\":\"" + ADMIN_EMAIL + "\",\"password\":\"User12345\"}"),
-                422, UserMessages.EMAIL_EXISTS);
-        expectError(register("{\"fullName\":\"X\",\"email\":\"short@test.local\",\"password\":\"short\"}"),
-                400, UserMessages.PASSWORD_TOO_SHORT);
-    }
-
-    @Test
-    void eleventhRegisterFromSameIpIsBlockedButOtherIpsAreNot() throws Exception {
-        String body = "{\"fullName\":\"X\",\"email\":\"" + ADMIN_EMAIL + "\",\"password\":\"User12345\"}";
-        for (int i = 0; i < 10; i++) {
-            expectError(registerFrom("10.0.0.1", body), 422, UserMessages.EMAIL_EXISTS);
-        }
-
-        expectError(registerFrom("10.0.0.1", body), 429, AuthMessages.REGISTER_BLOCKED);
-        expectError(registerFrom("10.0.0.2", body), 422, UserMessages.EMAIL_EXISTS);
-    }
-
-    @Test
     void refreshRotatesTokenToleratesConcurrentReuseAndDetectsTheft() throws Exception {
-        String first = refreshCookie(login(ADMIN_EMAIL, ADMIN_PASSWORD).andReturn().getResponse());
+        String first = refreshCookie(login(ADMIN_EMAIL, ADMIN_SECRET).andReturn().getResponse());
 
         MockHttpServletResponse rotated = refresh(first).andExpect(status().isOk()).andReturn().getResponse();
         String second = refreshCookie(rotated);
@@ -159,7 +127,7 @@ class AuthFlowIntegrationTest {
 
     @Test
     void logoutRevokesSession() throws Exception {
-        String token = refreshCookie(login(ADMIN_EMAIL, ADMIN_PASSWORD).andReturn().getResponse());
+        String token = refreshCookie(login(ADMIN_EMAIL, ADMIN_SECRET).andReturn().getResponse());
 
         mockMvc.perform(post("/api/auth/logout").cookie(new Cookie(RefreshCookies.NAME, token)))
                 .andExpect(status().isOk());
@@ -169,7 +137,7 @@ class AuthFlowIntegrationTest {
 
     @Test
     void fiveWrongPasswordsBlockLoginEvenWithCorrectPassword() throws Exception {
-        String adminToken = accessToken(login(ADMIN_EMAIL, ADMIN_PASSWORD));
+        String adminToken = accessToken(login(ADMIN_EMAIL, ADMIN_SECRET));
         String email = createUser(adminToken, "USER");
 
         for (int i = 0; i < 5; i++) {
@@ -180,7 +148,7 @@ class AuthFlowIntegrationTest {
 
     @Test
     void userRoleCannotUseAdminEndpointsAndDoesNotSeeAdminMenus() throws Exception {
-        String adminToken = accessToken(login(ADMIN_EMAIL, ADMIN_PASSWORD));
+        String adminToken = accessToken(login(ADMIN_EMAIL, ADMIN_SECRET));
         String email = createUser(adminToken, "USER");
 
         ResultActions userLogin = login(email, "User12345")
@@ -188,30 +156,12 @@ class AuthFlowIntegrationTest {
         String userToken = accessToken(userLogin);
 
         expectError(withToken(get("/api/users"), userToken), 403, GlobalMessages.ACCESS_DENIED);
-        mockMvc.perform(withToken(get("/api/categories"), userToken)).andExpect(status().isOk());
+        mockMvc.perform(withToken(get("/api/units"), userToken)).andExpect(status().isOk());
     }
 
     @Test
     void requestWithoutTokenReturns401InApiFormat() throws Exception {
-        expectError(get("/api/categories"), 401, GlobalMessages.UNAUTHORIZED);
-    }
-
-    @Test
-    void categoriesCreatedReportReturnsEveryDayIncludingToday() throws Exception {
-        String token = accessToken(login(ADMIN_EMAIL, ADMIN_PASSWORD));
-        mockMvc.perform(withToken(post("/api/categories"), token)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"name\":\"Rapor " + UUID.randomUUID() + "\"}"))
-                .andExpect(status().isOk());
-        String today = java.time.LocalDate.now(java.time.ZoneId.of("Europe/Istanbul")).toString();
-
-        mockMvc.perform(withToken(get("/api/reports/categories-created").param("days", "7"), token))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.length()").value(7))
-                .andExpect(jsonPath("$.data[6].period").value(today))
-                .andExpect(jsonPath("$.data[6].value").value(org.hamcrest.Matchers.greaterThanOrEqualTo(1)));
-
-        expectError(withToken(get("/api/reports/categories-created").param("days", "0"), token), 400, "report_days_invalid");
+        expectError(get("/api/units"), 401, GlobalMessages.UNAUTHORIZED);
     }
 
     @Test
@@ -220,11 +170,11 @@ class AuthFlowIntegrationTest {
     }
 
     @Test
-    void categoryCrudWithVersionConflictAndSoftDelete() throws Exception {
-        String token = accessToken(login(ADMIN_EMAIL, ADMIN_PASSWORD));
-        String name = "Kategori " + UUID.randomUUID();
+    void unitCrudWithVersionConflictAndSoftDelete() throws Exception {
+        String token = accessToken(login(ADMIN_EMAIL, ADMIN_SECRET));
+        String name = "Birim " + UUID.randomUUID();
 
-        String created = mockMvc.perform(withToken(post("/api/categories"), token)
+        String created = mockMvc.perform(withToken(post("/api/units"), token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"" + name + "\"}"))
                 .andExpect(status().isOk())
@@ -233,24 +183,24 @@ class AuthFlowIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         Integer id = JsonPath.read(created, "$.data.id");
 
-        expectError(withToken(post("/api/categories"), token)
+        expectError(withToken(post("/api/units"), token)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"" + name + "\"}"), 422, CategoryMessages.NAME_EXISTS);
+                .content("{\"name\":\"" + name + "\"}"), 422, UnitMessages.NAME_EXISTS);
 
-        mockMvc.perform(withToken(put("/api/categories/" + id), token)
+        mockMvc.perform(withToken(put("/api/units/" + id), token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"name\":\"" + name + " v2\",\"version\":0}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.version").value(1));
 
-        expectError(withToken(put("/api/categories/" + id), token)
+        expectError(withToken(put("/api/units/" + id), token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"" + name + " v3\",\"version\":0}"), 409, GlobalMessages.RECORD_MODIFIED);
 
-        mockMvc.perform(withToken(delete("/api/categories/" + id), token)).andExpect(status().isOk());
-        expectError(withToken(get("/api/categories/" + id), token), 404, GlobalMessages.RECORD_NOT_FOUND);
+        mockMvc.perform(withToken(delete("/api/units/" + id), token)).andExpect(status().isOk());
+        expectError(withToken(get("/api/units/" + id), token), 404, GlobalMessages.RECORD_NOT_FOUND);
 
-        Boolean deleted = jdbc.queryForObject("SELECT deleted FROM categories WHERE id = ?", Boolean.class, id);
+        Boolean deleted = jdbc.queryForObject("SELECT deleted FROM units WHERE id = ?", Boolean.class, id);
         assertThat(deleted).isTrue();
     }
 
@@ -258,20 +208,6 @@ class AuthFlowIntegrationTest {
         return mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"));
-    }
-
-    private ResultActions register(String body) throws Exception {
-        return mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON).content(body));
-    }
-
-    private ResultActions registerFrom(String ip, String body) throws Exception {
-        return mockMvc.perform(post("/api/auth/register")
-                .with(request -> {
-                    request.setRemoteAddr(ip);
-                    return request;
-                })
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(body));
     }
 
     private ResultActions refresh(String refreshToken) throws Exception {
@@ -282,9 +218,17 @@ class AuthFlowIntegrationTest {
         String email = "user-" + UUID.randomUUID() + "@test.local";
         mockMvc.perform(withToken(post("/api/users"), adminToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"" + email + "\",\"fullName\":\"Test User\",\"password\":\"User12345\",\"role\":\"" + role + "\"}"))
+                        .content("{\"email\":\"" + email + "\",\"fullName\":\"Test User\",\"password\":\"User12345\",\"role\":\"" + role
+                                + "\",\"unitId\":" + testUnitId() + "}"))
                 .andExpect(status().isOk());
         return email;
+    }
+
+    private long testUnitId() {
+        jdbc.update("""
+                INSERT INTO units (name, version, deleted, created_at)
+                SELECT 'Test Birimi', 0, false, now() WHERE NOT EXISTS (SELECT 1 FROM units WHERE name = 'Test Birimi')""");
+        return jdbc.queryForObject("SELECT id FROM units WHERE name = 'Test Birimi' AND deleted = false", Long.class);
     }
 
     private void expectError(MockHttpServletRequestBuilder request, int status, String message) throws Exception {

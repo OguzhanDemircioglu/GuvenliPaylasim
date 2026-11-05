@@ -2,6 +2,7 @@ package com.server.common.validation;
 
 import com.server.modules.auth.AuthMessages;
 import com.server.modules.auth.dto.ChangePasswordRequest;
+import com.server.modules.key.dto.KeyBundleRequest;
 import com.server.modules.user.UserMessages;
 import com.server.modules.user.dto.UserCreateRequest;
 import com.server.security.Role;
@@ -34,7 +35,7 @@ class MaxBytesValidatorTest {
         String password = "ğ".repeat(37); // 37 karakter, 74 byte
 
         Set<ConstraintViolation<UserCreateRequest>> violations =
-                validator.validate(new UserCreateRequest("ali@firma.com", "Ali", password, Role.USER));
+                validator.validate(new UserCreateRequest("ali@firma.com", "Ali", password, Role.USER, null, null));
 
         assertThat(violations).extracting(ConstraintViolation::getMessage).containsExactly(UserMessages.PASSWORD_TOO_LONG);
     }
@@ -43,13 +44,14 @@ class MaxBytesValidatorTest {
     void passwordAtTheLimitIsAccepted() {
         String password = "ğ".repeat(36); // 72 byte
 
-        assertThat(validator.validate(new UserCreateRequest("ali@firma.com", "Ali", password, Role.USER))).isEmpty();
+        assertThat(validator.validate(new UserCreateRequest("ali@firma.com", "Ali", password, Role.USER, null, null))).isEmpty();
     }
 
     @Test
     void newPasswordIsCheckedToo() {
         Set<ConstraintViolation<ChangePasswordRequest>> violations =
-                validator.validate(new ChangePasswordRequest("current-password", "ş".repeat(40)));
+                validator.validate(new ChangePasswordRequest("current-password", "ş".repeat(40),
+                        new KeyBundleRequest("enc", "sign", "bundle")));
 
         assertThat(violations).extracting(ConstraintViolation::getMessage)
                 .containsExactly(AuthMessages.NEW_PASSWORD_TOO_LONG);

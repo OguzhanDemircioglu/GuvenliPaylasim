@@ -16,7 +16,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Paylaşılan veritabanı güvencesi: başka bir uygulama public.categories ve public.users tablolarına sahipken
+ * Paylaşılan veritabanı güvencesi: başka bir uygulama public.units ve public.users tablolarına sahipken
  * DB_SCHEMA=starterapp ile açılan uygulama onlara dokunmamalı. Docker yoksa otomatik olarak atlanır.
  */
 @SpringBootTest
@@ -43,14 +43,14 @@ class SchemaIsolationIntegrationTest {
 
     @Test
     void otherSchemasAreUntouched() {
-        assertThat(columns("public", "categories")).containsExactly("id", "legacy_name");
+        assertThat(columns("public", "units")).containsExactly("id", "legacy_name");
         assertThat(columns("public", "users")).containsExactly("id", "login");
-        assertThat(jdbc.queryForObject("SELECT legacy_name FROM public.categories WHERE id = 1", String.class))
+        assertThat(jdbc.queryForObject("SELECT legacy_name FROM public.units WHERE id = 1", String.class))
                 .isEqualTo("other app row");
-        assertThat(tables("public")).containsExactly("categories", "users");
+        assertThat(tables("public")).containsExactly("units", "users");
 
         assertThat(tables("starterapp")).containsExactly(
-                "categories", "data_migration_history", "login_attempts", "menus", "user_sessions", "users");
+                "units", "data_migration_history", "login_attempts", "menus", "user_sessions", "users");
     }
 
     private List<String> columns(String schema, String table) {

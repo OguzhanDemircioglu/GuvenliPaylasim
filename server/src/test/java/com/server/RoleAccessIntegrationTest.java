@@ -3,6 +3,7 @@ package com.server;
 import com.jayway.jsonpath.JsonPath;
 import com.server.common.message.GlobalMessages;
 import com.server.modules.user.UserMessages;
+import com.server.security.AuthSecrets;
 import com.server.support.TestJwtKeys;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +39,7 @@ class RoleAccessIntegrationTest {
 
     private static final String SUPERADMIN_EMAIL = "superadmin@test.local";
     private static final String PASSWORD = "User12345";
+    private static final String SUPERADMIN_SECRET = AuthSecrets.derive(SUPERADMIN_EMAIL, PASSWORD);
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
@@ -66,7 +68,7 @@ class RoleAccessIntegrationTest {
                 .andExpect(jsonPath("$.data.menus[*].titleKey", hasItem("menu_administration"))));
 
         mockMvc.perform(withToken(get("/api/users"), token)).andExpect(status().isOk());
-        mockMvc.perform(withToken(get("/api/categories"), token)).andExpect(status().isOk());
+        mockMvc.perform(withToken(get("/api/units"), token)).andExpect(status().isOk());
     }
 
     @Test
@@ -74,7 +76,7 @@ class RoleAccessIntegrationTest {
         String admin = accessToken(login(createUser(superadminToken(), "ADMIN")));
 
         mockMvc.perform(withToken(get("/api/users"), admin)).andExpect(status().isOk());
-        mockMvc.perform(withToken(get("/api/categories"), admin)).andExpect(status().isOk());
+        mockMvc.perform(withToken(get("/api/units"), admin)).andExpect(status().isOk());
     }
 
     @Test
@@ -82,9 +84,8 @@ class RoleAccessIntegrationTest {
         String owner = accessToken(login(createUser(superadminToken(), "OWNER"))
                 .andExpect(jsonPath("$.data.menus[*].titleKey", containsInAnyOrder("menu_home"))));
 
-        mockMvc.perform(withToken(get("/api/reports/categories-created"), owner)).andExpect(status().isOk());
-        expectError(withToken(get("/api/categories"), owner), 403, GlobalMessages.ACCESS_DENIED);
-        expectError(withToken(post("/api/categories"), owner)
+        expectError(withToken(get("/api/units"), owner), 403, GlobalMessages.ACCESS_DENIED);
+        expectError(withToken(post("/api/units"), owner)
                 .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"X\"}"), 403, GlobalMessages.ACCESS_DENIED);
         expectError(withToken(get("/api/users"), owner), 403, GlobalMessages.ACCESS_DENIED);
     }
@@ -95,7 +96,7 @@ class RoleAccessIntegrationTest {
                 .andExpect(jsonPath("$.data.menus[*].titleKey", not(hasItem("menu_administration")))));
 
         expectError(withToken(get("/api/users"), user), 403, GlobalMessages.ACCESS_DENIED);
-        mockMvc.perform(withToken(get("/api/categories"), user)).andExpect(status().isOk());
+        mockMvc.perform(withToken(get("/api/units"), user)).andExpect(status().isOk());
     }
 
     @Test
@@ -139,25 +140,24 @@ class RoleAccessIntegrationTest {
         expectError(withToken(delete("/api/users/" + self), superadmin), 422, UserMessages.LAST_SUPERADMIN);
     }
 
-    @Test
-    void registrationAlwaysCreatesUser() throws Exception {
-        String email = "reg-" + UUID.randomUUID() + "@test.local";
-        mockMvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"fullName\":\"R\",\"email\":\"" + email + "\",\"password\":\"" + PASSWORD + "\"}"))
-                .andExpect(status().isOk());
-
-        login(email).andExpect(jsonPath("$.data.user.role").value("USER"));
-    }
-
     private String superadminToken() throws Exception {
         return accessToken(login(SUPERADMIN_EMAIL));
     }
 
+    /** İlk süperadmin migration'la türetilmiş parolayla açılır; API'den açılanlar testin gönderdiği değerle. */
     private ResultActions login(String email) throws Exception {
+        String password = SUPERADMIN_EMAIL.equals(email) ? SUPERADMIN_SECRET : PASSWORD;
         return mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"email\":\"" + email + "\",\"password\":\"" + PASSWORD + "\"}"))
+                        .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isOk());
+    }
+
+    private long testUnitId() {
+        jdbc.update("""
+                INSERT INTO units (name, version, deleted, created_at)
+                SELECT 'Test Birimi', 0, false, now() WHERE NOT EXISTS (SELECT 1 FROM units WHERE name = 'Test Birimi')""");
+        return jdbc.queryForObject("SELECT id FROM units WHERE name = 'Test Birimi'", Long.class);
     }
 
     private String createUser(String token, String role) throws Exception {
@@ -174,7 +174,7 @@ class RoleAccessIntegrationTest {
         return mockMvc.perform(withToken(post("/api/users"), token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\",\"fullName\":\"Test User\",\"password\":\"" + PASSWORD
-                        + "\",\"role\":\"" + role + "\"}"));
+                        + "\",\"role\":\"" + role + "\",\"unitId\":" + testUnitId() + "}"));
     }
 
     private ResultActions update(String token, long id, String role, boolean active) throws Exception {
@@ -185,7 +185,7 @@ class RoleAccessIntegrationTest {
         return mockMvc.perform(withToken(put("/api/users/" + id), token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\",\"fullName\":\"Test User\",\"role\":\"" + role
-                        + "\",\"active\":" + active + ",\"version\":" + version + "}"));
+                        + "\",\"active\":" + active + ",\"unitId\":" + testUnitId() + ",\"version\":" + version + "}"));
     }
 
     private long userId(String email) {

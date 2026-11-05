@@ -9,6 +9,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+/**
+ * {@code password}, istemcinin paroladan türettiği değerdir (AuthSecrets); parola kuralları istemcide uygulanır.
+ */
 public record UserCreateRequest(
         @NotBlank(message = UserMessages.EMAIL_REQUIRED)
         @Email(message = UserMessages.EMAIL_INVALID)
@@ -26,7 +29,12 @@ public record UserCreateRequest(
         String password,
 
         @NotNull(message = UserMessages.ROLE_REQUIRED)
-        Role role) {
+        Role role,
+
+        Long unitId,
+
+        @Size(max = 20, message = UserMessages.PHONE_TOO_LONG)
+        String phone) {
 
     public UserCreateRequest {
         email = Emails.normalize(email);

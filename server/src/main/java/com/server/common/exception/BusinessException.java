@@ -3,7 +3,7 @@ package com.server.common.exception;
 import org.springframework.http.HttpStatus;
 
 /**
- * İş kuralı ihlali (422). Örnek: throw new BusinessException(CategoryMessages.NAME_EXISTS).
+ * İş kuralı ihlali (422). Örnek: throw new BusinessException(UnitMessages.NAME_EXISTS).
  */
 public class BusinessException extends BaseException {
 

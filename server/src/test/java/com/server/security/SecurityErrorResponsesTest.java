@@ -71,14 +71,14 @@ class SecurityErrorResponsesTest {
     void errorControllerLogs500WithStacktrace(CapturedOutput output) {
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/error");
         request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, 500);
-        request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, "/api/categories");
+        request.setAttribute(RequestDispatcher.ERROR_REQUEST_URI, "/api/units");
         request.setAttribute(RequestDispatcher.ERROR_EXCEPTION, new IllegalStateException("filter failed"));
 
         new ApiErrorController().error(request);
 
         assertThat(output)
                 .contains("ERROR")
-                .contains("500 " + GlobalMessages.UNEXPECTED_ERROR + " GET /api/categories")
+                .contains("500 " + GlobalMessages.UNEXPECTED_ERROR + " GET /api/units")
                 .contains("java.lang.IllegalStateException: filter failed");
     }
 

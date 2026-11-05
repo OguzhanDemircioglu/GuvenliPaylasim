@@ -3,6 +3,8 @@ package com.server.modules.user;
 import com.server.common.exception.BusinessException;
 import com.server.common.service.BaseServiceImpl;
 import com.server.modules.auth.UserSessionRepository;
+import com.server.modules.key.UserKeyRepository;
+import com.server.modules.unit.UnitRepository;
 import com.server.modules.user.dto.UserCreateRequest;
 import com.server.modules.user.dto.UserPasswordResetRequest;
 import com.server.modules.user.dto.UserResponse;
@@ -35,13 +37,19 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserCreateRequest, Us
     private final PasswordEncoder passwordEncoder;
     private final CurrentUser currentUser;
 
+    private final UnitRepository unitRepository;
+    private final UserKeyRepository keyRepository;
+
     public UserServiceImpl(UserRepository repository, UserMapper mapper, UserSessionRepository sessionRepository,
-                           PasswordEncoder passwordEncoder, CurrentUser currentUser) {
+                           PasswordEncoder passwordEncoder, CurrentUser currentUser,
+                           UnitRepository unitRepository, UserKeyRepository keyRepository) {
         super(repository, mapper);
         this.userRepository = repository;
         this.sessionRepository = sessionRepository;
         this.passwordEncoder = passwordEncoder;
         this.currentUser = currentUser;
+        this.unitRepository = unitRepository;
+        this.keyRepository = keyRepository;
     }
 
     @Override
@@ -51,12 +59,6 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserCreateRequest, Us
             throw new BusinessException(UserMessages.ROLE_NOT_ASSIGNABLE);
         }
         return super.create(request);
-    }
-
-    @Override
-    @Transactional
-    public UserResponse register(String email, String fullName, String password) {
-        return super.create(new UserCreateRequest(email, fullName, password, Role.USER));
     }
 
     @Override
@@ -85,6 +87,10 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserCreateRequest, Us
         User user = findEntity(id);
         checkManageable(user);
         user.setPassword(passwordEncoder.encode(request.newPassword()));
+        user.setMustChangePassword(true);
+        // Özel anahtarlar eski parolayla şifreliydi; yönetici onları açamaz. Kullanıcı yeni anahtar üretir ve
+        // eski belgelerini artık açamaz (uçtan uca şifrelemenin doğal sonucu, docs/Crypto_Design.md §6).
+        keyRepository.deleteById(id);
         sessionRepository.revokeAllByUserId(id, Instant.now());
     }
 
@@ -93,6 +99,7 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserCreateRequest, Us
         if (userRepository.existsByEmail(request.email())) {
             throw new BusinessException(UserMessages.EMAIL_EXISTS);
         }
+        validateUnit(request.role(), request.unitId());
     }
 
     @Override
@@ -109,9 +116,10 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserCreateRequest, Us
                 throw new BusinessException(UserMessages.ROLE_NOT_ASSIGNABLE);
             }
         }
-        if (userRepository.existsByEmailAndIdNot(request.email(), entity.getId())) {
-            throw new BusinessException(UserMessages.EMAIL_EXISTS);
+        if (!entity.getEmail().equals(request.email())) {
+            throw new BusinessException(UserMessages.EMAIL_IMMUTABLE);
         }
+        validateUnit(request.role(), request.unitId());
         if (!request.active() && isLastActiveSuperadmin(entity)) {
             throw new BusinessException(UserMessages.LAST_SUPERADMIN);
         }
@@ -122,6 +130,19 @@ public class UserServiceImpl extends BaseServiceImpl<User, UserCreateRequest, Us
         checkManageable(entity);
         if (isLastActiveSuperadmin(entity)) {
             throw new BusinessException(UserMessages.LAST_SUPERADMIN);
+        }
+    }
+
+    /** Belge alıp gönderen her USER bir birime bağlıdır; yönetici rollerinde birim isteğe bağlıdır. */
+    private void validateUnit(Role role, Long unitId) {
+        if (unitId == null) {
+            if (role == Role.USER) {
+                throw new BusinessException(UserMessages.UNIT_REQUIRED);
+            }
+            return;
+        }
+        if (!unitRepository.existsById(unitId)) {
+            throw new BusinessException(UserMessages.UNIT_NOT_FOUND);
         }
     }
 

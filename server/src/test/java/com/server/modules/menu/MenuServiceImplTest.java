@@ -32,7 +32,7 @@ class MenuServiceImplTest {
         assertThat(tree).extracting(MenuNode::titleKey)
                 .containsExactly("menu_home", "menu_definitions", "menu_administration");
         assertThat(tree.get(1).children()).extracting(MenuNode::titleKey)
-                .containsExactly("menu_categories", "menu_products");
+                .containsExactly("menu_units", "menu_products");
         assertThat(tree.get(2).children()).extracting(MenuNode::titleKey)
                 .containsExactly("menu_users", "menu_orphan_of_admin_group");
     }
@@ -65,14 +65,14 @@ class MenuServiceImplTest {
         // menu_orphan_of_admin_group USER'a açık ama üst menüsü (Yönetim) görünmediği için o da görünmez.
         assertThat(tree).extracting(MenuNode::titleKey).containsExactly("menu_home", "menu_definitions");
         assertThat(tree.get(1).children()).extracting(MenuNode::titleKey)
-                .containsExactly("menu_categories", "menu_products");
+                .containsExactly("menu_units", "menu_products");
     }
 
     private static List<Menu> sampleMenus() {
         return List.of(
                 menu(7L, null, "menu_home", 0, Role.OWNER, Role.USER),
                 menu(1L, null, "menu_definitions", 1, Role.USER),
-                menu(3L, 1L, "menu_categories", 1, Role.USER),
+                menu(3L, 1L, "menu_units", 1, Role.USER),
                 menu(4L, 1L, "menu_products", 2, Role.USER),
                 menu(2L, null, "menu_administration", 99, Role.ADMIN),
                 menu(5L, 2L, "menu_users", 1, Role.ADMIN),

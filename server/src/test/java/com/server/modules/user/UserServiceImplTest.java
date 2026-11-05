@@ -2,6 +2,8 @@ package com.server.modules.user;
 
 import com.server.common.exception.BusinessException;
 import com.server.modules.auth.UserSessionRepository;
+import com.server.modules.key.UserKeyRepository;
+import com.server.modules.unit.UnitRepository;
 import com.server.modules.user.dto.UserCreateRequest;
 import com.server.modules.user.dto.UserUpdateRequest;
 import com.server.security.CurrentUser;
@@ -26,6 +28,8 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
 
+    private static final Long UNIT_ID = 10L;
+
     @Mock
     private UserRepository repository;
     @Mock
@@ -34,12 +38,17 @@ class UserServiceImplTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private CurrentUser currentUser;
+    @Mock
+    private UnitRepository unitRepository;
+    @Mock
+    private UserKeyRepository keyRepository;
 
     private UserServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new UserServiceImpl(repository, new UserMapperImpl(), sessionRepository, passwordEncoder, currentUser);
+        service = new UserServiceImpl(repository, new UserMapperImpl(), sessionRepository, passwordEncoder, currentUser,
+                unitRepository, keyRepository);
     }
 
     @Test
@@ -49,7 +58,7 @@ class UserServiceImplTest {
         when(repository.countByRoleAndActiveTrue(Role.SUPERADMIN)).thenReturn(1L);
 
         assertThatThrownBy(() -> service.update(1L,
-                new UserUpdateRequest("root@firma.com", "Root", Role.SUPERADMIN, false, 0L)))
+                new UserUpdateRequest("user1@firma.com", "Root", Role.SUPERADMIN, false, null, null, 0L)))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(UserMessages.LAST_SUPERADMIN);
     }
@@ -80,7 +89,7 @@ class UserServiceImplTest {
         when(currentUser.role()).thenReturn(Role.ADMIN);
 
         assertThatThrownBy(() -> service.create(
-                new UserCreateRequest("o@firma.com", "Owner", "Owner12345", Role.OWNER)))
+                new UserCreateRequest("o@firma.com", "Owner", "Owner12345", Role.OWNER, null, null)))
                 .isInstanceOf(BusinessException.class)
                 .hasMessage(UserMessages.ROLE_NOT_ASSIGNABLE);
     }
@@ -92,7 +101,7 @@ class UserServiceImplTest {
         when(repository.findById(4L)).thenReturn(Optional.of(user));
         when(repository.saveAndFlush(user)).thenReturn(user);
 
-        service.update(4L, new UserUpdateRequest("ayse@firma.com", "Ayşe", Role.OWNER, true, 0L));
+        service.update(4L, new UserUpdateRequest("user4@firma.com", "Ayşe", Role.OWNER, true, null, null, 0L));
 
         assertThat(user.getRole()).isEqualTo(Role.OWNER);
         verify(sessionRepository).revokeAllByUserId(eq(4L), any());
@@ -102,10 +111,11 @@ class UserServiceImplTest {
     void deactivatingUserRevokesAllSessions() {
         when(currentUser.role()).thenReturn(Role.ADMIN);
         User user = user(2L, Role.USER, true);
+        when(unitRepository.existsById(UNIT_ID)).thenReturn(true);
         when(repository.findById(2L)).thenReturn(Optional.of(user));
         when(repository.saveAndFlush(user)).thenReturn(user);
 
-        service.update(2L, new UserUpdateRequest("ali@firma.com", "Ali", Role.USER, false, 0L));
+        service.update(2L, new UserUpdateRequest("user2@firma.com", "Ali", Role.USER, false, UNIT_ID, null, 0L));
 
         assertThat(user.isActive()).isFalse();
         verify(sessionRepository).revokeAllByUserId(eq(2L), any());

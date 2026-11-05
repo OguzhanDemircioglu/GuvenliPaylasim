@@ -7,15 +7,15 @@ spring:
   datasource:
     # Varsayılan: kurulum gerektirmeyen, dosyada kalıcı H2 (server/data/, git'e girmez).
     # MODE=PostgreSQL prod ile aynı SQL'in çalışması içindir. PostgreSQL'e bağlanmak için .env'de DB_URL verilir.
-    url: ${DB_URL:jdbc:h2:file:./data/starterapp;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS ${DB_SCHEMA:starterapp}}
+    url: ${DB_URL:jdbc:h2:file:./data/guvenlipaylasim;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH;DB_CLOSE_ON_EXIT=FALSE;INIT=CREATE SCHEMA IF NOT EXISTS ${DB_SCHEMA:guvenlipaylasim}}
     username: ${DB_USERNAME:sa}
     password: ${DB_PASSWORD:}
     hikari:
-      schema: ${DB_SCHEMA:starterapp}
+      schema: ${DB_SCHEMA:guvenlipaylasim}
   jpa:
     show-sql: true
     properties:
-      hibernate.default_schema: ${DB_SCHEMA:starterapp}
+      hibernate.default_schema: ${DB_SCHEMA:guvenlipaylasim}
 
 logging:
   pattern:
@@ -41,5 +41,5 @@ app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
   admin:
-    email: ${ADMIN_EMAIL:admin@starterapp.local}
+    email: ${ADMIN_EMAIL:admin@gps.local}
     password: ${ADMIN_PASSWORD:Admin12345}

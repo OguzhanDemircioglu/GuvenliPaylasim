@@ -44,7 +44,7 @@ springdoc:
 
 app:
   jwt:
-    issuer: starterapp
+    issuer: guvenli-paylasim
     access-token-ttl: 15m
     key-id: ${JWT_KEY_ID}
     private-key-path: ${JWT_PRIVATE_KEY_PATH}
@@ -57,9 +57,6 @@ app:
     cookie-secure: ${COOKIE_SECURE:true}
   login-protection:
     max-attempts: 5
-    block-duration: 1h
-  register-protection:
-    max-attempts: 10
     block-duration: 1h
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
