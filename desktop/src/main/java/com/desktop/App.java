@@ -32,6 +32,9 @@ public class App extends Application {
     private static final String PREF_DARK = "theme.dark";
 
     private final StackPane content = new StackPane();
+    private final StackPane root = new StackPane();
+    private Stage stage;
+    private Boolean compact;
     private final AuthService auth = new AuthService(AppConfig.get().serverUrl());
     private Session session;
 
@@ -41,20 +44,20 @@ public class App extends Application {
 
     @Override
     public void start(Stage stage) {
+        this.stage = stage;
         applyTheme(PREFS.getBoolean(PREF_DARK, false));
 
         ModalPane modal = new ModalPane();
         VBox toastLayer = new VBox();
-        StackPane root = new StackPane(content, modal, toastLayer);
+        root.getChildren().addAll(content, modal, toastLayer);
         Overlays.install(modal, toastLayer);
 
-        Scene scene = new Scene(root, 1320, 840);
+        Scene scene = new Scene(root);
         scene.getStylesheets().add(App.class.getResource("/com/desktop/app.css").toExternalForm());
         stage.setScene(scene);
         stage.setTitle("Güvenli Paylaşım");
-        stage.setMinWidth(1120);
-        stage.setMinHeight(720);
         stage.getIcons().addAll(windowIcons());
+        setCompact(true);
         stage.show();
 
         show(new UpdateGate(this::showLogin));
@@ -84,11 +87,13 @@ public class App extends Application {
 
     public void showLogin() {
         session = null;
+        setCompact(true);
         show(new LoginView(auth, this::onLoggedIn));
     }
 
     private void onLoggedIn(Session newSession) {
         session = newSession;
+        setCompact(false);
         if (newSession.user().mustChangePassword()) {
             show(new PasswordSetupView(auth, newSession, () -> showShell(newSession), this::logout));
         } else {
@@ -121,6 +126,28 @@ public class App extends Application {
         Application.setUserAgentStylesheet(dark
                 ? new PrimerDark().getUserAgentStylesheet()
                 : new PrimerLight().getUserAgentStylesheet());
+    }
+
+    /**
+     * Güncelleme kontrolü ve giriş ekranında pencere sadece giriş kartı kadardır ve boyutlandırılamaz; girişten
+     * sonra büyük, boyutlandırılabilir pencereye geçilir.
+     */
+    private void setCompact(boolean value) {
+        if (compact != null && compact == value) {
+            return;
+        }
+        compact = value;
+        stage.setMaximized(false);
+        stage.setMinWidth(0);
+        stage.setMinHeight(0);
+        stage.setResizable(!value);
+        root.setPrefSize(value ? LoginView.WIDTH : 1320, value ? LoginView.HEIGHT : 840);
+        stage.sizeToScene();
+        stage.centerOnScreen();
+        if (!value) {
+            stage.setMinWidth(1120);
+            stage.setMinHeight(720);
+        }
     }
 
     private void show(Node view) {

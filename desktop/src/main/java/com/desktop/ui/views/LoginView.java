@@ -3,7 +3,6 @@ package com.desktop.ui.views;
 import atlantafx.base.controls.CustomTextField;
 import atlantafx.base.controls.PasswordTextField;
 import com.desktop.api.Dto;
-import com.desktop.config.AppConfig;
 import com.desktop.service.AuthService;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
@@ -30,8 +29,6 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.effect.GaussianBlur;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -59,8 +56,8 @@ import java.util.function.Consumer;
  */
 public final class LoginView extends VBox {
 
-    private static final double WIDTH = 900;
-    private static final double HEIGHT = 540;
+    public static final double WIDTH = 900;
+    public static final double HEIGHT = 540;
     private static final Duration ITEM_DURATION = Duration.seconds(0.7);
     private static final Duration ITEM_STEP = Duration.seconds(0.1);
     private static final Duration PANEL_DURATION = Duration.seconds(1.5);
@@ -97,33 +94,11 @@ public final class LoginView extends VBox {
         this.auth = auth;
         this.onLoggedIn = onLoggedIn;
 
-        Pane card = card();
-        VBox.setMargin(card, new Insets(26, 0, 22, 0));
-        getChildren().addAll(brand(), card,
-                Ui.label("Sadece kurum içi kullanım içindir · Sürüm " + AppConfig.get().version(), "auth-footnote"));
-        getStyleClass().add("auth-page");
+        getChildren().add(card());
         setAlignment(Pos.CENTER);
 
         apply(false);
         loadUnits();
-    }
-
-    private static HBox brand() {
-        Node logo;
-        var stream = LoginView.class.getResourceAsStream("/com/desktop/icon.png");
-        if (stream != null) {
-            ImageView image = new ImageView(new Image(stream));
-            image.setFitHeight(44);
-            image.setPreserveRatio(true);
-            image.setSmooth(true);
-            logo = image;
-        } else {
-            logo = Ui.icon(Material2OutlinedMZ.VERIFIED_USER, 32);
-        }
-        HBox brand = Ui.row(12, logo, Ui.column(0, Ui.label("Güvenli Paylaşım", "auth-brand-title"),
-                Ui.label("Kurum içi uçtan uca şifreli belge paylaşımı", "auth-brand-subtitle")));
-        brand.setAlignment(Pos.CENTER);
-        return brand;
     }
 
     // ---------- Kart ve paneller ----------
@@ -135,8 +110,6 @@ public final class LoginView extends VBox {
         card.setPrefSize(WIDTH, HEIGHT);
         card.setMaxSize(WIDTH, HEIGHT);
         Rectangle clip = new Rectangle(WIDTH, HEIGHT);
-        clip.setArcWidth(24);
-        clip.setArcHeight(24);
         card.setClip(clip);
 
         loginBox = loginForm();
