@@ -23,7 +23,8 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 | v1 (rollü, birimli prototip) | Çalışıyor, sürüm 1.0.5 yayında |
 | 1. Temel dönüşüm (herkes kullanıcı, telefon, davet kodu, kişiler) | **Konuşuldu**, kararlar Crypto_Design §7'de. Kodlanmadı |
 | 2. Gizlilik | **Konuşuldu**, kararlar Crypto_Design §8'de. Kodlanmadı |
-| 3. Karşılıklı teslim (kasa) | **Konuşulacak** |
+| 3. Karşılıklı teslim (kasa) | **Konuşuldu: yapılmayacak** (gerekçe aşağıda) |
+| Güvenlik: tehdit modeli ve test planı (`docs/Security.md`) | **Yazılacak**, 4. kısımdan önce |
 | 4. İnternete açılma | **Konuşulacak** |
 | TOTP ile giriş | Konuşuldu: istenir; ilk parçadan sonra eklenecek (§7.4) |
 
@@ -56,16 +57,27 @@ Ayrıntı Crypto_Design §8'de. Yaklaşım: sunucu daha az şey değil, **daha k
 - **Gizli gönderen (teslim jetonu) ertelendi.** IP ve zamanlama sızıntısı yüzünden kazancı sınırlı. v2'de kişi
   kaydı ayrı tabloda tutulur, gönderim yetkisi tek yerde kontrol edilir; ileride jetona geçilebilir.
 
-## 3. Karşılıklı teslim (kasa): konuşulacaklar
+## 3. Karşılıklı teslim (kasa): yapılmayacak
 
-- İki taraf da kendi kutusunu bırakır. Sunucu, iki kutu da gelmeden hiçbir tarafa açma anahtarını vermez. İkisi de
-  gelince iki taraf aynı anda açabilir.
-- Belirlenen süre içinde karşı taraf kutusunu bırakmazsa takas iptal olur ve kutular silinir.
-- Sınır: Bu kuralı sunucu uygular. İçeriği göremez, ama anahtarı erken vermemesi için sunucuya güvenmek gerekir.
-- Sorular:
-  - Gerçekten gerekli mi, hangi kullanım için?
-  - Kutunun içeriğinin "beklenen şey" olduğunu kim doğrular? Sunucu içeriği göremediği için doğrulayamaz.
-  - Sadece kişiler arasında mı, yoksa davet koduyla da mı?
+- İçerik doğrulanamaz: sunucu kutunun içini göremez, kasa sadece "ikiniz de bir şey bıraktınız" garantisi verir.
+- Sunucuya iki taraflı, zaman aşımlı, durumlu bir karar mantığı ekler; yarış durumu ve zamanlama saldırılarına açık
+  yeni bir yüzey açar.
+- Süreli kutu ve kayıt silme (§8) ile birleşince kapsam dışı bırakılan "izlenemez takas sistemi"ne dönüşür.
+- Meşru kullanımlar başka özelliklerle daha iyi çözülür: sözleşme için karşılıklı imza, teklif zarfı için zaman
+  kilidi. Gerekirse bunlar ayrıca konuşulur.
+
+## Güvenlik ilkesi
+
+Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu yüzden:
+
+- Her özellik için ilk soru: "Hangi saldırı yüzeyini açıyor, bunu savunabilir miyiz?"
+- Kodlamadan önce `docs/Security.md` yazılır: saldırgan listesi, her biri için garanti ve kabul edilen sınırlar,
+  test planı. Ölçüt **OWASP ASVS Seviye 3**; ek olarak kripto test vektörleri ve fuzz, uç nokta başına yetki
+  (IDOR) ve hız sınırı testleri, bağımlılık taraması, en sonda dışarıdan sızma testi.
+- Kodlama sırasındaki bir adım, ilgili saldırı testleri yazılıp geçmeden "bitti" sayılmaz.
+- Şimdiden görülen riskler (Security.md'de ele alınacak): güncelleme imza anahtarının düz dosyada durması, kayıt ve
+  davette zamanlama farkıyla numara tarama, SMS pompalama, SIM kopyalama sonrası anahtar değişikliği uyarısının
+  geçilmesi, masaüstünde anahtarların bellekte ve diskte kalması.
 
 ## 4. İnternete açılma: konuşulacaklar
 
@@ -94,10 +106,12 @@ Kararlar netleşince güncellenir.
 5. Anahtar değişikliği uyarısı.
 6. Gizlilik (§8): süreli kutu, açılınca sil, kayıt silme işi. Konuşmalarda kabul edilen 4. kısım maddeleri.
 7. TOTP.
-8. Her adımda unit testler; sonunda yeni sürüm (MSI) ve README güncellemesi.
+8. Her adımda unit testler ve ilgili saldırı testleri (Security.md); sonunda yeni sürüm (MSI) ve README güncellemesi.
 
 ## Hatırlatmalar
 
+- **Acil, v2'den bağımsız:** `release-keys/update-private-key.txt` düz dosya olarak duruyor. Ele geçiren herkese imzalı
+  zararlı sürüm dağıtabilir. Parolayla şifrelenmeli ya da donanım anahtarına taşınmalı.
 - `release-keys/update-private-key.txt` (git'e girmez) güvenli bir yere **yedeklenmeli**. Kaybolursa güncelleme
   anahtarı yine değişir ve kullanıcılar elle kurulum yapmak zorunda kalır (1.0.5'te olduğu gibi).
 - 1.0.4 kullananlar 1.0.5'i bir kez elle kurmalı.

@@ -251,6 +251,8 @@ ve özel anahtar paketleri yeni türetmeyle açılmaz. Henüz prod verisi olmad�
 
 - TOTP (§7.4), büyük dosyalar için parçalı yükleme.
 - Gizli gönderen ve teslim jetonu (§8.6).
+- Karşılıklı teslim (kasa): **yapılmaz.** İçerik doğrulanamaz, sunucuya saldırıya açık durumlu bir karar mantığı
+  ekler ve kapsam dışı bırakılan takas sistemine dönüşür (gerekçe: Devam_Rehberi §3).
 - Süreli ve açılınca silinen kutu §8'de tasarlandı; v2 ile birlikte kodlanır.
 
 ## 8. Gizlilik: sunucu daha kısa süre bilsin
