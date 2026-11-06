@@ -6,6 +6,8 @@ public final class InviteMessages {
     public static final String PHONE_INVALID = "invite_phone_invalid";
     public static final String OWN_PHONE = "invite_own_phone";
     public static final String TTL_INVALID = "invite_ttl_invalid";
+    /** Kod, kutunun kendisinden uzun yaşayamaz (Crypto_Design §8.2). */
+    public static final String TTL_EXCEEDS_LIFETIME = "invite_ttl_exceeds_lifetime";
     public static final String DAILY_LIMIT = "invite_daily_limit";
     public static final String FIELD_REQUIRED = "invite_field_required";
     public static final String FIELD_TOO_LONG = "invite_field_too_long";

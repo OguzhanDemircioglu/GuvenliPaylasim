@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.List;
@@ -37,31 +38,27 @@ public class DocumentServiceImpl implements DocumentService {
     private final UserRepository userRepository;
     private final UserKeyRepository keyRepository;
     private final ContactService contactService;
+    private final SendQuota quota;
 
     @Override
     @Transactional
     public DocumentSentResponse send(Long senderId, DocumentSendRequest request) {
+        if (!BoxLifetimes.valid(request.lifetimeHours())) {
+            throw new BusinessException(DocumentMessages.LIFETIME_INVALID);
+        }
         if (!keyRepository.existsById(senderId)) {
             throw new BusinessException(DocumentMessages.SENDER_HAS_NO_KEYS);
         }
         List<User> recipients = validRecipients(senderId, request.recipients());
         contactService.requireVerifiedRecipients(senderId, recipients.stream().map(User::getId).toList());
+        byte[] payload = decode(request.payload());
+        quota.check(senderId, payload.length);
 
-        Document document = new Document();
-        document.setSenderId(senderId);
-        document.setKind(request.kind());
-        document.setPayload(decode(request.payload()));
-        document.setSignature(request.signature());
-        document.setSizeBytes(document.getPayload().length);
-        document.setCreatedAt(Instant.now());
-        documentRepository.save(document);
-
+        Instant now = Instant.now();
+        Document document = newDocument(senderId, request.kind(), payload, request.signature(),
+                now.plus(Duration.ofHours(request.lifetimeHours())), request.deleteOnOpen(), now);
         for (RecipientKeyRequest key : request.recipients()) {
-            DocumentRecipient recipient = new DocumentRecipient();
-            recipient.setDocumentId(document.getId());
-            recipient.setRecipientId(key.userId());
-            recipient.setWrappedKey(key.wrappedKey());
-            recipientRepository.save(recipient);
+            saveRecipient(document.getId(), key.userId(), key.wrappedKey());
         }
         return new DocumentSentResponse(document.getId(), recipients.size());
     }
@@ -69,34 +66,22 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional
     public Long createFromInvite(Long senderId, Long recipientId, DocumentKind kind, byte[] payload, String signature,
-                                 String wrappedKey) {
-        Document document = new Document();
-        document.setSenderId(senderId);
-        document.setKind(kind);
-        document.setPayload(payload);
-        document.setSignature(signature);
-        document.setSizeBytes(payload.length);
-        document.setCreatedAt(Instant.now());
-        documentRepository.save(document);
-
-        DocumentRecipient recipient = new DocumentRecipient();
-        recipient.setDocumentId(document.getId());
-        recipient.setRecipientId(recipientId);
-        recipient.setWrappedKey(wrappedKey);
-        recipientRepository.save(recipient);
+                                 String wrappedKey, Instant expiresAt, boolean deleteOnOpen) {
+        Document document = newDocument(senderId, kind, payload, signature, expiresAt, deleteOnOpen, Instant.now());
+        saveRecipient(document.getId(), recipientId, wrappedKey);
         return document.getId();
     }
 
     @Override
     public List<InboxItemResponse> inbox(Long recipientId) {
-        return recipientRepository.findInbox(recipientId);
+        return recipientRepository.findInbox(recipientId, Instant.now());
     }
 
     @Override
     @Transactional
     public DocumentContentResponse open(Long documentId, Long recipientId) {
         DocumentRecipient recipient = findRecipient(documentId, recipientId);
-        Document document = documentRepository.findById(documentId).orElseThrow(DocumentServiceImpl::notFound);
+        Document document = findLive(documentId);
         User sender = userRepository.findById(document.getSenderId()).orElseThrow(DocumentServiceImpl::notFound);
         String senderSigningKey = keyRepository.findById(sender.getId()).map(UserKey::getSigningPublicKey).orElse(null);
 
@@ -106,41 +91,46 @@ public class DocumentServiceImpl implements DocumentService {
         return new DocumentContentResponse(document.getId(), document.getKind(),
                 Base64.getEncoder().encodeToString(document.getPayload()), document.getSignature(),
                 recipient.getWrappedKey(), sender.getId(), sender.getFullName(),
-                senderSigningKey, document.getCreatedAt());
+                senderSigningKey, document.getCreatedAt(), document.getExpiresAt(), document.isDeleteOnOpen());
+    }
+
+    @Override
+    @Transactional
+    public void opened(Long documentId, Long recipientId) {
+        DocumentRecipient recipient = findRecipient(documentId, recipientId);
+        if (findLive(documentId).isDeleteOnOpen()) {
+            deleteRecipient(recipient);
+        }
     }
 
     @Override
     @Transactional
     public void delete(Long documentId, Long recipientId) {
-        deleteRecipient(findRecipient(documentId, recipientId), Instant.now());
+        deleteRecipient(findRecipient(documentId, recipientId));
     }
 
     @Override
     @Transactional
     public void deleteAllReceived(Long recipientId) {
-        Instant now = Instant.now();
-        for (DocumentRecipient recipient : recipientRepository.findByRecipientIdAndDeletedAtIsNull(recipientId)) {
-            deleteRecipient(recipient, now);
+        for (DocumentRecipient recipient : recipientRepository.findByRecipientId(recipientId)) {
+            deleteRecipient(recipient);
         }
     }
 
-    private void deleteRecipient(DocumentRecipient recipient, Instant now) {
+    /** Satır tamamen silinir; son alıcıysa belge de (Crypto_Design §8.5). Kalıcı denetim kaydı tutulmaz. */
+    private void deleteRecipient(DocumentRecipient recipient) {
         Long documentId = recipient.getDocumentId();
-        recipient.setWrappedKey(null);
-        recipient.setDeletedAt(now);
+        recipientRepository.delete(recipient);
         recipientRepository.flush();
-
-        if (!recipientRepository.existsByDocumentIdAndDeletedAtIsNull(documentId)) {
-            Document document = documentRepository.findById(documentId).orElseThrow(DocumentServiceImpl::notFound);
-            document.setPayload(null);
-            document.setSignature(null);
-            document.setPurgedAt(now);
+        if (!recipientRepository.existsByDocumentId(documentId)) {
+            documentRepository.deleteById(documentId);
         }
     }
 
     @Override
     public List<SentItemResponse> sent(Long senderId) {
-        List<Document> documents = documentRepository.findBySenderIdOrderByCreatedAtDesc(senderId);
+        List<Document> documents = documentRepository.findBySenderIdAndExpiresAtAfterOrderByCreatedAtDesc(senderId,
+                Instant.now());
         if (documents.isEmpty()) {
             return List.of();
         }
@@ -149,8 +139,37 @@ public class DocumentServiceImpl implements DocumentService {
                 .collect(Collectors.groupingBy(SentRecipientResponse::documentId));
         return documents.stream()
                 .map(d -> new SentItemResponse(d.getId(), d.getKind(), d.getSizeBytes(), d.getCreatedAt(),
-                        d.getPurgedAt(), recipients.getOrDefault(d.getId(), List.of())))
+                        d.getExpiresAt(), d.isDeleteOnOpen(), recipients.getOrDefault(d.getId(), List.of())))
                 .toList();
+    }
+
+    private Document newDocument(Long senderId, DocumentKind kind, byte[] payload, String signature, Instant expiresAt,
+                                 boolean deleteOnOpen, Instant now) {
+        Document document = new Document();
+        document.setSenderId(senderId);
+        document.setKind(kind);
+        document.setPayload(payload);
+        document.setSignature(signature);
+        document.setSizeBytes(payload.length);
+        document.setCreatedAt(now);
+        document.setExpiresAt(expiresAt);
+        document.setDeleteOnOpen(deleteOnOpen);
+        return documentRepository.save(document);
+    }
+
+    private void saveRecipient(Long documentId, Long recipientId, String wrappedKey) {
+        DocumentRecipient recipient = new DocumentRecipient();
+        recipient.setDocumentId(documentId);
+        recipient.setRecipientId(recipientId);
+        recipient.setWrappedKey(wrappedKey);
+        recipientRepository.save(recipient);
+    }
+
+    /** Ömrü dolmuş ama temizlik işinin henüz silmediği belge de yokmuş gibi davranır. */
+    private Document findLive(Long documentId) {
+        return documentRepository.findById(documentId)
+                .filter(d -> d.getExpiresAt().isAfter(Instant.now()))
+                .orElseThrow(DocumentServiceImpl::notFound);
     }
 
     /** Alıcılar tekrarsız, kayıtlı, gönderenden farklı ve anahtar sahibi olmalıdır. */
@@ -172,7 +191,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     private DocumentRecipient findRecipient(Long documentId, Long recipientId) {
-        return recipientRepository.findByDocumentIdAndRecipientIdAndDeletedAtIsNull(documentId, recipientId)
+        return recipientRepository.findByDocumentIdAndRecipientId(documentId, recipientId)
                 .orElseThrow(DocumentServiceImpl::notFound);
     }
 

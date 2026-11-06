@@ -44,27 +44,28 @@ public final class Dto {
     public record RecipientKey(Long userId, String wrappedKey) {
     }
 
+    /** {@code lifetimeHours}: 1, 24, 168 ya da 720 (Crypto_Design §8.2). */
     public record DocumentSendRequest(DocumentKind kind, String payload, String signature,
-                                      List<RecipientKey> recipients) {
+                                      List<RecipientKey> recipients, int lifetimeHours, boolean deleteOnOpen) {
     }
 
     public record DocumentSent(Long id, int recipientCount) {
     }
 
     public record InboxItem(Long id, DocumentKind kind, long sizeBytes, Long senderId, String senderName,
-                            Instant createdAt, Instant readAt) {
+                            Instant createdAt, Instant expiresAt, boolean deleteOnOpen, Instant readAt) {
     }
 
     public record DocumentPayload(Long id, DocumentKind kind, String payload, String signature, String wrappedKey,
                                   Long senderId, String senderName, String senderSigningPublicKey,
-                                  Instant createdAt) {
+                                  Instant createdAt, Instant expiresAt, boolean deleteOnOpen) {
     }
 
-    public record SentRecipient(Long documentId, Long userId, String fullName, Instant readAt, Instant deletedAt) {
+    public record SentRecipient(Long documentId, Long userId, String fullName, Instant readAt) {
     }
 
-    public record SentItem(Long id, DocumentKind kind, long sizeBytes, Instant createdAt, Instant purgedAt,
-                           List<SentRecipient> recipients) {
+    public record SentItem(Long id, DocumentKind kind, long sizeBytes, Instant createdAt, Instant expiresAt,
+                           boolean deleteOnOpen, List<SentRecipient> recipients) {
     }
 
     // ---------- Kişiler ve davet kodu (Crypto_Design §7.6–7.8) ----------
@@ -77,7 +78,8 @@ public final class Dto {
     }
 
     public record InviteCreateRequest(String recipientPhone, int ttlHours, DocumentKind kind, String payload,
-                                      String signature, String wrapped, String verifierHash, String selfWrapped) {
+                                      String signature, String wrapped, String verifierHash, String selfWrapped,
+                                      int lifetimeHours, boolean deleteOnOpen) {
     }
 
     public record InviteCreated(Long id, Instant expiresAt) {

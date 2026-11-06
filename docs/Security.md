@@ -120,7 +120,7 @@ test" listesi bu belgenin ekine yazılır.
 | Yetki (S4) | Her uç nokta için başka kullanıcının kimliğiyle erişim denemesi (IDOR); oturumsuz erişim. **Kısmen var:** davetlerde başka kullanıcının kodu ve kabul/doğrulama/geri alma denemesi (`InviteServiceImplTest`); diğer uç noktalar için sistematik test henüz yok |
 | Numara tarama (S4) | Kayıtlı ve kayıtsız numara için yanıt gövdesi aynı; yanıt süresi farkı istatistiksel olarak ayırt edilemez. İlk ölçüm (2026-11-06, yerel sunucu, uzak DB, 20'şer istek): `register/start` medyan farkı 2,6 ms, `password-reset/start` 10,2 ms (~690 ms yanıtta) |
 | Hız sınırları (S4, S8) | Her sınır aşılınca reddedilir; IP değiştirerek ya da paralel isteklerle atlatılamaz |
-| Silme (Crypto_Design §8) | Süresi dolan, açılınca silinen ve alıcının sildiği kutunun DB'de hiçbir satırı kalmaz |
+| Silme (Crypto_Design §8) | Süresi dolan, açılınca silinen ve alıcının sildiği kutunun DB'de hiçbir satırı kalmaz. **Var:** `DocumentServiceImplTest`; uçtan uca deneme veritabanını doğrudan sorgulayarak üç durumda da satır kalmadığını kontrol eder |
 | DB dökümü (S2) | DB'deki anahtar paketi ve `authSecret` özeti, sunucu anahtarı olmadan çözülemez |
 | TLS (S1) | Sabitlenmemiş sertifikayla bağlantı reddedilir; TLS 1.2 altı ve düz HTTP reddedilir |
 | Güncelleme (S7) | İmzasız, daha eski ve süresi dolmuş bildirim reddedilir |

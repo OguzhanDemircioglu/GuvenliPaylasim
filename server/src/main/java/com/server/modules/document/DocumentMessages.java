@@ -16,6 +16,9 @@ public final class DocumentMessages {
     public static final String WRAPPED_KEY_REQUIRED = "document_wrapped_key_required";
     public static final String WRAPPED_KEY_TOO_LONG = "document_wrapped_key_too_long";
     public static final String SENDER_HAS_NO_KEYS = "document_sender_has_no_keys";
+    public static final String LIFETIME_INVALID = "document_lifetime_invalid";
+    public static final String DAILY_LIMIT = "document_daily_limit";
+    public static final String QUOTA_EXCEEDED = "document_quota_exceeded";
 
     private DocumentMessages() {
     }

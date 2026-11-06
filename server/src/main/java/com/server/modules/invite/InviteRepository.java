@@ -20,6 +20,12 @@ public interface InviteRepository extends JpaRepository<Invite, Long> {
 
     long countBySenderIdAndCreatedAtAfter(Long senderId, Instant after);
 
+    /** Kabul edilmemiş, süresi dolmamış davetlerin toplam boyutu (kota, SendQuota). */
+    @Query("""
+            select coalesce(sum(i.sizeBytes), 0) from Invite i
+             where i.senderId = :senderId and i.acceptedAt is null and i.expiresAt > :now""")
+    long sumPendingSize(Long senderId, Instant now);
+
     /** Gönderenin kabul mührünü doğrulaması gereken davetler. */
     List<Invite> findBySenderIdAndAcceptedAtIsNotNullAndCompletedAtIsNull(Long senderId);
 

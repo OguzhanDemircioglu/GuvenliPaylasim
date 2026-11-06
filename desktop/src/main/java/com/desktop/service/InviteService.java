@@ -37,8 +37,12 @@ public final class InviteService {
         this.session = session;
     }
 
-    /** @param ttlHours 1, 24, 72 ya da 168 */
-    public SentCode send(DocumentContent content, String recipientPhone, int ttlHours) {
+    /**
+     * @param ttlHours      kodun geçerliliği: 1, 24, 72 ya da 168; kutunun ömründen uzun olamaz
+     * @param lifetimeHours kutunun ömrü: 1, 24, 168 ya da 720
+     */
+    public SentCode send(DocumentContent content, String recipientPhone, int ttlHours, int lifetimeHours,
+                         boolean deleteOnOpen) {
         String phone = Phones.normalize(recipientPhone);
         if (phone == null) {
             throw new IllegalArgumentException(AuthService.validatePhone(recipientPhone));
@@ -47,7 +51,7 @@ public final class InviteService {
         Dto.InviteCreated result = session.api().post("/api/invites",
                 new Dto.InviteCreateRequest(phone, ttlHours, content.text() ? Dto.DocumentKind.TEXT : Dto.DocumentKind.FILE,
                         Base64.getEncoder().encodeToString(created.payload()), created.signature(), created.wrapped(),
-                        created.verifierHash(), created.selfWrapped()),
+                        created.verifierHash(), created.selfWrapped(), lifetimeHours, deleteOnOpen),
                 new TypeReference<>() {
                 });
         return new SentCode(InviteCrypto.format(created.code()), Phones.toE164(phone), result.expiresAt());

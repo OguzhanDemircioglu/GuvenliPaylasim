@@ -10,12 +10,14 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 
 /**
- * Şifreli belge. Teknik tablo: soft delete kullanmaz. Bütün alıcılar "okudum ve sil" dediğinde şifreli içerik ve
- * imza kalıcı olarak silinir ({@code purgedAt}); kim, kime, ne zaman bilgisi denetim için kalır.
+ * Şifreli belge. Teknik tablo: soft delete kullanmaz. Crypto_Design §8: her kutunun bir ömrü vardır
+ * ({@code expiresAt}); süre dolunca, son alıcı silince ya da "açılınca sil" kutusu açılınca satır alıcı satırlarıyla
+ * birlikte tamamen silinir. Kim, kime, ne zaman bilgisi de kalmaz.
  */
 @Getter
 @Setter
@@ -34,9 +36,7 @@ public class Document {
     @Column(name = "kind", nullable = false, length = 10)
     private DocumentKind kind;
 
-    /**
-     * AES-256-GCM ile şifrelenmiş içerik (istemcinin biçimi). Silindiğinde null olur. PostgreSQL {@code bytea}.
-     */
+    /** AES-256-GCM ile şifrelenmiş içerik (istemcinin biçimi). PostgreSQL {@code bytea}. */
     @Column(name = "payload", columnDefinition = "bytea")
     private byte[] payload;
 
@@ -50,6 +50,16 @@ public class Document {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(name = "purged_at")
-    private Instant purgedAt;
+    /**
+     * Kutunun ömrünün bittiği an. DB varsayılanı sadece bu kolon eklenmeden önce yazılmış satırlar içindir
+     * (Backend_Architecture §11 kural 5); yeni satırlarda her zaman gönderim anı + seçilen ömür yazılır.
+     */
+    @ColumnDefault("(now() + interval '7 days')")
+    @Column(name = "expires_at", nullable = false)
+    private Instant expiresAt;
+
+    /** Alıcı açtığını onaylayınca kendi satırı silinir (Crypto_Design §8.3). */
+    @ColumnDefault("false")
+    @Column(name = "delete_on_open", nullable = false)
+    private boolean deleteOnOpen;
 }

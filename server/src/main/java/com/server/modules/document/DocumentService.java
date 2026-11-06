@@ -19,15 +19,21 @@ public interface DocumentService {
      * belgeye dönüşür. Yetki kontrolü davet akışında yapılmıştır.
      */
     Long createFromInvite(Long senderId, Long recipientId, DocumentKind kind, byte[] payload, String signature,
-                          String wrappedKey);
+                          String wrappedKey, java.time.Instant expiresAt, boolean deleteOnOpen);
 
     List<InboxItemResponse> inbox(Long recipientId);
 
     /** Belgeyi alıcıya verir ve ilk açılışta okundu olarak işaretler. Alıcı değilse 404. */
     DocumentContentResponse open(Long documentId, Long recipientId);
 
-    /** "Okudum ve sil". Son alıcı da sildiğinde şifreli içerik veritabanından kalıcı olarak silinir. */
+    /** "Okudum ve sil": alıcının satırı silinir; son alıcıysa belge de tamamen silinir (Crypto_Design §8.5). */
     void delete(Long documentId, Long recipientId);
+
+    /**
+     * Alıcı kutuyu açıp doğruladığını onaylar (Crypto_Design §8.3, ikinci adım). Kutu "açılınca sil" ise alıcının
+     * satırı burada silinir; değilse bir şey değişmez. Onay gelmezse kutu ömrü dolana kadar durur.
+     */
+    void opened(Long documentId, Long recipientId);
 
     /** Parola sıfırlamada (Crypto_Design §7.5): kullanıcıya gelmiş bütün kutular, tek tek silinmiş gibi silinir. */
     void deleteAllReceived(Long recipientId);

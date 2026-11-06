@@ -9,7 +9,9 @@ import com.server.modules.auth.LoginProtectionProperties;
 import com.server.modules.contact.ContactMessages;
 import com.server.modules.contact.ContactService;
 import com.server.modules.document.DocumentKind;
+import com.server.modules.document.DocumentMessages;
 import com.server.modules.document.DocumentService;
+import com.server.modules.document.SendQuota;
 import com.server.modules.invite.dto.InviteAcceptRequest;
 import com.server.modules.invite.dto.InviteCreateRequest;
 import com.server.modules.invite.dto.InviteRedeemResponse;
@@ -73,6 +75,8 @@ class InviteServiceImplTest {
     private DocumentService documentService;
     @Mock
     private LoginAttemptRepository attemptRepository;
+    @Mock
+    private SendQuota quota;
 
     private InviteServiceImpl service;
     private UserKey aliKey;
@@ -81,7 +85,7 @@ class InviteServiceImplTest {
     @BeforeEach
     void setUp() throws Exception {
         service = new InviteServiceImpl(repository, userRepository, keyRepository, contactService, documentService,
-                attemptRepository, new LoginProtectionProperties(5, Duration.ofHours(1)));
+                attemptRepository, new LoginProtectionProperties(5, Duration.ofHours(1)), quota);
         aliKey = key(ALI);
         ayseKey = key(AYSE);
         when(userRepository.findById(ALI)).thenReturn(Optional.of(user(ALI, "+905550000001", "Ali")));
@@ -108,6 +112,18 @@ class InviteServiceImplTest {
         verify(repository).save(saved.capture());
         assertThat(saved.getValue().getRecipientPhone()).isEqualTo("+905551112233");
         assertThat(saved.getValue().getVerifierHash()).isEqualTo(verifierHash());
+        assertThat(Duration.between(saved.getValue().getCreatedAt(), saved.getValue().getBoxExpiresAt()))
+                .isEqualTo(Duration.ofDays(7));
+        verify(quota).check(ALI, 2);
+    }
+
+    @Test
+    void codeCannotOutliveTheBoxAndLifetimeMustBeAFixedChoice() {
+        assertThatThrownBy(() -> service.create(ALI, request("5551112233", 168, 24)))
+                .hasMessage(InviteMessages.TTL_EXCEEDS_LIFETIME);
+        assertThatThrownBy(() -> service.create(ALI, request("5551112233", 1, 48)))
+                .hasMessage(DocumentMessages.LIFETIME_INVALID);
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -159,7 +175,7 @@ class InviteServiceImplTest {
         Invite invite = pendingInvite();
         when(repository.findById(10L)).thenReturn(Optional.of(invite));
         when(documentService.createFromInvite(ALI, AYSE, DocumentKind.TEXT, invite.getPayload(), "signature",
-                "wrapped-for-ayse")).thenReturn(100L);
+                "wrapped-for-ayse", invite.getBoxExpiresAt(), true)).thenReturn(100L);
 
         var response = service.accept(AYSE, 10L, accept(Fingerprints.of(aliKey)));
 
@@ -178,7 +194,8 @@ class InviteServiceImplTest {
 
         assertThatThrownBy(() -> service.accept(MALLORY, 10L, accept(Fingerprints.of(aliKey))))
                 .isInstanceOf(NotFoundException.class);
-        verify(documentService, never()).createFromInvite(any(), any(), any(), any(), any(), any());
+        verify(documentService, never()).createFromInvite(any(), any(), any(), any(), any(), any(), any(),
+                org.mockito.ArgumentMatchers.anyBoolean());
     }
 
     @Test
@@ -238,8 +255,12 @@ class InviteServiceImplTest {
     // ---------- Yardımcılar ----------
 
     private static InviteCreateRequest request(String phone, int ttl) {
+        return request(phone, ttl, 168);
+    }
+
+    private static InviteCreateRequest request(String phone, int ttl, int lifetime) {
         return new InviteCreateRequest(phone, ttl, DocumentKind.TEXT, Base64.getEncoder().encodeToString(new byte[]{1, 2}),
-                "signature", "wrapped", verifierHash(), "self-wrapped");
+                "signature", "wrapped", verifierHash(), "self-wrapped", lifetime, false);
     }
 
     private static InviteAcceptRequest accept(String fingerprint) {
@@ -259,6 +280,8 @@ class InviteServiceImplTest {
         invite.setSelfWrapped("self-wrapped");
         invite.setCreatedAt(Instant.now());
         invite.setExpiresAt(Instant.now().plus(Duration.ofHours(1)));
+        invite.setBoxExpiresAt(Instant.now().plus(Duration.ofDays(30)));
+        invite.setDeleteOnOpen(true);
         return invite;
     }
 

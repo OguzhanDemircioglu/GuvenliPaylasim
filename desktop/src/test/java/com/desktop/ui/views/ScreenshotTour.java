@@ -58,7 +58,8 @@ public final class ScreenshotTour {
         ContactService mehmetContacts = new ContactService(mehmet);
         if (mehmetContacts.list().stream().noneMatch(c -> c.canReceive() && c.userId().equals(ayse.user().id()))) {
             InviteService.SentCode code = new InviteService(ayse).send(
-                    DocumentContent.ofText("Merhaba Mehmet Bey, bundan sonra belgeleri buradan paylaşalım."), "5550000002", 24);
+                    DocumentContent.ofText("Merhaba Mehmet Bey, bundan sonra belgeleri buradan paylaşalım."), "5550000002",
+                    24, 168, false);
             new InviteService(mehmet).redeem(code.code());
             new InviteService(ayse).processVerifications();
         }
@@ -69,11 +70,11 @@ public final class ScreenshotTour {
         fromMehmet.send(DocumentContent.ofText("""
                 Sayın Ayşe Hanım,
 
-                14 Kasım tarihli koordinasyon toplantısının gündemi ve katılımcı listesi ektedir. Toplantı saat                 14:00'te yapılacaktır.
+                14 Kasım tarihli koordinasyon toplantısının gündemi ve katılımcı listesi ektedir. Toplantı saat 14:00'te yapılacaktır.
 
                 Bilgilerinize rica ederim.
-                Mehmet Kaya"""), toAyse);
-        fromMehmet.send(DocumentContent.ofFile("Denetim Raporu 2026.pdf", "application/pdf", new byte[180_000]), toAyse);
+                Mehmet Kaya"""), toAyse, 168, false);
+        fromMehmet.send(DocumentContent.ofFile("Denetim Raporu 2026.pdf", "application/pdf", new byte[180_000]), toAyse, 24, true);
 
         Platform.startup(() -> {
         });

@@ -10,5 +10,6 @@ import java.time.Instant;
  */
 public record DocumentContentResponse(Long id, DocumentKind kind, String payload, String signature, String wrappedKey,
                                       Long senderId, String senderName,
-                                      String senderSigningPublicKey, Instant createdAt) {
+                                      String senderSigningPublicKey, Instant createdAt, Instant expiresAt,
+                                      boolean deleteOnOpen) {
 }

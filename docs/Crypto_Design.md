@@ -83,6 +83,8 @@ AAD sarmalanmış anahtarı **o belgeye** bağlar; başka bir belgenin anahtarı
 - Gönderen kendi belgesini açamaz (anahtar ona sarmalanmaz); "Gönderilenler"de sadece okunma durumu görünür.
 
 ### 4.5 Silme
+
+> v2'de bu bölümün yerini §8.5 aldı: silinen kutu işaretlenmez, satırıyla birlikte silinir.
 - "Okudum ve sil": alıcının sarmalı anahtarı silinir, satır `deleted_at` alır.
 - Son alıcı da silince `documents.payload` ve `signature` **null** olur (`purged_at`). Kim, kime, ne zaman bilgisi
   denetim için kalır. `documents` ve `document_recipients` bilerek soft delete kullanmaz.
@@ -314,7 +316,14 @@ ve özel anahtar paketleri yeni türetmeyle açılmaz. Henüz prod verisi olmad�
 
 ## 8. Gizlilik: sunucu daha kısa süre bilsin
 
-> Konuşuldu (2026-11-06). v2 (§7) ile birlikte kodlanır.
+> Konuşuldu ve kodlandı (2026-11-06, kodlama sırasının 6. adımı).
+>
+> Uygulama: `documents.expires_at` ve `delete_on_open`; gönderimde `lifetimeHours` (1, 24, 168, 720) ve
+> `deleteOnOpen`. Davette `box_expires_at` gönderim anından sayılır, kodun süresi kutunun ömründen uzun olamaz.
+> `POST /api/documents/{id}/opened` açılınca sil onayıdır. `DocumentCleanupJob` 10 dakikada bir ömrü dolan kutuları
+> alıcı satırlarıyla siler; arada kalanlar sorgularda zaten görünmez. Eski `deleted_at` / `purged_at` kolonları ve
+> işaretli satırlar `V002_HardDelete` ile kaldırıldı. Kotalar (`SendQuota`): günde 200 kutu, yaşayan gönderilmiş
+> kutular + bekleyen davetler toplamı 500 MB.
 
 ### 8.1 Yaklaşım
 

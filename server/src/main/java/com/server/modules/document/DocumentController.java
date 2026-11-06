@@ -49,6 +49,13 @@ public class DocumentController {
         return ApiResponse.success(service.open(id, currentUser.id()));
     }
 
+    /** "Açılınca sil" kutusunun açıldığını onaylar (Crypto_Design §8.3). */
+    @PostMapping("/{id}/opened")
+    public ApiResponse<Void> opened(@PathVariable Long id) {
+        service.opened(id, currentUser.id());
+        return ApiResponse.success(null);
+    }
+
     @DeleteMapping("/{id}")
     public ApiResponse<Void> delete(@PathVariable Long id) {
         service.delete(id, currentUser.id());

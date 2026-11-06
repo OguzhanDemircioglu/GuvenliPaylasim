@@ -9,7 +9,9 @@ import com.server.modules.auth.LoginProtectionProperties;
 import com.server.modules.contact.ContactMessages;
 import com.server.modules.contact.ContactService;
 import com.server.modules.document.DocumentMessages;
+import com.server.modules.document.BoxLifetimes;
 import com.server.modules.document.DocumentService;
+import com.server.modules.document.SendQuota;
 import com.server.modules.invite.dto.InviteAcceptRequest;
 import com.server.modules.invite.dto.InviteAcceptedResponse;
 import com.server.modules.invite.dto.InviteCreateRequest;
@@ -60,12 +62,19 @@ public class InviteServiceImpl implements InviteService {
     private final DocumentService documentService;
     private final LoginAttemptRepository attemptRepository;
     private final LoginProtectionProperties protection;
+    private final SendQuota quota;
 
     @Override
     @Transactional
     public InviteCreatedResponse create(Long senderId, InviteCreateRequest request) {
         if (!TTL_HOURS.contains(request.ttlHours())) {
             throw new BusinessException(InviteMessages.TTL_INVALID);
+        }
+        if (!BoxLifetimes.valid(request.lifetimeHours())) {
+            throw new BusinessException(DocumentMessages.LIFETIME_INVALID);
+        }
+        if (request.ttlHours() > request.lifetimeHours()) {
+            throw new BusinessException(InviteMessages.TTL_EXCEEDS_LIFETIME);
         }
         if (!keyRepository.existsById(senderId)) {
             throw new BusinessException(DocumentMessages.SENDER_HAS_NO_KEYS);
@@ -86,12 +95,15 @@ public class InviteServiceImpl implements InviteService {
         invite.setKind(request.kind());
         invite.setPayload(decode(request.payload()));
         invite.setSizeBytes(invite.getPayload().length);
+        quota.check(senderId, invite.getSizeBytes());
         invite.setSignature(request.signature());
         invite.setWrapped(request.wrapped());
         invite.setVerifierHash(request.verifierHash());
         invite.setSelfWrapped(request.selfWrapped());
         invite.setCreatedAt(now);
         invite.setExpiresAt(now.plus(Duration.ofHours(request.ttlHours())));
+        invite.setBoxExpiresAt(now.plus(Duration.ofHours(request.lifetimeHours())));
+        invite.setDeleteOnOpen(request.deleteOnOpen());
         repository.save(invite);
         return new InviteCreatedResponse(invite.getId(), invite.getExpiresAt());
     }
@@ -136,7 +148,8 @@ public class InviteServiceImpl implements InviteService {
         }
 
         Long documentId = documentService.createFromInvite(invite.getSenderId(), recipientId, invite.getKind(),
-                invite.getPayload(), invite.getSignature(), request.wrappedKey());
+                invite.getPayload(), invite.getSignature(), request.wrappedKey(), invite.getBoxExpiresAt(),
+                invite.isDeleteOnOpen());
         contactService.saveVerified(recipientId, invite.getSenderId(), request.fingerprint(), request.signature());
         contactService.savePending(invite.getSenderId(), recipientId);
 

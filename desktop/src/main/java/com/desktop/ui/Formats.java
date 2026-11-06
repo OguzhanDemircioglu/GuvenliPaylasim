@@ -38,6 +38,21 @@ public final class Formats {
     }
 
     /** "Ayşe Yılmaz" → "AY" */
+    /** Kutunun silinmesine kalan süre: "3 gün", "5 saat", "40 dakika". */
+    public static String remaining(Instant until) {
+        java.time.Duration left = java.time.Duration.between(Instant.now(), until);
+        if (left.isNegative() || left.isZero()) {
+            return "süresi doldu";
+        }
+        if (left.toDays() >= 1) {
+            return left.toDays() + " gün";
+        }
+        if (left.toHours() >= 1) {
+            return left.toHours() + " saat";
+        }
+        return Math.max(1, left.toMinutes()) + " dakika";
+    }
+
     /** {@code +905321234567} → {@code 0532 123 45 67}. Beklenmeyen biçim olduğu gibi döner. */
     public static String phone(String e164) {
         if (e164 == null || !e164.matches("\\+90\\d{10}")) {

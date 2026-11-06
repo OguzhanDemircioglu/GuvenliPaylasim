@@ -38,7 +38,4 @@ public class DocumentRecipient {
 
     @Column(name = "read_at")
     private Instant readAt;
-
-    @Column(name = "deleted_at")
-    private Instant deletedAt;
 }

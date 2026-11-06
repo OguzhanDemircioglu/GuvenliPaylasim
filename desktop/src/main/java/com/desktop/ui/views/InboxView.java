@@ -42,6 +42,8 @@ final class InboxView extends VBox {
     /** Ayrıntı panelinde gösterilen belge. */
     private Long shownId;
     private boolean refreshing;
+    /** Açılınca silinen kutunun içeriği ekranda: liste yenilense de kullanıcı başka belge seçene kadar kalır. */
+    private boolean pinned;
 
     InboxView(Context context) {
         this.context = context;
@@ -55,6 +57,7 @@ final class InboxView extends VBox {
             // Liste yenilenirken seçim geçici olarak boşalır ve aynı belge yeniden seçilir; açılmış belge
             // tekrar kilitlenmesin diye bu sırada ayrıntı paneline dokunulmaz.
             if (!refreshing && (item == null || !item.id().equals(shownId))) {
+                pinned = false;
                 showDetail(item);
             }
         });
@@ -133,7 +136,7 @@ final class InboxView extends VBox {
             items.stream().filter(i -> i.id().equals(shownId)).findFirst()
                     .ifPresent(i -> list.getSelectionModel().select(i));
             refreshing = false;
-            if (shownId != null && items.stream().noneMatch(i -> i.id().equals(shownId))) {
+            if (!pinned && shownId != null && items.stream().noneMatch(i -> i.id().equals(shownId))) {
                 showDetail(null);
             }
             long unread = items.stream().filter(i -> i.readAt() == null).count();
@@ -168,7 +171,17 @@ final class InboxView extends VBox {
         Label meta = Ui.muted(item.senderName() + " · " + Formats.fullDate(item.createdAt()));
         Label number = Ui.chip("No " + item.id(), "neutral");
         Label size = Ui.chip(Formats.size(item.sizeBytes()) + " şifreli", "neutral");
-        return Ui.row(14, Ui.avatar(item.senderName(), 22), Ui.column(3, title, meta), Ui.grow(), number, size);
+        Label expiry = Ui.chip(Formats.remaining(item.expiresAt()) + " sonra silinir", "neutral");
+        expiry.setTooltip(new javafx.scene.control.Tooltip("Kutu " + Formats.fullDate(item.expiresAt())
+                + " tarihinde, açılmış olsun olmasın, sunucudan kalıcı olarak silinir."));
+        javafx.scene.layout.FlowPane chips = new javafx.scene.layout.FlowPane(8, 6, number, size, expiry);
+        if (item.deleteOnOpen()) {
+            chips.getChildren().add(Ui.chip("Açılınca silinir", "warning"));
+        }
+        VBox text = Ui.column(3, title, meta, chips);
+        HBox.setHgrow(text, Priority.ALWAYS);
+        VBox.setMargin(chips, new javafx.geometry.Insets(4, 0, 0, 0));
+        return Ui.row(14, Ui.avatar(item.senderName(), 22), text);
     }
 
     private void openDocument(Dto.InboxItem item, Button open) {
@@ -178,8 +191,16 @@ final class InboxView extends VBox {
         open.setText("İmza doğrulanıyor ve çözülüyor…");
         open.setDisable(true);
         Async.run(() -> context.documents.open(item.id()),
-                opened -> {
-                    showOpened(item, opened);
+                result -> {
+                    showOpened(item, result.opened(), result.removedFromServer());
+                    if (result.removedFromServer()) {
+                        // İçerik ekranda kalır; liste kutuyu artık göstermez (sunucuda yok).
+                        pinned = true;
+                        refreshing = true;
+                        list.getItems().remove(item);
+                        list.getSelectionModel().clearSelection();
+                        refreshing = false;
+                    }
                     context.onInboxChanged.run();
                     load();
                 },
@@ -191,15 +212,15 @@ final class InboxView extends VBox {
                 });
     }
 
-    private void showOpened(Dto.InboxItem item, DocumentCrypto.Opened opened) {
+    private void showOpened(Dto.InboxItem item, DocumentCrypto.Opened opened, boolean removedFromServer) {
         DocumentContent content = opened.content();
         Node body = content.text() ? textBody(content) : fileBody(content);
         VBox.setVgrow(body, Priority.ALWAYS);
 
         Button delete = Ui.button("Okudum ve sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER, Styles.BUTTON_OUTLINED);
         delete.setOnAction(e -> Dialogs.confirm("Belge kalıcı olarak silinsin mi?",
-                "Belge sizin kutunuzdan silinir. Bütün alıcılar sildiğinde şifreli içerik sunucudan da kalıcı "
-                        + "olarak silinir. Bu işlem geri alınamaz.",
+                "Belge sizin kutunuzdan silinir. Son alıcı da silince belge sunucudan iz bırakmadan silinir. "
+                        + "Bu işlem geri alınamaz.",
                 "Okudum, sil", Material2OutlinedAL.DELETE_FOREVER, true,
                 () -> Async.run(() -> {
                     context.documents.delete(item.id());
@@ -211,8 +232,17 @@ final class InboxView extends VBox {
                     load();
                 })));
 
-        VBox page = new VBox(16, documentHeader(item), signatureBanner(item, opened.signature()), body,
-                Ui.row(10, Ui.grow(), delete));
+        VBox page = new VBox(16, documentHeader(item), signatureBanner(item, opened.signature()));
+        if (removedFromServer) {
+            Label gone = new Label("Bu kutu açıldı ve sunucudan silindi. Pencereyi değiştirirseniz bir daha açamazsınız; "
+                    + "saklamak istiyorsanız şimdi kaydedin.", Ui.icon(Material2OutlinedMZ.WARNING, 18));
+            gone.setWrapText(true);
+            gone.setGraphicTextGap(10);
+            gone.getStyleClass().add("recipient-summary");
+            page.getChildren().addAll(gone, body);
+        } else {
+            page.getChildren().addAll(body, Ui.row(10, Ui.grow(), delete));
+        }
         detail.getChildren().setAll(page);
     }
 

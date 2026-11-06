@@ -75,6 +75,9 @@ final class ComposeView extends VBox {
     private final ObservableSet<Long> selected = FXCollections.observableSet();
     private final TextField invitePhone = new TextField();
     private final ComboBox<Ttl> ttl = new ComboBox<>();
+    /** Kutunun ömrü (Crypto_Design §8.2); Ttl ile aynı biçim. Varsayılan 7 gün. */
+    private final ComboBox<Ttl> lifetime = new ComboBox<>();
+    private final CheckBox deleteOnOpen = new CheckBox("Açılınca sil");
     private File file;
 
     ComposeView(Context context) {
@@ -252,6 +255,17 @@ final class ComposeView extends VBox {
         ttl.setMaxWidth(Double.MAX_VALUE);
         invitePhone.setPromptText("Alıcının cep telefonu (5XXXXXXXXX)");
         invitePhone.textProperty().addListener((obs, old, value) -> updateSummary());
+        ttl.valueProperty().addListener((obs, old, value) -> updateSummary());
+
+        lifetime.getItems().setAll(new Ttl("1 saat", 1), new Ttl("1 gün", 24), new Ttl("7 gün", 168),
+                new Ttl("30 gün", 720));
+        lifetime.getSelectionModel().select(2);
+        lifetime.setMaxWidth(Double.MAX_VALUE);
+        lifetime.valueProperty().addListener((obs, old, value) -> updateSummary());
+        deleteOnOpen.setTooltip(new javafx.scene.control.Tooltip("Alıcı açtığı anda kutu sunucudan silinir. Alıcı "
+                + "içeriği kaydedebilir; bu seçenek sadece sunucuda kalmamasını sağlar."));
+        HBox.setHgrow(lifetime, Priority.ALWAYS);
+        HBox lifetimeRow = Ui.row(10, Ui.label("Kutunun ömrü", Styles.TEXT_BOLD), lifetime, deleteOnOpen);
 
         summary.setWrapText(true);
         summary.setMinHeight(Region.USE_PREF_SIZE);
@@ -266,7 +280,7 @@ final class ComposeView extends VBox {
         send.setOnAction(e -> send());
 
         return Ui.surface(Ui.row(10, Ui.label("Alıcı", "section-title"), Ui.grow(), new HBox(contactsMode, inviteMode)),
-                recipientEditor, summaryBox, send);
+                recipientEditor, lifetimeRow, summaryBox, send);
     }
 
     private VBox inviteForm() {
@@ -288,9 +302,9 @@ final class ComposeView extends VBox {
     private void updateSummary() {
         if (inviteMode.isSelected()) {
             String error = AuthService.validatePhone(invitePhone.getText());
-            summary.setText(error == null
-                    ? "Kod ekranda gösterilecek; sunucuya gönderilmez. Kutu kod girilene kadar kimseye görünmez."
-                    : "Alıcının telefonunu yazın.");
+            summary.setText(error != null ? "Alıcının telefonunu yazın."
+                    : codeOutlivesBox() ? "Kodun geçerlilik süresi kutunun ömründen uzun olamaz."
+                    : "Kod ekranda gösterilecek; sunucuya gönderilmez. Kutu kod girilene kadar kimseye görünmez.");
         } else {
             int count = selectedRecipients().size();
             summary.setText(count == 0
@@ -303,9 +317,13 @@ final class ComposeView extends VBox {
     private void updateSendState() {
         boolean hasContent = textMode.isSelected() ? !text.getText().isBlank() : file != null;
         boolean hasRecipient = inviteMode.isSelected()
-                ? AuthService.validatePhone(invitePhone.getText()) == null
+                ? AuthService.validatePhone(invitePhone.getText()) == null && !codeOutlivesBox()
                 : !selectedRecipients().isEmpty();
         send.setDisable(!hasContent || !hasRecipient);
+    }
+
+    private boolean codeOutlivesBox() {
+        return ttl.getValue() != null && lifetime.getValue() != null && ttl.getValue().hours() > lifetime.getValue().hours();
     }
 
     // ---------- Gönderim ----------
@@ -323,16 +341,20 @@ final class ComposeView extends VBox {
 
         SendProgress progress = new SendProgress(to, size, this::clearAll);
         progress.show();
-        Async.run(() -> context.documents.send(content(isText, plain, chosen), to),
+        int hours = lifetime.getValue().hours();
+        boolean once = deleteOnOpen.isSelected();
+        Async.run(() -> context.documents.send(content(isText, plain, chosen), to, hours, once),
                 progress::completed,
                 progress::failed);
     }
 
     private void sendInvite(boolean isText, String plain, File chosen) {
         String phone = invitePhone.getText();
-        int hours = ttl.getValue().hours();
+        int codeHours = ttl.getValue().hours();
+        int boxHours = lifetime.getValue().hours();
+        boolean once = deleteOnOpen.isSelected();
         send.setDisable(true);
-        Async.run(() -> context.invites.send(content(isText, plain, chosen), phone, hours),
+        Async.run(() -> context.invites.send(content(isText, plain, chosen), phone, codeHours, boxHours, once),
                 sent -> {
                     clearAll();
                     invitePhone.clear();

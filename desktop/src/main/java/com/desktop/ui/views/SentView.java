@@ -36,7 +36,7 @@ final class SentView extends VBox {
         Button refresh = Ui.button("Yenile", Material2OutlinedMZ.REFRESH, Styles.FLAT);
         refresh.setOnAction(e -> load());
         HBox top = Ui.row(10, Ui.header("Gönderilenler",
-                "Gönderdiğiniz belgeler ve alıcıların okuma durumu"), Ui.grow(), refresh);
+                "Ömrü dolmamış kutularınız ve okunma durumu. Silinen kutu bu listeden de kalkar."), Ui.grow(), refresh);
 
         ScrollPane scroll = new ScrollPane(items);
         scroll.setFitToWidth(true);
@@ -64,10 +64,11 @@ final class SentView extends VBox {
         boolean text = item.kind() == Dto.DocumentKind.TEXT;
         long read = item.recipients().stream().filter(r -> r.readAt() != null).count();
         Label title = Ui.label((text ? "Şifreli yazı" : "Şifreli belge") + " · No " + item.id(), Styles.TEXT_BOLD);
-        Label meta = Ui.muted(Formats.fullDate(item.createdAt()) + " · " + Formats.size(item.sizeBytes()));
-        Node status = item.purgedAt() != null
-                ? Ui.chip("İçerik kalıcı olarak silindi", "neutral")
-                : Ui.chip(read + " / " + item.recipients().size() + " okundu", read == item.recipients().size() ? "success" : "accent");
+        Label meta = Ui.muted(Formats.fullDate(item.createdAt()) + " · " + Formats.size(item.sizeBytes())
+                + " · " + Formats.remaining(item.expiresAt()) + " sonra silinir"
+                + (item.deleteOnOpen() ? " · açılınca silinir" : ""));
+        Node status = Ui.chip(read + " / " + item.recipients().size() + " okundu",
+                read == item.recipients().size() ? "success" : "accent");
 
         FlowPane recipients = new FlowPane(8, 8);
         item.recipients().forEach(r -> recipients.getChildren().add(recipientChip(r)));
@@ -80,10 +81,7 @@ final class SentView extends VBox {
     private Node recipientChip(Dto.SentRecipient recipient) {
         String tone;
         String state;
-        if (recipient.deletedAt() != null) {
-            tone = "neutral";
-            state = "okudu ve sildi";
-        } else if (recipient.readAt() != null) {
+        if (recipient.readAt() != null) {
             tone = "success";
             state = "okudu";
         } else {

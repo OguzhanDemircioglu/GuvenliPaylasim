@@ -12,6 +12,7 @@ import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
 
@@ -69,8 +70,21 @@ public class Invite {
     @Column(name = "self_wrapped", nullable = false, length = 300)
     private String selfWrapped;
 
+    /** Davetin (kodun) son geçerlilik zamanı. Kutunun ömründen uzun olamaz. */
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
+
+    /**
+     * Kutunun ömrü gönderim anından sayılır (Crypto_Design §8.2); kod girilince belge bu zamanla oluşur.
+     * DB varsayılanı sadece kolon eklenmeden önceki satırlar içindir.
+     */
+    @ColumnDefault("(now() + interval '7 days')")
+    @Column(name = "box_expires_at", nullable = false)
+    private Instant boxExpiresAt;
+
+    @ColumnDefault("false")
+    @Column(name = "delete_on_open", nullable = false)
+    private boolean deleteOnOpen;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;

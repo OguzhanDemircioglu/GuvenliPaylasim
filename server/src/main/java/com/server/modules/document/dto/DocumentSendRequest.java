@@ -28,5 +28,11 @@ public record DocumentSendRequest(
 
         @NotEmpty(message = DocumentMessages.RECIPIENTS_REQUIRED)
         @Size(max = 2000, message = DocumentMessages.RECIPIENTS_TOO_MANY)
-        List<@Valid @NotNull(message = DocumentMessages.RECIPIENT_REQUIRED) RecipientKeyRequest> recipients) {
+        List<@Valid @NotNull(message = DocumentMessages.RECIPIENT_REQUIRED) RecipientKeyRequest> recipients,
+
+        /** 1, 24, 168 ya da 720 (BoxLifetimes). */
+        @NotNull(message = DocumentMessages.LIFETIME_INVALID)
+        Integer lifetimeHours,
+
+        boolean deleteOnOpen) {
 }

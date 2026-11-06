@@ -157,7 +157,12 @@ Kararlar netleşince güncellenir.
    değişen kişiye gönderim reddedilir, yeni kodla yeniden doğrulanır, silme iki yönlüdür.
 5. Anahtar değişikliği: doğrulanmamış kişi ve yeni kod (§7.8) **4. adımda yapıldı** (istemci "anahtarı değişti"
    gösterir, sunucu kodsuz gönderimi reddeder). Kalanlar: sertifika sabitleme, sunucuda ikinci kilit.
-6. Gizlilik (§8): süreli kutu, açılınca sil, kayıt silme işi. Konuşmalarda kabul edilen 4. kısım maddeleri.
+6. ✅ (2026-11-06, `main`) Gizlilik (§8): kutunun ömrü (1 saat, 1 gün, 7 gün varsayılan, 30 gün), açılınca sil (iki
+   adımlı onay), iz bırakmayan silme (satır silinir, son alıcıysa belge de), ömrü dolan kutuların zamanlanmış silinmesi,
+   gönderilenlerde sadece yaşayan kutular. Kotalar: günde 200 kutu, 500 MB. Masaüstünde Yeni Gönderi'de "Kutunun ömrü"
+   ve "Açılınca sil", Gelen Kutusu'nda kalan süre ve "Açılınca silinir" etiketi; açılınca silinen içerik kaydedilene
+   kadar ekranda kalır. Uçtan uca denendi (18 kontrol, veritabanı doğrudan sorgulanarak): açılınca silinen,
+   "okudum ve sil" ile silinen ve ömrü dolan kutunun hiçbir satırı kalmıyor.
 7. TOTP.
 8. Her adımda unit testler ve ilgili saldırı testleri (Security.md); sonunda yeni sürüm (MSI) ve README güncellemesi.
 

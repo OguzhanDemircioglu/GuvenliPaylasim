@@ -13,7 +13,9 @@ import jakarta.validation.constraints.Size;
  * Davet koduyla kilitli kutu (Crypto_Design §7.6, gönderen adım 4). Kod, kodKey ve mühürKey bu istekte yoktur.
  *
  * @param recipientPhone {@code 5XXXXXXXXX}
- * @param ttlHours       1, 24, 72 ya da 168 (en fazla 7 gün)
+ * @param ttlHours       kodun geçerliliği: 1, 24, 72 ya da 168 (en fazla 7 gün); kutunun ömründen uzun olamaz
+ * @param lifetimeHours  kutunun ömrü: 1, 24, 168 ya da 720 (BoxLifetimes), gönderim anından
+ * @param deleteOnOpen   açılınca sil (Crypto_Design §8.3)
  * @param wrapped        {@code 0x01 | AES-GCM(kodKey, K || gönderen parmak izi)}, Base64
  * @param verifierHash   {@code SHA-256(doğrulayıcı)}, 64 karakter hex
  * @param selfWrapped    mühürKey'in gönderenin kendi açık anahtarına sarmalanmış hali, Base64
@@ -47,7 +49,12 @@ public record InviteCreateRequest(
 
         @NotBlank(message = InviteMessages.FIELD_REQUIRED)
         @Size(max = 300, message = InviteMessages.FIELD_TOO_LONG)
-        String selfWrapped) {
+        String selfWrapped,
+
+        @NotNull(message = DocumentMessages.LIFETIME_INVALID)
+        Integer lifetimeHours,
+
+        boolean deleteOnOpen) {
 
     public InviteCreateRequest {
         recipientPhone = Phones.trim(recipientPhone);
