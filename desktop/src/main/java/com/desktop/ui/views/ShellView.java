@@ -6,6 +6,7 @@ import com.desktop.config.AppConfig;
 import com.desktop.service.AuthService;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
+import com.desktop.ui.Formats;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import javafx.animation.FadeTransition;
@@ -35,7 +36,7 @@ import java.util.function.Supplier;
 
 /**
  * Ana ekran: solda kenar çubuğu, sağda seçili sayfa. Gelen kutusu arka planda düzenli kontrol edilir; yeni belge
- * gelince bildirim gösterilir (SMS servisi bağlanana kadar SMS'in yerini tutar).
+ * gelince uygulama içinde bildirim gösterilir (v2'de kişilere SMS/WhatsApp bildirimi gitmez, Crypto_Design §7.7).
  */
 public final class ShellView extends BorderPane {
 
@@ -43,7 +44,7 @@ public final class ShellView extends BorderPane {
     private final StackPane page = new StackPane();
     private final ToggleGroup nav = new ToggleGroup();
     private final Label inboxBadge = Ui.label("", "nav-badge");
-    private final Label userUnit = Ui.label("", "user-unit");
+    private final Label userPhone = Ui.label("", "user-unit");
     private final Set<Long> knownDocuments = new HashSet<>();
     private final Timeline poller;
     private boolean firstPoll = true;
@@ -65,13 +66,10 @@ public final class ShellView extends BorderPane {
             }
         });
 
-        Async.run(context.documents::units, units -> {
-            context.units(units);
-            userUnit.setText(context.unitName(session.user().unitId()));
-            ((ToggleButton) nav.getToggles().getFirst()).fire();
-            pollInbox();
-            poller.play();
-        });
+        userPhone.setText(Formats.phone(session.user().phone()));
+        ((ToggleButton) nav.getToggles().getFirst()).fire();
+        pollInbox();
+        poller.play();
     }
 
     private VBox sidebar(App app, Dto.SessionUser user) {
@@ -91,12 +89,6 @@ public final class ShellView extends BorderPane {
                 Ui.label("GÜVENLİK", "nav-section"),
                 navButton("Anahtarım", Material2OutlinedAL.FINGERPRINT, () -> new SecurityView(context)),
                 navButton("Neden Güvenli?", Material2OutlinedMZ.VERIFIED_USER, WhyView::new));
-        if (user.isAdmin()) {
-            items.getChildren().addAll(
-                    Ui.label("YÖNETİM", "nav-section"),
-                    navButton("Birimler", Material2OutlinedAL.APARTMENT, () -> new UnitsView(context)),
-                    navButton("Kullanıcılar", Material2OutlinedAL.GROUPS, () -> new UsersView(context)));
-        }
 
         HBox securePill = Ui.row(6, Ui.icon(Material2OutlinedAL.LOCK, 13), Ui.label("Anahtarlarınız bu bilgisayarda"));
         securePill.getStyleClass().add("secure-pill");
@@ -115,8 +107,8 @@ public final class ShellView extends BorderPane {
 
         Label name = Ui.label(user.fullName(), "user-name");
         name.setWrapText(true);
-        userUnit.setWrapText(true);
-        VBox identity = Ui.column(1, name, userUnit);
+        userPhone.setWrapText(true);
+        VBox identity = Ui.column(1, name, userPhone);
         HBox.setHgrow(identity, Priority.ALWAYS);
         VBox userCard = Ui.column(8, Ui.row(10, Ui.avatar(user.fullName(), 18), identity),
                 Ui.row(4, Ui.grow(), theme, logout));
@@ -182,8 +174,7 @@ public final class ShellView extends BorderPane {
 
         for (Dto.InboxItem item : items) {
             if (knownDocuments.add(item.id()) && !firstPoll) {
-                Toasts.sms("SMS bildirimi (simülasyon): " + item.senderName() + " ("
-                        + context.unitName(item.senderUnitId()) + ") size yeni bir "
+                Toasts.info(item.senderName() + " size yeni bir "
                         + (item.kind() == Dto.DocumentKind.TEXT ? "şifreli yazı" : "şifreli belge") + " gönderdi.");
             }
         }

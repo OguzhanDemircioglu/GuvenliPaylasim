@@ -141,8 +141,12 @@ Kararlar netleşince güncellenir.
    `password-reset/start|complete`); `VonageWhatsAppGateway`; numara/IP/günlük sınırlar; kuyruktan gönderim.
    Kayıtta anahtarlar da gelir. Sıfırlamada gelen kutular silinir, oturumlar kapanır. Yerelde uçtan uca denendi;
    start yanıt süresi kayıtlı ve kayıtsız numarada aynı (medyan farkı 3–10 ms / ~690 ms).
-3. Kripto (istemci ve sunucu): telefon tuzlu türetme; anahtarların kayıtta üretilmesi; test vektörlerinin
-   güncellenmesi.
+3. ✅ (2026-11-06, `v2` dalı) Kripto ve masaüstü girişi: telefon tuzlu türetme (istemci ve sunucu aynı test
+   vektörü), anahtar paketi telefona bağlı (`gps-private-keys/v2|`), anahtarlar kayıtta üretilir. Masaüstünde telefonla
+   giriş, WhatsApp kodlu kayıt, "Parolamı unuttum" (yeni anahtar çifti); yönetim ekranları, birimler ve ilk parola
+   ekranı kaldırıldı; parola en az 12 karakter. Yeni Gönderi'de alıcı seçimi 4. adıma kadar kapalı. Masaüstü →
+   sunucu uçtan uca denendi (kayıt, giriş, parola değiştirme aynı anahtarları korur, sıfırlama yeni anahtar üretir).
+   Açık: yaygın parola listesi kontrolü (Security.md S2).
 4. Davet kodu ve kişiler: sunucu tabloları ve API'leri, istemcide "Kod ile al" ve kişi listesi ekranları.
 5. Anahtar değişikliği: doğrulanmamış kişi ve yeni kod (§7.8). Sertifika sabitleme, sunucuda ikinci kilit.
 6. Gizlilik (§8): süreli kutu, açılınca sil, kayıt silme işi. Konuşmalarda kabul edilen 4. kısım maddeleri.

@@ -14,7 +14,6 @@ import javafx.scene.layout.VBox;
 import javafx.util.Duration;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.material2.Material2OutlinedAL;
-import org.kordamp.ikonli.material2.Material2OutlinedMZ;
 
 /** Sağ üst köşede birkaç saniye görünen bildirimler. */
 public final class Toasts {
@@ -40,11 +39,6 @@ public final class Toasts {
         show(message, Material2OutlinedAL.INFO, Styles.ACCENT, Duration.seconds(6));
     }
 
-    /** SMS servisi bağlanana kadar SMS bildirimi uygulama içinde gösterilir. */
-    public static void sms(String message) {
-        show(message, Material2OutlinedMZ.SMS, Styles.ACCENT, Duration.seconds(7));
-    }
-
     public static void error(Throwable error) {
         show(describe(error), Material2OutlinedAL.ERROR_OUTLINE, Styles.DANGER, Duration.seconds(7));
     }
@@ -52,6 +46,7 @@ public final class Toasts {
     /** Kullanıcıya gösterilecek metin; teknik ayrıntı (sınıf adı, stacktrace) gösterilmez. */
     public static String describe(Throwable error) {
         return error instanceof ApiException || error instanceof CryptoException
+                || error instanceof IllegalArgumentException
                 ? error.getMessage()
                 : "Beklenmeyen bir hata oluştu (" + error.getClass().getSimpleName() + ").";
     }

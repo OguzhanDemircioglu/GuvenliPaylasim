@@ -42,7 +42,8 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   - **Sunucuda ikinci kilit.** Özel anahtar paketi ve `authSecret` özeti, veritabanına yazılmadan önce veritabanı
     dışında tutulan bir sunucu anahtarıyla (ortam değişkeni ya da anahtar kasası) AES-256-GCM ile bir kez daha
     şifrelenir. Sadece DB dökümü ele geçerse deneme yapılamaz.
-  - **Güçlü parola şartı.** En az 12 karakter; yaygın parola ve sözlük listesiyle (Türkçe dahil) kontrol. Kontrol
+  - **Güçlü parola şartı.** En az 12 karakter (uygulandı, 3. adım); yaygın parola ve sözlük listesiyle (Türkçe dahil)
+    kontrol (henüz yok). Kontrol
     istemcide yapılır, çünkü parola sunucuya gitmez.
 - **Kabul:** DB ile birlikte sunucu anahtarı da ele geçerse (S3) koruma PBKDF2 (600.000 tur) ve parola gücüne kalır.
   Argon2id dış kripto kütüphanesi gerektirdiği için şimdilik kullanılmaz.

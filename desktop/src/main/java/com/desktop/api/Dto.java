@@ -9,21 +9,17 @@ public final class Dto {
     private Dto() {
     }
 
-    public enum Role { SUPERADMIN, ADMIN, OWNER, USER }
-
     public enum DocumentKind { TEXT, FILE }
 
-    public record SessionUser(Long id, String email, String fullName, Role role, Long unitId,
-                              boolean mustChangePassword) {
-        public boolean isAdmin() {
-            return role == Role.ADMIN || role == Role.SUPERADMIN;
-        }
+    /** {@code phone} E.164 ({@code +905XXXXXXXXX}); parola türetmede tuz olarak kullanılır. */
+    public record SessionUser(Long id, String phone, String fullName) {
     }
 
     public record SessionInfo(String accessToken, long expiresIn, SessionUser user) {
     }
 
-    public record LoginRequest(String email, String password) {
+    /** {@code phone}: {@code 5XXXXXXXXX}. */
+    public record LoginRequest(String phone, String password) {
     }
 
     public record KeyBundle(String encryptionPublicKey, String signingPublicKey, String privateKeyBundle) {
@@ -32,36 +28,17 @@ public final class Dto {
     public record ChangePasswordRequest(String currentPassword, String newPassword, KeyBundle keys) {
     }
 
-    public record RegisterRequest(String fullName, String email, String password, Long unitId, String phone) {
+    public record PhoneRequest(String phone) {
     }
 
-    public record Unit(Long id, String name, String description, Long version) {
-        @Override
-        public String toString() {
-            return name;
-        }
+    public record RegisterRequest(String phone, String code, String fullName, String password, KeyBundle keys) {
     }
 
-    public record UnitRequest(String name, String description, Long version) {
+    public record PasswordResetRequest(String phone, String code, String password, KeyBundle keys) {
     }
 
-    public record User(Long id, String email, String fullName, Role role, boolean active, Long unitId,
-                       String phone, boolean mustChangePassword, Long version) {
-    }
-
-    public record UserCreateRequest(String email, String fullName, String password, Role role, Long unitId,
-                                    String phone) {
-    }
-
-    public record UserUpdateRequest(String email, String fullName, Role role, boolean active, Long unitId,
-                                    String phone, Long version) {
-    }
-
-    public record PasswordResetRequest(String newPassword) {
-    }
-
-    public record Recipient(Long userId, String fullName, Long unitId, String encryptionPublicKey,
-                            String signingPublicKey) {
+    /** Belge gönderilebilecek bir kişi ve açık anahtarları (kişiler 4. adımda gelir). */
+    public record Recipient(Long userId, String fullName, String encryptionPublicKey, String signingPublicKey) {
     }
 
     public record RecipientKey(Long userId, String wrappedKey) {
@@ -71,20 +48,19 @@ public final class Dto {
                                       List<RecipientKey> recipients) {
     }
 
-    public record DocumentSent(Long id, int recipientCount, int smsNotified) {
+    public record DocumentSent(Long id, int recipientCount) {
     }
 
     public record InboxItem(Long id, DocumentKind kind, long sizeBytes, Long senderId, String senderName,
-                            Long senderUnitId, Instant createdAt, Instant readAt) {
+                            Instant createdAt, Instant readAt) {
     }
 
     public record DocumentPayload(Long id, DocumentKind kind, String payload, String signature, String wrappedKey,
-                                  Long senderId, String senderName, Long senderUnitId, String senderSigningPublicKey,
+                                  Long senderId, String senderName, String senderSigningPublicKey,
                                   Instant createdAt) {
     }
 
-    public record SentRecipient(Long documentId, Long userId, String fullName, Long unitId, Instant readAt,
-                                Instant deletedAt) {
+    public record SentRecipient(Long documentId, Long userId, String fullName, Instant readAt, Instant deletedAt) {
     }
 
     public record SentItem(Long id, DocumentKind kind, long sizeBytes, Instant createdAt, Instant purgedAt,

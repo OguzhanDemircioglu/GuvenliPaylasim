@@ -116,8 +116,7 @@ final class InboxView extends VBox {
 
     private Node documentHeader(Dto.InboxItem item) {
         Label title = Ui.label(item.kind() == Dto.DocumentKind.TEXT ? "Şifreli yazı" : "Şifreli belge", Styles.TITLE_3);
-        Label meta = Ui.muted(item.senderName() + " · " + context.unitName(item.senderUnitId()) + " · "
-                + Formats.fullDate(item.createdAt()));
+        Label meta = Ui.muted(item.senderName() + " · " + Formats.fullDate(item.createdAt()));
         Label number = Ui.chip("No " + item.id(), "neutral");
         Label size = Ui.chip(Formats.size(item.sizeBytes()) + " şifreli", "neutral");
         return Ui.row(14, Ui.avatar(item.senderName(), 22), Ui.column(3, title, meta), Ui.grow(), number, size);
@@ -240,14 +239,13 @@ final class InboxView extends VBox {
             Label kind = new Label(item.kind() == Dto.DocumentKind.TEXT ? "Şifreli yazı" : "Şifreli belge",
                     Ui.icon(kindIcon, 14));
             kind.getStyleClass().add(Styles.TEXT_MUTED);
-            Label unit = Ui.muted(context.unitName(item.senderUnitId()));
 
             Circle dot = new Circle(4);
             dot.getStyleClass().add("unread-dot");
             dot.setVisible(item.readAt() == null);
 
             HBox top = Ui.row(8, sender, Ui.grow(), when);
-            HBox bottom = Ui.row(8, kind, Ui.label("·", Styles.TEXT_MUTED), unit, Ui.grow(), dot);
+            HBox bottom = Ui.row(8, kind, Ui.grow(), dot);
             VBox text = new VBox(4, top, bottom);
             HBox.setHgrow(text, Priority.ALWAYS);
             HBox row = Ui.row(12, Ui.avatar(item.senderName(), 19), text);

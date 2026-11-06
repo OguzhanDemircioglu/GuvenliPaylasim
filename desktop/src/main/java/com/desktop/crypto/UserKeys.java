@@ -21,13 +21,13 @@ import java.util.HexFormat;
 
 /**
  * Kullanıcının iki anahtar çifti: belge anahtarı sarmalamak için X25519, imzalamak için Ed25519.
- * Anahtarlar ilk girişte bu bilgisayarda üretilir. Sunucuya açık anahtarlar ve parolayla şifrelenmiş özel anahtar
+ * Anahtarlar kayıtta (ve parola sıfırlamada) bu bilgisayarda üretilir. Sunucuya açık anahtarlar ve parolayla şifrelenmiş özel anahtar
  * paketi gider (docs/Crypto_Design.md §3).
  */
 public record UserKeys(KeyPair encryption, KeyPair signing) {
 
     private static final byte BUNDLE_VERSION = 1;
-    private static final String BUNDLE_AAD = "gps-private-keys/v1|";
+    private static final String BUNDLE_AAD = "gps-private-keys/v2|";
 
     public static UserKeys generate() {
         try {
@@ -46,8 +46,8 @@ public record UserKeys(KeyPair encryption, KeyPair signing) {
         return encode(signing.getPublic());
     }
 
-    /** Özel anahtarları paroladan türetilen anahtarla (kek) şifreler. E-posta, paketin başka hesaba taşınmasını önler. */
-    public String seal(byte[] kek, String email) {
+    /** Özel anahtarları paroladan türetilen anahtarla (kek) şifreler. Telefon, paketin başka hesaba taşınmasını önler. */
+    public String seal(byte[] kek, String phoneE164) {
         try {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream();
             DataOutputStream out = new DataOutputStream(bytes);
@@ -57,7 +57,7 @@ public record UserKeys(KeyPair encryption, KeyPair signing) {
             out.write(enc);
             out.writeShort(sign.length);
             out.write(sign);
-            byte[] sealed = Aead.encrypt(kek, bytes.toByteArray(), aad(email));
+            byte[] sealed = Aead.encrypt(kek, bytes.toByteArray(), aad(phoneE164));
 
             byte[] bundle = new byte[1 + sealed.length];
             bundle[0] = BUNDLE_VERSION;
@@ -72,7 +72,7 @@ public record UserKeys(KeyPair encryption, KeyPair signing) {
      * Sunucudaki paketi açar. Açılan özel anahtarların kayıtlı açık anahtarlarla eşleştiği de kontrol edilir;
      * eşleşmezse paket başka bir anahtar çiftine aittir ve kullanılmaz.
      */
-    public static UserKeys open(String bundle, byte[] kek, String email, String encryptionPublicKey,
+    public static UserKeys open(String bundle, byte[] kek, String phoneE164, String encryptionPublicKey,
                                 String signingPublicKey) {
         byte[] raw = Base64.getDecoder().decode(bundle);
         if (raw.length < 2 || raw[0] != BUNDLE_VERSION) {
@@ -80,7 +80,7 @@ public record UserKeys(KeyPair encryption, KeyPair signing) {
         }
         byte[] plain;
         try {
-            plain = Aead.decrypt(kek, Arrays.copyOfRange(raw, 1, raw.length), aad(email));
+            plain = Aead.decrypt(kek, Arrays.copyOfRange(raw, 1, raw.length), aad(phoneE164));
         } catch (AEADBadTagException e) {
             throw new CryptoException("Özel anahtarlar bu parolayla açılamadı");
         }
@@ -158,8 +158,8 @@ public record UserKeys(KeyPair encryption, KeyPair signing) {
         throw new CryptoException("Şifreleme anahtarı kayıtlı açık anahtarla eşleşmiyor");
     }
 
-    private static byte[] aad(String email) {
-        return Aead.utf8(BUNDLE_AAD + PasswordKeys.normalize(email));
+    private static byte[] aad(String phoneE164) {
+        return Aead.utf8(BUNDLE_AAD + phoneE164);
     }
 
     private static String encode(PublicKey key) {

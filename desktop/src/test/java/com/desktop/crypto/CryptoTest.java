@@ -14,38 +14,38 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CryptoTest {
 
     /**
-     * Sunucudaki AuthSecrets ile aynı değer (server: AuthSecretsTest). Biri değişirse demo kullanıcıları ve ilk
-     * admin giriş yapamaz; bu test iki tarafın uyumunu korur.
+     * v2 (tuz = telefon). Sunucudaki AuthSecrets ile aynı değer (server: AuthSecretsTest); değer bağımsız bir
+     * uygulamayla (Python hashlib) da hesaplandı. Biri değişirse demo kullanıcıları giriş yapamaz.
      */
     @Test
     void authSecretMatchesServerDerivation() {
-        PasswordKeys.Derived derived = PasswordKeys.derive("  Admin@Test.LOCAL ", "Admin12345".toCharArray());
+        PasswordKeys.Derived derived = PasswordKeys.derive("+905551234567", "DemoParola2026!".toCharArray());
         assertEquals(AUTH_SECRET_VECTOR, derived.authSecret());
         assertEquals(32, derived.kek().length);
         assertNotEquals(derived.authSecret(),
                 Base64.getUrlEncoder().withoutPadding().encodeToString(derived.kek()), "kek authSecret'tan farklı olmalı");
     }
 
-    static final String AUTH_SECRET_VECTOR = "n3yyVX4DZreKguvSq6klsfXDt_VTmuONob1pTJijKSM";
+    static final String AUTH_SECRET_VECTOR = "MW9rjw23gWedr5y5msOuC7DRjgHO7PHtMjTskHEwKus";
 
     @Test
-    void privateKeysOpenOnlyWithTheRightPasswordAndEmail() {
+    void privateKeysOpenOnlyWithTheRightPasswordAndPhone() {
         UserKeys keys = UserKeys.generate();
-        byte[] kek = PasswordKeys.derive("ayse@gps.local", "Doğru-Parola1".toCharArray()).kek();
-        String bundle = keys.seal(kek, "ayse@gps.local");
+        byte[] kek = PasswordKeys.derive("+905550000001", "Doğru-Parola1".toCharArray()).kek();
+        String bundle = keys.seal(kek, "+905550000001");
 
-        UserKeys opened = UserKeys.open(bundle, kek, "ayse@gps.local", keys.encryptionPublicKey(), keys.signingPublicKey());
+        UserKeys opened = UserKeys.open(bundle, kek, "+905550000001", keys.encryptionPublicKey(), keys.signingPublicKey());
         assertEquals(keys.fingerprint(), opened.fingerprint());
 
-        byte[] wrongKek = PasswordKeys.derive("ayse@gps.local", "Yanlış-Parola1".toCharArray()).kek();
+        byte[] wrongKek = PasswordKeys.derive("+905550000001", "Yanlış-Parola1".toCharArray()).kek();
         assertThrows(CryptoException.class,
-                () -> UserKeys.open(bundle, wrongKek, "ayse@gps.local", keys.encryptionPublicKey(), keys.signingPublicKey()));
+                () -> UserKeys.open(bundle, wrongKek, "+905550000001", keys.encryptionPublicKey(), keys.signingPublicKey()));
         assertThrows(CryptoException.class,
-                () -> UserKeys.open(bundle, kek, "baska@gps.local", keys.encryptionPublicKey(), keys.signingPublicKey()));
+                () -> UserKeys.open(bundle, kek, "+905550000002", keys.encryptionPublicKey(), keys.signingPublicKey()));
 
         UserKeys other = UserKeys.generate();
         assertThrows(CryptoException.class,
-                () -> UserKeys.open(bundle, kek, "ayse@gps.local", other.encryptionPublicKey(), keys.signingPublicKey()),
+                () -> UserKeys.open(bundle, kek, "+905550000001", other.encryptionPublicKey(), keys.signingPublicKey()),
                 "paket başka bir anahtar çiftine ait gösterilirse kabul edilmemeli");
     }
 

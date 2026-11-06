@@ -13,12 +13,12 @@ import org.kordamp.ikonli.material2.Material2OutlinedAL;
 
 /**
  * Parola değiştirme formu. Özel anahtarlar yeni parolayla bu bilgisayarda yeniden şifrelenir ve parolayla
- * birlikte kaydedilir; anahtar yoksa burada üretilir.
+ * birlikte kaydedilir.
  */
 final class PasswordForm extends VBox {
 
     private final PasswordTextField current = field("Mevcut parola");
-    private final PasswordTextField next = field("En az 10 karakter, harf ve rakam");
+    private final PasswordTextField next = field("En az 12 karakter, harf ve rakam");
     private final PasswordTextField repeat = field("Yeni parolayı tekrar girin");
     private final Label error = Ui.label("", "form-error");
     private final Button submit;

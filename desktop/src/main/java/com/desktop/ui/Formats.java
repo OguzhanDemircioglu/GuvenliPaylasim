@@ -38,6 +38,15 @@ public final class Formats {
     }
 
     /** "Ayşe Yılmaz" → "AY" */
+    /** {@code +905321234567} → {@code 0532 123 45 67}. Beklenmeyen biçim olduğu gibi döner. */
+    public static String phone(String e164) {
+        if (e164 == null || !e164.matches("\\+90\\d{10}")) {
+            return e164;
+        }
+        String d = e164.substring(3);
+        return "0" + d.substring(0, 3) + " " + d.substring(3, 6) + " " + d.substring(6, 8) + " " + d.substring(8);
+    }
+
     public static String initials(String fullName) {
         String[] parts = fullName.trim().split("\\s+");
         String first = parts[0].substring(0, 1);

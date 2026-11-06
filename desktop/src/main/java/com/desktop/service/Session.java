@@ -12,7 +12,7 @@ public final class Session {
 
     private final ApiClient api;
     private final Dto.SessionUser user;
-    private volatile UserKeys keys;
+    private final UserKeys keys;
 
     Session(ApiClient api, Dto.SessionUser user, UserKeys keys) {
         this.api = api;
@@ -28,16 +28,8 @@ public final class Session {
         return user;
     }
 
-    /** İlk girişte parola değiştirilene kadar null olabilir. */
+    /** v2'de her oturumun anahtarı vardır: kayıtta üretilir, girişte açılır. */
     public UserKeys keys() {
         return keys;
-    }
-
-    void keys(UserKeys keys) {
-        this.keys = keys;
-    }
-
-    public boolean hasKeys() {
-        return keys != null;
     }
 }

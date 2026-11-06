@@ -6,9 +6,7 @@ import com.desktop.crypto.DocumentCrypto;
 import tools.jackson.core.type.TypeReference;
 
 import java.util.Base64;
-import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /** Belge gönderme ve açma. Şifreleme ve çözme bu bilgisayarda yapılır; sunucuya sadece şifreli veri gider. */
 public final class DocumentService {
@@ -20,17 +18,6 @@ public final class DocumentService {
 
     public DocumentService(Session session) {
         this.session = session;
-    }
-
-    public List<Dto.Unit> units() {
-        return session.api().get("/api/units", new TypeReference<>() {
-        });
-    }
-
-    public List<Dto.Recipient> recipients(Collection<Long> unitIds) {
-        String ids = unitIds.stream().map(String::valueOf).collect(Collectors.joining(","));
-        return session.api().get("/api/keys/recipients?unitIds=" + ids, new TypeReference<>() {
-        });
     }
 
     public Dto.DocumentSent send(DocumentContent content, List<Dto.Recipient> recipients) {

@@ -41,8 +41,9 @@ public final class ApiClient {
         this.baseUrl = baseUrl;
     }
 
-    public Dto.SessionInfo login(String email, String authSecret) {
-        Dto.SessionInfo session = post("/api/auth/login", new Dto.LoginRequest(email, authSecret),
+    /** {@code phone}: {@code 5XXXXXXXXX}. */
+    public Dto.SessionInfo login(String phone, String authSecret) {
+        Dto.SessionInfo session = post("/api/auth/login", new Dto.LoginRequest(phone, authSecret),
                 new TypeReference<>() {
                 });
         accessToken = session.accessToken();

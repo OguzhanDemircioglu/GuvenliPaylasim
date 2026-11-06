@@ -1,6 +1,5 @@
 package com.desktop.ui.views;
 
-import atlantafx.base.controls.CustomTextField;
 import atlantafx.base.theme.Styles;
 import com.desktop.api.Dto;
 import com.desktop.crypto.DocumentContent;
@@ -9,18 +8,9 @@ import com.desktop.ui.Async;
 import com.desktop.ui.Formats;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
-import javafx.animation.PauseTransition;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableSet;
-import javafx.collections.SetChangeListener;
-import javafx.collections.transformation.FilteredList;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
@@ -32,21 +22,19 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.util.Duration;
 import org.kordamp.ikonli.material2.Material2OutlinedAL;
 import org.kordamp.ikonli.material2.Material2OutlinedMZ;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
 /**
- * Yeni gönderi: düz yazı ya da dosya, alıcı birimler. İçerik bu bilgisayarda şifrelenir; seçilen birimlerdeki
- * her kişi için belge anahtarı ayrı ayrı sarmalanır.
+ * Yeni gönderi: düz yazı ya da dosya. İçerik bu bilgisayarda şifrelenir; her alıcı kişi için belge anahtarı ayrı
+ * ayrı sarmalanır.
  */
 final class ComposeView extends VBox {
 
@@ -64,14 +52,11 @@ final class ComposeView extends VBox {
     private final TextArea text = new TextArea();
     private final StackPane fileArea = new StackPane();
     private final StackPane editor = new StackPane();
-    private final ObservableSet<Long> selectedUnits = FXCollections.observableSet();
-    private final CheckBox allUnits = new CheckBox("Tüm birimlere gönder");
     private final Label summary = new Label();
     private final Button send = Ui.button("Şifrele ve gönder", Material2OutlinedAL.ENHANCED_ENCRYPTION,
             Styles.ACCENT, "send-button");
-    private final PauseTransition debounce = new PauseTransition(Duration.millis(250));
-    private List<Dto.Unit> units = List.of();
-    private List<Dto.Recipient> recipients = List.of();
+    /** 4. adımda kişi listesinden ya da davet kodundan dolar. */
+    private final List<Dto.Recipient> recipients = List.of();
     private File file;
 
     ComposeView(Context context) {
@@ -89,8 +74,6 @@ final class ComposeView extends VBox {
         getChildren().addAll(Ui.header("Yeni Gönderi",
                 "İçerik bu bilgisayarda şifrelenir; sunucu dahil alıcılar dışında kimse okuyamaz."), body);
 
-        debounce.setOnFinished(e -> resolveRecipients());
-        selectedUnits.addListener((SetChangeListener<Long>) c -> debounce.playFromStart());
         text.textProperty().addListener((obs, old, value) -> updateSendState());
         updateSendState();
     }
@@ -208,34 +191,11 @@ final class ComposeView extends VBox {
 
     // ---------- Alıcılar ----------
 
+    /**
+     * v2'de alıcı birim değil kişidir: kişi listesi ve ilk temas için davet kodu kodlama sırasının 4. adımında
+     * gelir (Crypto_Design §7.6–7.7). O zamana kadar alıcı seçilemez ve gönderim kapalıdır.
+     */
     private VBox recipientsPanel() {
-        CustomTextField search = new CustomTextField();
-        search.setPromptText("Birim ara");
-        search.setLeft(Ui.icon(Material2OutlinedMZ.SEARCH, 16));
-
-        ListView<Dto.Unit> list = new ListView<>();
-        list.getStyleClass().add("unit-list");
-        list.setCellFactory(v -> new UnitCell());
-        VBox.setVgrow(list, Priority.ALWAYS);
-
-        Async.run(context.documents::units, loaded -> {
-            units = loaded;
-            FilteredList<Dto.Unit> filtered = new FilteredList<>(FXCollections.observableArrayList(loaded));
-            search.textProperty().addListener((obs, old, query) -> filtered.setPredicate(unit ->
-                    query.isBlank() || unit.name().toLowerCase(Locale.forLanguageTag("tr"))
-                            .contains(query.toLowerCase(Locale.forLanguageTag("tr")))));
-            list.setItems(filtered);
-        });
-
-        allUnits.selectedProperty().addListener((obs, old, all) -> {
-            if (all) {
-                units.forEach(u -> selectedUnits.add(u.id()));
-            } else {
-                selectedUnits.clear();
-            }
-            list.refresh();
-        });
-
         summary.setWrapText(true);
         summary.setMinHeight(Region.USE_PREF_SIZE);
         summary.setMaxWidth(Double.MAX_VALUE);
@@ -248,35 +208,17 @@ final class ComposeView extends VBox {
         send.setMaxWidth(Double.MAX_VALUE);
         send.setOnAction(e -> send());
 
-        return Ui.surface(Ui.label("Alıcı birimler", "section-title"),
-                Ui.muted("Seçtiğiniz birimlerdeki herkes belgeyi kendi anahtarıyla açabilir."),
-                search, allUnits, list, summaryBox, send);
-    }
-
-    private void resolveRecipients() {
-        if (selectedUnits.isEmpty()) {
-            recipients = List.of();
-            updateSummary();
-            return;
-        }
-        List<Long> ids = new ArrayList<>(selectedUnits);
-        Async.run(() -> context.documents.recipients(ids), resolved -> {
-            if (ids.size() == selectedUnits.size() && selectedUnits.containsAll(ids)) {
-                recipients = resolved;
-                updateSummary();
-            }
-        });
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+        return Ui.surface(Ui.label("Alıcı", "section-title"),
+                Ui.muted("Belge, telefon numarasıyla eklediğiniz kişilere gider. İlk gönderim davet koduyla yapılır."),
+                spacer, summaryBox, send);
     }
 
     private void updateSummary() {
-        if (selectedUnits.isEmpty()) {
-            summary.setText("Henüz birim seçilmedi.");
-        } else if (recipients.isEmpty()) {
-            summary.setText(selectedUnits.size() + " birim seçildi, ancak bu birimlerde anahtarı olan kullanıcı yok.");
-        } else {
-            summary.setText(selectedUnits.size() + " birim · " + recipients.size()
-                    + " kişi. Belge anahtarı her kişi için ayrı ayrı sarmalanacak.");
-        }
+        summary.setText(recipients.isEmpty()
+                ? "Kişi listesi ve davet kodu henüz hazır değil; bu sürümde alıcı seçilemez."
+                : recipients.size() + " kişi. Belge anahtarı her kişi için ayrı ayrı sarmalanacak.");
         updateSendState();
     }
 
@@ -298,8 +240,6 @@ final class ComposeView extends VBox {
             text.clear();
             file = null;
             showFilePicker();
-            allUnits.setSelected(false);
-            selectedUnits.clear();
         });
         progress.show();
         Async.run(() -> {
@@ -309,39 +249,5 @@ final class ComposeView extends VBox {
                 },
                 progress::completed,
                 progress::failed);
-    }
-
-    private final class UnitCell extends ListCell<Dto.Unit> {
-
-        private final CheckBox box = new CheckBox();
-
-        UnitCell() {
-            box.setOnAction(e -> {
-                Dto.Unit unit = getItem();
-                if (unit == null) {
-                    return;
-                }
-                if (box.isSelected()) {
-                    selectedUnits.add(unit.id());
-                } else {
-                    selectedUnits.remove(unit.id());
-                }
-            });
-        }
-
-        @Override
-        protected void updateItem(Dto.Unit unit, boolean empty) {
-            super.updateItem(unit, empty);
-            setText(null);
-            if (empty || unit == null) {
-                setGraphic(null);
-                return;
-            }
-            box.setText(unit.name());
-            box.setSelected(selectedUnits.contains(unit.id()));
-            Node icon = Ui.icon(Material2OutlinedAL.BUSINESS, 16);
-            icon.getStyleClass().add(Styles.TEXT_MUTED);
-            setGraphic(Ui.row(10, box, Ui.grow(), icon));
-        }
     }
 }

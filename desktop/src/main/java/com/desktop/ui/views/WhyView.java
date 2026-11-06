@@ -127,7 +127,7 @@ final class WhyView extends ScrollPane {
 
     private static Node journey() {
         HBox flow = Ui.row(8,
-                flowStep(Material2OutlinedAL.EDIT, "1 · Siz", "Belgeyi seçer, alıcı birimleri işaretlersiniz."),
+                flowStep(Material2OutlinedAL.EDIT, "1 · Siz", "Belgeyi ve alıcı kişileri seçersiniz."),
                 arrow(),
                 flowStep(Material2OutlinedAL.ENHANCED_ENCRYPTION, "2 · Bu bilgisayar",
                         "Rastgele anahtarla şifreler, imzalar, anahtarı her alıcıya ayrı sarmalar."),
