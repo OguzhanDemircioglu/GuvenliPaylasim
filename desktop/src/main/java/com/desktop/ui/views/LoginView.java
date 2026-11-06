@@ -138,8 +138,9 @@ public final class LoginView extends VBox {
 
         versionRow.getChildren().add(Ui.label("Sürüm " + AppConfig.get().version(), "auth-version"));
         versionRow.setPrefWidth(WIDTH);
-        versionRow.setLayoutY(HEIGHT - 32);
-        versionRow.setPadding(new Insets(0, 20, 0, 20));
+        // Lacivert panel köşelerde en dar yerinde ~150 px; yazı onun içinde kalır.
+        versionRow.setLayoutY(HEIGHT - 40);
+        versionRow.setPadding(new Insets(0, 24, 0, 24));
         versionRow.setMouseTransparent(true);
 
         card.getChildren().addAll(rotatingPanel(), sweepingPanel(), loginBox, loginInfo, registerBox, registerInfo,
@@ -147,9 +148,12 @@ public final class LoginView extends VBox {
         return card;
     }
 
-    /** Sürüm girişte sol altta, kayıtta sağ altta; ekranlar arası geçiş sırasında görünmez. */
+    /**
+     * Sürüm lacivert panelin köşesinde, beyaz: girişte sağ altta, kayıtta sol altta. Ekranlar arası geçiş sırasında
+     * görünmez.
+     */
     private void placeVersion(boolean register) {
-        versionRow.setAlignment(register ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
+        versionRow.setAlignment(register ? Pos.CENTER_LEFT : Pos.CENTER_RIGHT);
     }
 
     private static void place(VBox box, double x, Insets padding) {

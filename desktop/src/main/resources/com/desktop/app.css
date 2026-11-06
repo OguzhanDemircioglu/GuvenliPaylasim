@@ -289,8 +289,9 @@
 }
 
 .auth-version {
-    -fx-text-fill: -color-fg-subtle;
-    -fx-font-size: 11px;
+    -fx-text-fill: white;
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
 }
 
 .auth-check {
