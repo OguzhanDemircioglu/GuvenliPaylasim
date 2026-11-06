@@ -261,6 +261,9 @@ iletildiği için, numarasını kopyalayıp (SIM swap) parolasını sıfırlayan
 | SMS (kayıt, sıfırlama) | sadece TR mobil (`^5\d{9}$`); numara başına saatte 3, IP başına saatte 10; sistem geneli günlük tavan (aşılınca SMS durur, alarm) |
 | SMS kodu | 5 dk geçerli, 3 deneme |
 | Davet oluşturma | kullanıcı başına günde 20 |
+| Kişilere gönderim | kullanıcı başına günde 200 kutu |
+| Dosya boyutu | en fazla 10 MB (tek parça) |
+| Depolama | kullanıcı başına aynı anda yaşayan gönderilmiş kutuların toplamı 500 MB |
 | Kod girme | kullanıcı başına 5 hatalı deneme → 1 saat bekleme |
 | Giriş | mevcut brute-force koruması (`LoginAttemptService`) |
 

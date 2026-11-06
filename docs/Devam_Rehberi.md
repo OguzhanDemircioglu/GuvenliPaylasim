@@ -25,7 +25,7 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 | 2. Gizlilik | **Konuşuldu**, kararlar Crypto_Design §8'de. Kodlanmadı |
 | 3. Karşılıklı teslim (kasa) | **Konuşuldu: yapılmayacak** (gerekçe aşağıda) |
 | Güvenlik: tehdit modeli ve test planı | **Konuşuldu**, [Security.md](Security.md)'de. §7 buna göre güncellendi |
-| 4. İnternete açılma | **Kısmen karar verildi** (10 MB, WhatsApp, Railway); kota, QR, yedekleme onay bekliyor |
+| 4. İnternete açılma | **Konuşuldu**, kararlar aşağıda. Demo sunucusu Railway'de |
 | TOTP ile giriş | Konuşuldu: istenir; ilk parçadan sonra eklenecek (§7.4) |
 
 ## 1. Temel dönüşüm: alınan kararlar (özet)
@@ -86,7 +86,7 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 - **Demo sunucusu Railway'de** (aşağıda). Adres `https://guvenlipaylasim.up.railway.app`. DuckDNS kullanılamadı:
   Railway özel adres için CNAME ister, DuckDNS CNAME desteklemez. Kendi alan adı alınınca CNAME ile bağlanır.
 
-**Önerildi, onay bekliyor**
+**Onaylandı (2026-11-06)**
 - Parmak izi için QR ekranı yapılmaz; iki yönlü davet kodu (§7.6) bu işi görür. Parmak izi kişi detayında görünür.
 - Kota: kullanıcı başına aynı anda yaşayan gönderilmiş kutular toplamı 500 MB; kişilere günde 200 kutu.
 - Yedekleme: kutular yedeklenmez (süreli silme sözü yedekte bozulmasın); kullanıcılar, anahtar paketleri ve kişiler
