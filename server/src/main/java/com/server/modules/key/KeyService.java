@@ -2,10 +2,6 @@ package com.server.modules.key;
 
 import com.server.modules.key.dto.KeyBundleRequest;
 import com.server.modules.key.dto.KeyBundleResponse;
-import com.server.modules.key.dto.RecipientResponse;
-
-import java.util.Collection;
-import java.util.List;
 
 public interface KeyService {
 
@@ -20,6 +16,4 @@ public interface KeyService {
      * Açık anahtarlar değişmez; değişirse eski belgeler açılamaz hale gelirdi.
      */
     void saveOnPasswordChange(Long userId, KeyBundleRequest request);
-
-    List<RecipientResponse> findRecipients(Collection<Long> unitIds, Long excludedUserId);
 }

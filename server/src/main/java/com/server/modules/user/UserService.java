@@ -1,16 +1,10 @@
 package com.server.modules.user;
 
-import com.server.common.service.BaseService;
-import com.server.modules.user.dto.UserCreateRequest;
-import com.server.modules.user.dto.UserPasswordResetRequest;
-import com.server.modules.user.dto.UserResponse;
-import com.server.modules.user.dto.UserUpdateRequest;
+public interface UserService {
 
-public interface UserService extends BaseService<UserCreateRequest, UserUpdateRequest, UserResponse> {
-
-    /** Admin'in bir kullanıcının şifresini sıfırlaması; kullanıcının bütün oturumları kapanır. */
-    void resetPassword(Long id, UserPasswordResetRequest request);
-
-    /** Herkese açık kayıt: kayıt olan herkes USER olur ve seçtiği birime bağlanır. */
-    void register(String email, String fullName, String password, Long unitId, String phone);
+    /**
+     * Herkese açık kayıt. {@code phone} {@code 5XXXXXXXXX}, {@code password} istemcinin türettiği authSecret'tır.
+     * Geçici: telefon doğrulaması (WhatsApp kodu) kodlama sırasının 2. adımında eklenir.
+     */
+    void register(String phone, String fullName, String password);
 }

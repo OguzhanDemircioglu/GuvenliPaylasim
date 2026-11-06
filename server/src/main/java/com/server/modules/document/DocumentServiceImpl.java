@@ -12,7 +12,6 @@ import com.server.modules.document.dto.SentItemResponse;
 import com.server.modules.document.dto.SentRecipientResponse;
 import com.server.modules.key.UserKey;
 import com.server.modules.key.UserKeyRepository;
-import com.server.modules.notification.SmsGateway;
 import com.server.modules.user.User;
 import com.server.modules.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,6 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRecipientRepository recipientRepository;
     private final UserRepository userRepository;
     private final UserKeyRepository keyRepository;
-    private final SmsGateway smsGateway;
 
     @Override
     @Transactional
@@ -62,7 +60,7 @@ public class DocumentServiceImpl implements DocumentService {
             recipient.setWrappedKey(key.wrappedKey());
             recipientRepository.save(recipient);
         }
-        return new DocumentSentResponse(document.getId(), recipients.size(), notify(recipients, document.getId()));
+        return new DocumentSentResponse(document.getId(), recipients.size());
     }
 
     @Override
@@ -83,7 +81,7 @@ public class DocumentServiceImpl implements DocumentService {
         }
         return new DocumentContentResponse(document.getId(), document.getKind(),
                 Base64.getEncoder().encodeToString(document.getPayload()), document.getSignature(),
-                recipient.getWrappedKey(), sender.getId(), sender.getFullName(), sender.getUnitId(),
+                recipient.getWrappedKey(), sender.getId(), sender.getFullName(),
                 senderSigningKey, document.getCreatedAt());
     }
 
@@ -119,7 +117,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .toList();
     }
 
-    /** Alıcılar tekrarsız, aktif, gönderenden farklı ve anahtar sahibi olmalıdır. */
+    /** Alıcılar tekrarsız, kayıtlı, gönderenden farklı ve anahtar sahibi olmalıdır. */
     private List<User> validRecipients(Long senderId, List<RecipientKeyRequest> keys) {
         Set<Long> ids = keys.stream().map(RecipientKeyRequest::userId).collect(Collectors.toSet());
         if (ids.size() != keys.size()) {
@@ -130,23 +128,11 @@ public class DocumentServiceImpl implements DocumentService {
         Set<Long> withKeys = keyRepository.findAllById(ids).stream().map(UserKey::getUserId).collect(Collectors.toSet());
         for (Long id : ids) {
             User user = users.get(id);
-            if (user == null || !user.isActive() || id.equals(senderId) || !withKeys.contains(id)) {
+            if (user == null || id.equals(senderId) || !withKeys.contains(id)) {
                 throw new BusinessException(DocumentMessages.RECIPIENT_INVALID);
             }
         }
         return List.copyOf(users.values());
-    }
-
-    private int notify(List<User> recipients, Long documentId) {
-        int notified = 0;
-        for (User user : recipients) {
-            if (user.getPhone() != null && !user.getPhone().isBlank()) {
-                smsGateway.send(user.getPhone(), "Güvenli Paylaşım: " + documentId
-                        + " numaralı yeni bir belgeniz var. Uygulamaya giriş yaparak açabilirsiniz.");
-                notified++;
-            }
-        }
-        return notified;
     }
 
     private DocumentRecipient findRecipient(Long documentId, Long recipientId) {

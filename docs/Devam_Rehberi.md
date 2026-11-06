@@ -113,12 +113,17 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
   girilir; repoya ve sohbete yazılmaz. Değişken adları WhatsApp gateway kodlanınca belirlenir.
 - Railway proje token'ı sohbette paylaşıldı; kurulum işleri bitince panelden yenilenmeli.
 
-## Konuşmalar bitince: kodlama sırası (taslak)
+## Kodlama sırası
+
+> v2 kodu `v2` dalında yazılır. Railway sadece `main`'i deploy eder; sunucu tarafı kullanılabilir olunca (en az 1–3.
+> adımlar) `v2` `main`'e birleştirilir. Birleştirmeden önce Railway'de `DB_SCHEMA=gps_v2` yapılır ve `ADMIN_EMAIL` /
+> `ADMIN_PASSWORD` değişkenleri silinir (v1 tabloları eski şemada kalır, Crypto_Design §7.11).
 
 Kararlar netleşince güncellenir.
 
-1. Sunucu: rolleri, birimleri ve yönetim API'lerini kaldırmak; `User` modelini ad soyad + telefon olarak yeniden
-   kurmak; şemayı sıfırlamak; demo verisini yeniden yazmak.
+1. ✅ (2026-11-06, `v2` dalı) Sunucu: rolleri, birimleri ve yönetim API'lerini kaldırmak; `User` modelini ad soyad +
+   telefon olarak yeniden kurmak; şemayı sıfırlamak (yeni şema `gps_v2`); demo verisini yeniden yazmak.
+   Geçici: kayıt henüz telefon doğrulamasız (2. adım); `AuthSecrets` v2 tuzuna geçti, masaüstü istemci 3. adımda.
 2. Sunucu: SMS doğrulamalı kayıt ve parola sıfırlama; Vonage `SmsGateway`; SMS sınırları.
 3. Kripto (istemci ve sunucu): telefon tuzlu türetme; anahtarların kayıtta üretilmesi; test vektörlerinin
    güncellenmesi.

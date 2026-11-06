@@ -129,15 +129,6 @@ class KeyServiceImplTest {
                 .hasMessage(KeyMessages.NOT_FOUND);
     }
 
-    @Test
-    void recipientSearchNeedsAtLeastOneUnit() {
-        assertThatThrownBy(() -> service.findRecipients(List.of(), USER_ID))
-                .isInstanceOf(BusinessException.class)
-                .hasMessage(KeyMessages.UNITS_REQUIRED);
-        assertThatThrownBy(() -> service.findRecipients(null, USER_ID))
-                .hasMessage(KeyMessages.UNITS_REQUIRED);
-    }
-
     private UserKey key(String bundle) {
         UserKey key = new UserKey();
         key.setUserId(USER_ID);

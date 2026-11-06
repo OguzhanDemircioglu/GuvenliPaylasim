@@ -9,7 +9,7 @@ import com.server.modules.auth.dto.LoginRequest;
 import com.server.modules.auth.dto.SessionInfo;
 import com.server.modules.auth.dto.SessionUser;
 import com.server.modules.key.KeyService;
-import com.server.modules.menu.MenuService;
+import com.server.modules.user.Phones;
 import com.server.modules.user.User;
 import com.server.modules.user.UserRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -31,22 +31,20 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final UserSessionRepository sessionRepository;
     private final LoginAttemptService loginAttemptService;
-    private final MenuService menuService;
     private final AccessTokenIssuer accessTokenIssuer;
     private final PasswordEncoder passwordEncoder;
     private final SessionProperties properties;
     private final KeyService keyService;
-    /** Kayıtlı olmayan e-postalarda da şifre kontrolü yapılır; cevap süresinden kullanıcının varlığı anlaşılmasın. */
+    /** Kayıtlı olmayan numaralarda da şifre kontrolü yapılır; cevap süresinden kullanıcının varlığı anlaşılmasın. */
     private final String dummyPasswordHash;
 
     public AuthServiceImpl(UserRepository userRepository, UserSessionRepository sessionRepository,
-                           LoginAttemptService loginAttemptService, MenuService menuService,
+                           LoginAttemptService loginAttemptService,
                            AccessTokenIssuer accessTokenIssuer, PasswordEncoder passwordEncoder,
                            SessionProperties properties, KeyService keyService) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.loginAttemptService = loginAttemptService;
-        this.menuService = menuService;
         this.accessTokenIssuer = accessTokenIssuer;
         this.passwordEncoder = passwordEncoder;
         this.properties = properties;
@@ -56,25 +54,23 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResult login(LoginRequest request, ClientInfo client) {
-        String attemptKey = client.ip() + "_" + request.email();
+        String phone = Phones.toE164(request.phone());
+        String attemptKey = client.ip() + "_" + phone;
         loginAttemptService.ensureNotBlocked(attemptKey);
 
-        Optional<User> user = userRepository.findByEmail(request.email());
+        Optional<User> user = userRepository.findByPhone(phone);
         String passwordHash = user.map(User::getPassword).orElse(dummyPasswordHash);
         if (!passwordEncoder.matches(request.password(), passwordHash) || user.isEmpty()) {
             loginAttemptService.recordFailure(attemptKey);
             throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
-        }
-        if (!user.get().isActive()) {
-            throw new UnauthorizedException(AuthMessages.USER_INACTIVE);
         }
         loginAttemptService.clear(attemptKey);
         return openSession(user.get(), client);
     }
 
     @Override
-    public AuthResult devLogin(String email, ClientInfo client) {
-        User user = userRepository.findByEmail(email).filter(User::isActive)
+    public AuthResult devLogin(String phone, ClientInfo client) {
+        User user = userRepository.findByPhone(phone)
                 .orElseThrow(() -> new NotFoundException(GlobalMessages.RECORD_NOT_FOUND));
         return openSession(user, client);
     }
@@ -100,9 +96,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = userRepository.findById(session.getUserId()).orElse(null);
-        if (user == null || !user.isActive()) {
+        if (user == null) {
             sessionRepository.revoke(session.getId(), now);
-            throw new UnauthorizedException(user == null ? AuthMessages.SESSION_EXPIRED : AuthMessages.USER_INACTIVE);
+            throw sessionExpired();
         }
 
         if (hash.equals(session.getCurrentTokenHash())) {
@@ -136,7 +132,6 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         }
         user.setPassword(passwordEncoder.encode(request.newPassword()));
-        user.setMustChangePassword(false);
         keyService.saveOnPasswordChange(userId, request.keys());
         sessionRepository.revokeAllByUserIdExcept(userId, currentSessionId, Instant.now());
     }
@@ -163,8 +158,7 @@ public class AuthServiceImpl implements AuthService {
         return new SessionInfo(
                 accessTokenIssuer.issue(user, sessionId),
                 accessTokenIssuer.expiresInSeconds(),
-                SessionUser.from(user),
-                menuService.getMenuTree(user.getRole()));
+                SessionUser.from(user));
     }
 
     private Optional<UserSession> findSession(String tokenHash) {

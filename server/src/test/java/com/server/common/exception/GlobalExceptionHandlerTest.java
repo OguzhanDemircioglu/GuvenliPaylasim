@@ -2,9 +2,9 @@ package com.server.common.exception;
 
 import com.server.common.message.GlobalMessages;
 import com.server.common.web.TraceIdFilter;
-import com.server.modules.unit.UnitMessages;
-import com.server.modules.unit.dto.UnitCreateRequest;
+import com.server.modules.user.UserMessages;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -50,7 +50,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void validationErrorReturnsFirstFieldKey() throws Exception {
         expectError(post("/test/validated").contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"\"}"),
-                400, UnitMessages.NAME_REQUIRED);
+                400, UserMessages.FULL_NAME_REQUIRED);
     }
 
     @Test
@@ -117,7 +117,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     void businessExceptionReturns422() throws Exception {
-        expectError(get("/test/throw").param("type", "business"), 422, UnitMessages.NAME_EXISTS);
+        expectError(get("/test/throw").param("type", "business"), 422, UserMessages.PHONE_EXISTS);
     }
 
     @Test
@@ -142,11 +142,14 @@ class GlobalExceptionHandlerTest {
                 .andExpect(header().exists(TraceIdFilter.HEADER));
     }
 
+    record NameRequest(@NotBlank(message = UserMessages.FULL_NAME_REQUIRED) String name) {
+    }
+
     @RestController
     static class FailingController {
 
         @PostMapping("/test/validated")
-        void validated(@Valid @RequestBody UnitCreateRequest request) {
+        void validated(@Valid @RequestBody NameRequest request) {
         }
 
         @GetMapping("/test/typed")
@@ -162,7 +165,7 @@ class GlobalExceptionHandlerTest {
                 case "conflict" -> throw new ConflictException(GlobalMessages.RECORD_MODIFIED);
                 case "optimisticLock" -> throw new ObjectOptimisticLockingFailureException(Object.class, 1L);
                 case "integrity" -> throw new DataIntegrityViolationException("duplicate key value");
-                case "business" -> throw new BusinessException(UnitMessages.NAME_EXISTS);
+                case "business" -> throw new BusinessException(UserMessages.PHONE_EXISTS);
                 case "blocked" -> throw new LoginBlockedException("auth_login_blocked");
                 default -> throw new NullPointerException("boom");
             }

@@ -1,12 +1,11 @@
 package com.server.modules.auth.dto;
 
 import com.server.modules.user.User;
-import com.server.security.Role;
 
-public record SessionUser(Long id, String email, String fullName, Role role, Long unitId, boolean mustChangePassword) {
+/** {@code phone} E.164 biçimindedir; istemci parola türetmede tuz olarak bunu kullanır. */
+public record SessionUser(Long id, String phone, String fullName) {
 
     public static SessionUser from(User user) {
-        return new SessionUser(user.getId(), user.getEmail(), user.getFullName(), user.getRole(),
-                user.getUnitId(), user.isMustChangePassword());
+        return new SessionUser(user.getId(), user.getPhone(), user.getFullName());
     }
 }

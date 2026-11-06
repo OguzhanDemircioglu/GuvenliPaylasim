@@ -6,8 +6,6 @@ import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
 import com.server.modules.auth.dto.RegisterRequest;
 import com.server.modules.auth.dto.SessionInfo;
-import com.server.modules.auth.dto.UnitOption;
-import com.server.modules.unit.UnitService;
 import com.server.modules.user.UserService;
 import com.server.security.CurrentUser;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,18 +14,15 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.CookieValue;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
-
 /**
- * login, register, units, refresh ve logout herkese açıktır; password giriş yapmış kullanıcı içindir.
- * Kayıt olan kullanıcı USER rolüyle seçtiği birime bağlanır; istemci ardından normal girişi yapar.
+ * login, register, refresh ve logout herkese açıktır; password giriş yapmış kullanıcı içindir.
+ * Kayıttan sonra istemci normal girişi yapar.
  */
 @RestController
 @RequestMapping("/api/auth")
@@ -36,7 +31,6 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
-    private final UnitService unitService;
     private final RegisterRateLimiter registerRateLimiter;
     private final RefreshCookies refreshCookies;
     private final CurrentUser currentUser;
@@ -50,17 +44,8 @@ public class AuthController {
     @PostMapping("/register")
     public ApiResponse<Void> register(@Valid @RequestBody RegisterRequest request, HttpServletRequest httpRequest) {
         registerRateLimiter.acquire(ClientInfo.from(httpRequest).ip());
-        userService.register(request.email(), request.fullName(), request.password(), request.unitId(),
-                request.phone());
+        userService.register(request.phone(), request.fullName(), request.password());
         return ApiResponse.success(GlobalMessages.RECORD_CREATED, null);
-    }
-
-    /** Kayıt formundaki birim seçimi için. */
-    @GetMapping("/units")
-    public ApiResponse<List<UnitOption>> units() {
-        return ApiResponse.success(unitService.getAll().stream()
-                .map(unit -> new UnitOption(unit.id(), unit.name()))
-                .toList());
     }
 
     @PostMapping("/refresh")

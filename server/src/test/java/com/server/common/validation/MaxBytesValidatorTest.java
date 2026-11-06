@@ -4,8 +4,7 @@ import com.server.modules.auth.AuthMessages;
 import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.key.dto.KeyBundleRequest;
 import com.server.modules.user.UserMessages;
-import com.server.modules.user.dto.UserCreateRequest;
-import com.server.security.Role;
+import com.server.modules.auth.dto.RegisterRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -34,8 +33,8 @@ class MaxBytesValidatorTest {
     void turkishCharactersCountAsTwoBytes() {
         String password = "ğ".repeat(37); // 37 karakter, 74 byte
 
-        Set<ConstraintViolation<UserCreateRequest>> violations =
-                validator.validate(new UserCreateRequest("ali@firma.com", "Ali", password, Role.USER, null, null));
+        Set<ConstraintViolation<RegisterRequest>> violations =
+                validator.validate(new RegisterRequest("Ali", "5551234567", password));
 
         assertThat(violations).extracting(ConstraintViolation::getMessage).containsExactly(UserMessages.PASSWORD_TOO_LONG);
     }
@@ -44,7 +43,7 @@ class MaxBytesValidatorTest {
     void passwordAtTheLimitIsAccepted() {
         String password = "ğ".repeat(36); // 72 byte
 
-        assertThat(validator.validate(new UserCreateRequest("ali@firma.com", "Ali", password, Role.USER, null, null))).isEmpty();
+        assertThat(validator.validate(new RegisterRequest("Ali", "5551234567", password))).isEmpty();
     }
 
     @Test

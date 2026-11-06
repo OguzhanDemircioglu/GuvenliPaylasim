@@ -19,14 +19,6 @@ public class CurrentUser {
         return Long.valueOf(jwt().getSubject());
     }
 
-    public String email() {
-        return jwt().getClaimAsString(JwtClaims.EMAIL);
-    }
-
-    public Role role() {
-        return Role.valueOf(jwt().getClaimAsString(JwtClaims.ROLE));
-    }
-
     public Long sessionId() {
         Number sessionId = jwt().getClaim(JwtClaims.SESSION_ID);
         return sessionId.longValue();

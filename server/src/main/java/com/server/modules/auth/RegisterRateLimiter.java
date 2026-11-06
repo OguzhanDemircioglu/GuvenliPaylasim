@@ -8,7 +8,7 @@ import java.time.Instant;
 
 /**
  * Herkese açık kaydı IP başına sınırlar. Login denemeleriyle aynı tabloyu ve atomik sayacı kullanır (anahtar: register_IP).
- * Başarılı ya da başarısız her deneme sayılır: böylece kayıtlı e-posta taraması da sınırlanır.
+ * Başarılı ya da başarısız her deneme sayılır: böylece kayıtlı numara taraması da sınırlanır.
  */
 @Component
 @RequiredArgsConstructor

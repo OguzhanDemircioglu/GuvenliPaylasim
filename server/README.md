@@ -34,9 +34,7 @@ kullanmaz. Ortam değişkenleri her zaman `.env`'den önceliklidir.
 DB_URL=jdbc:postgresql://localhost:5432/guvenlipaylasim
 DB_USERNAME=guvenlipaylasim
 DB_PASSWORD=...
-DB_SCHEMA=guvenlipaylasim
-# ADMIN_EMAIL=admin@firma.com
-# ADMIN_PASSWORD=...
+DB_SCHEMA=gps_v2
 ```
 
 Bilgisayara kurulu bir PostgreSQL'de veritabanı ve kullanıcı bir kez oluşturulur (`postgres` kullanıcısıyla, ör.
@@ -51,12 +49,12 @@ CREATE DATABASE guvenlipaylasim OWNER guvenlipaylasim;
   bağlantı sadece `DB_URL`'den alınır.
 - `DB_SCHEMA` küçük harf olmalıdır. Uygulamanın bütün tabloları bu şemada durur; şema yoksa ilk açılışta oluşturulur.
   Başka projelerle paylaşılan bir veritabanında diğer şemalara (ör. `public`) dokunulmaz. Dev profilinde varsayılanı
-  `guvenlipaylasim`'dir; prod'da **zorunludur**.
-- Demo verisini sıfırlamak için şema silinir (`DROP SCHEMA guvenlipaylasim CASCADE`); sunucu bir sonraki açılışta
+  `gps_v2`'dir (v2 şeması; v1 tabloları eski şemada kalır, Crypto_Design §7.11); prod'da **zorunludur**.
+- Demo verisini sıfırlamak için şema silinir (`DROP SCHEMA gps_v2 CASCADE`); sunucu bir sonraki açılışta
   tabloları ve demo verisini yeniden oluşturur.
 
-Tablolar ilk açılışta Hibernate tarafından (`ddl-auto=update`), başlangıç verileri migration class'larıyla oluşturulur.
-`ADMIN_EMAIL`/`ADMIN_PASSWORD` verilmezse dev profilinde `admin@gps.local` / `Admin12345` kullanılır.
+Tablolar ilk açılışta Hibernate tarafından (`ddl-auto=update`), demo verisi migration class'larıyla oluşturulur.
+v2'de yönetici hesabı yoktur; herkes kendisi kayıt olur.
 
 ### 3. Çalıştırma
 
@@ -85,8 +83,8 @@ yapın (`.env` ve `keys/` bu dizine göre aranır).
 |---|---|
 | API | http://localhost:8080 |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
-| İlk admin | `.env`'deki `ADMIN_EMAIL` / `ADMIN_PASSWORD` (yoksa `admin@gps.local` / `Admin12345`) |
-| Demo verisi | Birimler ve demo kullanıcıları (V007, sadece dev) |
+| Demo verisi | 4 demo kullanıcısı, telefon `5550000001`–`5550000004`, parola `DemoParola2026!` (V001, sadece dev) |
+| Dev-login | `POST /api/auth/dev-login` ilk demo kullanıcısıyla şifresiz oturum açar (sadece bu makineden) |
 
 ## Testler
 
