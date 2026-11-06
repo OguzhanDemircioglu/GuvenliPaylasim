@@ -23,7 +23,7 @@
   engelleyecek ilkeler ayarladı"; msiexec 1625, günlükte 1718). Aynı uygulamanın kurulumsuz klasörü (jpackage
   app-image) internetten gelmiş işaretiyle bile çalıştı. Release'e `GuvenliPaylasim-2.0.0-kurulumsuz.zip` eklendi,
   `package.cmd` artık ZIP'i de üretir. Kalıcı çözüm kod imzalama (ör. Azure Trusted Signing, aylık ücretli); demo
-  için ertelendi. **Güncelleyici (2026-11-07, 2.0.2'den itibaren):** Akıllı Uygulama Denetimi açıksa MSI başlatılmaz,
+  için ertelendi. **Güncelleyici (2026-11-07, 2.0.2 ile yayında):** Akıllı Uygulama Denetimi açıksa MSI başlatılmaz,
   "ZIP'i indir" gösterilir (Update_Design §2b). 2.0.1 ve öncesi bunu bilmez: onlarda "Şimdi güncelle" MSI'ı dener,
   Windows engeller; ZIP elle indirilir. Sürümler zorunlu yapılmamalı. ZIP'in özeti imzalı değil (Security S7).
 - Giriş ekranında sürüm sağ altta, kayıt ekranında sol altta, lacivert zeminde beyaz; geçiş sırasında gizli (2.0.2).
