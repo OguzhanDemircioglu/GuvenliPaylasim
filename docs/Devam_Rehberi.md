@@ -17,6 +17,16 @@ Yayındaki 1.0.5 (v1) canlı v2 sunucusuyla çalışmaz; kullanıcılar şu an d
    (git'te yok; bu dosyanın olduğu bilgisayarda yapılmalı). Yayın adımları: [Update_Design.md](Update_Design.md).
 3. Yayından sonra README'deki "1.0.5 hâlâ v1" notları ve indirme bağlantısı güncellenir.
 
+### Doküman borcu (MSI'dan önce ya da birlikte yapılmalı)
+v2 kodlanırken §7, §8, Security.md ve bu rehber güncel tutuldu; şunlar hâlâ v1'i anlatıyor:
+- **Backend_Architecture.md** (en büyüğü): roller, menüler, birimler, ilk süperadmin, MapStruct, `BaseService`, soft
+  delete, kayıt hız sınırı silindi; yeni modüller (invite, contact, verification, totp, `ServerSeal`, kutu ömrü,
+  temizlik işleri, `SendQuota`) hiç anlatılmıyor.
+- **Crypto_Design.md §1–§6**: e-posta tuzu, ilk girişte anahtar, yönetici sıfırlaması, birime gönderim, SMS
+  bildirimi. §7 başlığındaki "Planlandı" notu da eski. §7–§8'e göre yeniden yazılmalı ya da "v1 (tarihçe)" diye
+  ayrılmalı.
+- **README.md**: "Nedir?" ve "Neden güvenli?" bölümleri v1 (birimler, SMS). **server/README.md**: v1 izleri.
+
 ### Bilinen açıklar ve sonraya kalanlar
 - Günlük 200 kutu sınırı silinen kutuları saymıyor (sayım var olan kutulardan); kesin sayaç ayrı iş.
 - Güncelleme imza anahtarı hâlâ düz dosya (acil madde, Hatırlatmalar).
