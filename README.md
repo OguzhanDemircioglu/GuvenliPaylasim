@@ -15,6 +15,9 @@
   <br>
   <sub>Sürüm 2.0.0 · Tıklayınca kurulum dosyası doğrudan iner · Uygulama yeni sürümleri açılışta kendisi kurar ·
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
+  <br>
+  <sub>Kurulum "Sistem yöneticisi, bu yüklemeyi engelleyecek ilkeler ayarladı" derse:
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.0/GuvenliPaylasim-2.0.0-kurulumsuz.zip">kurulumsuz ZIP</a></sub>
 </p>
 
 ---
@@ -72,6 +75,11 @@ ekranında da gösterilir.
 2. Kurulum kullanıcı başınadır, **yönetici yetkisi istemez**. Java ayrıca gerekmez; uygulamanın içinde gelir.
 3. "Güvenli Paylaşım" Başlat menüsüne ve masaüstüne eklenir.
 4. Yeni bir sürüm yayımlandığında uygulama açılışta haber verir; imzasını doğruladıktan sonra kendisi kurar.
+
+> **Kurulum engellenirse** ("Sistem yöneticisi, bu yüklemeyi engelleyecek ilkeler ayarladı"): Windows'ta Akıllı
+> Uygulama Denetimi açıktır ve kod imzalama sertifikası olmayan MSI'ı reddeder. Bunun yerine **kurulumsuz ZIP**'i
+> indirin, bir klasöre çıkarın ve içindeki `GuvenliPaylasim.exe`'yi çalıştırın. Akıllı Uygulama Denetimi açıkken
+> yeni sürümler de kendiliğinden kurulamaz; yeni sürümde ZIP yeniden indirilir.
 
 > Uygulama varsayılan olarak demo sunucusuna (`https://guvenlipaylasim.up.railway.app`) bağlanır. Başka bir sunucu
 > için `GPS_SERVER_URL` ortam değişkeni verilir (ör. `GPS_SERVER_URL=https://paylasim.ornek.com`). Demo sunucusunda
@@ -165,7 +173,8 @@ sunucusuna karşı `ScreenshotTour` (test kaynakları) ile pencere açmadan alı
 desktop\package.cmd
 ```
 
-`desktop/dist/GuvenliPaylasim-<sürüm>.msi` üretilir (Java runtime içinde; kullanıcı başına kurulur, yönetici
+`desktop/dist/GuvenliPaylasim-<sürüm>.msi` ve `GuvenliPaylasim-<sürüm>-kurulumsuz.zip` üretilir; ikisi de release'e
+eklenir. MSI (Java runtime içinde; kullanıcı başına kurulur, yönetici
 yetkisi istemez). Uygulama Windows'ta "Güvenli Paylaşım" adıyla görünür (Başlat menüsü, masaüstü, yüklü
 uygulamalar); Türkçe karakterler için WiX'e Türkçe kod sayfası (1254) `desktop/src/main/jpackage/` altından verilir.
 WiX 3.14 gerekir (`Projeler\.tools\wix3` ya da PATH; `wix314-binaries.zip` oraya açılır). İmzalama ve GitHub'a yükleme:

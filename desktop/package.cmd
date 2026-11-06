@@ -45,3 +45,20 @@ set "MODULES=java.base,java.compiler,java.datatransfer,java.xml,java.prefs,java.
 rem GitHub'a yuklenen dosya adi ASCII kalir (release.json bu adi kullanir).
 move /y "dist\Güvenli Paylaşım-%VERSION%.msi" "dist\GuvenliPaylasim-%VERSION%.msi" >nul || exit /b 1
 echo Kurulum dosyasi: %~dp0dist\GuvenliPaylasim-%VERSION%.msi
+
+rem Kurulumsuz ZIP: Akilli Uygulama Denetimi (Smart App Control) acik bilgisayarlar imzasiz MSI'i reddeder
+rem (hata 1625/1718), ama ayni uygulamanin kurulumsuz klasoru calisir. Kod imzalama sertifikasi olmadan tek yol bu.
+"%JAVA_HOME%\bin\jpackage" --type app-image ^
+  --name GuvenliPaylasim ^
+  --app-version %VERSION% ^
+  --vendor "Bilgi İşlem" ^
+  --input target\libs ^
+  --main-jar desktop-%VERSION%.jar ^
+  --main-class com.desktop.Launcher ^
+  --add-modules %MODULES% ^
+  --java-options "--enable-native-access=ALL-UNNAMED" ^
+  --icon src\main\jpackage\GuvenliPaylasim.ico ^
+  --dest dist\zip || exit /b 1
+powershell -NoProfile -Command "Compress-Archive -Path 'dist\zip\GuvenliPaylasim' -DestinationPath 'dist\GuvenliPaylasim-%VERSION%-kurulumsuz.zip' -Force" || exit /b 1
+rmdir /s /q dist\zip
+echo Kurulumsuz ZIP: %~dp0dist\GuvenliPaylasim-%VERSION%-kurulumsuz.zip

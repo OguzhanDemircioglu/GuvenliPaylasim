@@ -19,6 +19,12 @@
   yok); imza gömülü açık anahtarla doğrulandı. WiX 3.14.1 `C:\Projeler\.tools\wix3`'e açıldı.
 - GitHub release `v2.0.0` açıldı (`gh` CLI, `OguzhanDemircioglu` hesabıyla girişli); GitHub'dan indirilen MSI'ın
   özeti `release.json` ile aynı. README'deki indirme düğmesi çalışıyor.
+- **Akıllı Uygulama Denetimi (Smart App Control) imzasız MSI'ı reddediyor** ("Sistem yöneticisi, bu yüklemeyi
+  engelleyecek ilkeler ayarladı"; msiexec 1625, günlükte 1718). Aynı uygulamanın kurulumsuz klasörü (jpackage
+  app-image) internetten gelmiş işaretiyle bile çalıştı. Release'e `GuvenliPaylasim-2.0.0-kurulumsuz.zip` eklendi,
+  `package.cmd` artık ZIP'i de üretir. Kalıcı çözüm kod imzalama (ör. Azure Trusted Signing, aylık ücretli); demo
+  için ertelendi. Açık: Akıllı Uygulama Denetimi açık bilgisayarda **zorunlu** bir güncelleme MSI'ı kuramayacağı için
+  uygulamayı açtırmaz; bir sonraki sürüm zorunlu yapılmamalı ya da güncelleme ZIP'i de desteklemeli.
 - **Kalan:** yeni özel anahtar (`release-keys/update-private-key.txt`) bu bilgisayardan başka, çevrimdışı bir yere
   yedeklenmeli; Acer'daki 1.0.5 anahtarı artık kullanılmaz.
 
