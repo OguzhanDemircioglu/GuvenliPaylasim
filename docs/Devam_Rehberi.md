@@ -30,8 +30,13 @@
 - **2.0.3 için kodlandı, yayınlanmadı (2026-11-07):** sürüm `v2.0.3` biçiminde, kenarı bilgi yazılarıyla aynı hizada;
   "Kod gönder" sonrası 300 sn geri sayım; kayıtta ve girişte "Bu cihaza güven (30 gün)"; kenar çubuğunda kendi logomuz;
   ad soyad 2–3 kelime, kelime başları Türkçe kurala göre büyük (sunucu da 2–3 kelimeyi denetler).
-- **Açık soru: KVKK.** Kayıtta aydınlatma metni ve yurt dışına aktarım için açık rıza gerekip gerekmediği konuşulacak
-  (sunucu Railway, Türkiye dışında).
+- **KVKK aydınlatma metni: TASLAK eklendi (2026-11-07, 2.0.3).** Metin
+  `desktop/src/main/resources/com/desktop/aydinlatma-metni.txt`; kayıtta "Aydınlatma metnini okudum" zorunlu, bağlantı
+  metni açar, "Okudum" kutuyu işaretler. Onay sadece istemcide; sunucuda kim hangi metin sürümünü ne zaman onayladı
+  tutulmuyor. **Gerçek kullanıcıdan önce:** avukat incelemesi; köşeli parantezli yerler (veri sorumlusu, iletişim,
+  Railway ülkesi, yurt dışı aktarım güvencesi, yedekleme); yurt dışı aktarım KVKK m.9 (2024 değişikliği: düzenli
+  aktarımda standart sözleşme vb., açık rıza sadece arızi) ya da sunucuyu Türkiye'ye taşımak; gerekirse onayın
+  sunucuda kaydı.
 - **Ücretsiz kod imzalama: SignPath Foundation (ertelendi, 2026-11-06).** Demo şimdilik ZIP ile sürüyor. Başvurudan
   önce gerekenler: lisans (**karar: MIT**, `LICENSE` henüz eklenmedi), MSI/ZIP'i GitHub Actions'ta kaynaktan üretmek
   (doğrulanabilir derleme), README'de "Code signing policy" bölümü (roller; "Free code signing provided by

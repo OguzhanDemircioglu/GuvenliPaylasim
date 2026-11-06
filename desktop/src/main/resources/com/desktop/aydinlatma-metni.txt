@@ -1,0 +1,41 @@
+TASLAK — hukuki inceleme yapılmadı. Gerçek kullanıcıya açılmadan önce bir avukat tarafından gözden geçirilmeli ve köşeli parantezli yerler doldurulmalıdır. Taslak sürüm: 2026-11-07
+
+KİŞİSEL VERİLERİN İŞLENMESİNE İLİŞKİN AYDINLATMA METNİ
+(6698 sayılı Kişisel Verilerin Korunması Kanunu, madde 10)
+
+1. Veri sorumlusu
+[Ad soyad / unvan], [adres], [e-posta]. Bu metinde "biz" olarak anılır.
+
+2. Hangi verilerinizi işliyoruz
+- Kimlik ve iletişim: ad soyad, cep telefonu numarası.
+- Hesap güvenliği: parolanızdan bu bilgisayarda türetilen bir değerin özeti. Parolanızın kendisi sunucuya hiç gönderilmez. İki adımlı doğrulamayı açarsanız Authenticator anahtarınız ve kurtarma kodlarınızın özeti.
+- Anahtarlar: açık anahtarlarınız ve parolanızla şifrelenmiş özel anahtar paketiniz. Sunucu bu paketi açamaz.
+- Kişiler ve davetler: kimlerle kişi olduğunuz, hangi numaraya ne zaman davet gönderdiğiniz. Davet kodu sunucuda tutulmaz.
+- Kutular: gönderdiğiniz ve size gelen kutuların şifreli içeriği ile kimden kime, ne zaman gönderildiği, boyutu ve okunma durumu. İçerik ve dosya adları uçtan uca şifrelidir; sunucu dahil hiç kimse okuyamaz.
+- İşlem kayıtları: oturum açtığınız cihazın IP adresi ve uygulama bilgisi, giriş denemeleri, doğrulama kodu istekleri.
+
+3. Neden işliyoruz (amaçlar)
+Hesabınızı açmak ve telefonunuzu doğrulamak; kimliğinizi doğrulamak; kutuları doğru kişiye teslim etmek; hesabınızı ve hizmeti kötüye kullanıma (parola deneme, toplu kod isteme) karşı korumak.
+
+4. Hukuki sebep
+Hizmetin sunulması için sözleşmenin kurulması ve ifası (KVKK m.5/2-c); güvenlik ve kötüye kullanımın önlenmesi için meşru menfaatimiz (m.5/2-f). [Avukatla doğrulanacak.]
+
+5. Ne kadar süre saklıyoruz
+- Hesap, anahtarlar ve kişiler: hesabınız açık olduğu sürece.
+- Kutular: gönderenin seçtiği ömür boyunca (en fazla 30 gün) ya da "açılınca sil" seçildiyse açılınca. Süre dolunca kutu ve kimden kime gönderildiği bilgisi tamamen silinir.
+- Giriş denemeleri ve kod istekleri: 24 saat. Kapanan oturum kayıtları: 7 gün. Doğrulama kodları: 5 dakika.
+- Yedekler: [yedekleme düzeni kesinleşince yazılacak].
+
+6. Kimlere aktarıyoruz
+- Sunucu ve veritabanı hizmeti: Railway ([ülke]). Verileriniz Türkiye dışında saklanır. Yurt dışına aktarım KVKK m.9'a göre [standart sözleşme / diğer güvence] ile yapılır. [Avukatla doğrulanacak.]
+- Doğrulama mesajı: telefon numaranız ve doğrulama kodu, mesajı iletmek için Vonage'a ve WhatsApp (Meta) altyapısına aktarılır.
+- Kanunen yetkili kamu kurumlarına, talep halinde ve yalnızca sunucuda bulunan veriler. Şifreli içeriği biz de açamayız.
+
+7. Nasıl topluyoruz
+Masaüstü uygulamasına girdiğiniz bilgilerden ve uygulamanın kullanımı sırasında, elektronik ortamda.
+
+8. Bu bilgisayarda tutulanlar
+"Bu cihaza güven" seçerseniz oturumunuz ve anahtarlarınız bu bilgisayarda, Windows hesabınıza bağlı olarak şifreli saklanır. "Güvenli çıkış" bu kaydı siler.
+
+9. Haklarınız (KVKK m.11)
+Verilerinizin işlenip işlenmediğini öğrenme, bilgi isteme, amacını öğrenme, aktarıldığı kişileri bilme, eksik ya da yanlış işlenmişse düzeltilmesini, silinmesini ya da yok edilmesini isteme, bu işlemlerin aktarılan kişilere bildirilmesini isteme, otomatik analiz sonucu aleyhinize bir sonuca itiraz etme ve zarara uğrarsanız tazminat isteme haklarınız vardır. Başvuru: [e-posta / adres].

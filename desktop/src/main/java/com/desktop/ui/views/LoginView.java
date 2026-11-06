@@ -32,6 +32,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Tooltip;
@@ -81,6 +82,7 @@ public final class LoginView extends VBox {
     private final PasswordTextField loginPassword = new PasswordTextField();
     private final CheckBox rememberMe = new CheckBox("Bu cihaza güven (30 gün)");
     private final CheckBox trustDevice = new CheckBox("Bu cihaza güven (30 gün)");
+    private final CheckBox noticeRead = new CheckBox();
     private final Button loginSubmit = submitButton("Giriş yap");
     private final Label loginStatus = statusLabel();
 
@@ -280,7 +282,16 @@ public final class LoginView extends VBox {
         trustDevice.setTooltip(new Tooltip("Uygulamayı kapatıp açtığınızda 30 gün boyunca parola sorulmaz. "
                 + "Anahtarlarınız Windows hesabınıza bağlı olarak şifreli saklanır; ortak kullanılan bilgisayarda "
                 + "seçmeyin. Güvenli çıkış yaparsanız kayıt silinir."));
-        VBox action = new VBox(10, trustDevice, registerStatus, registerSubmit);
+        noticeRead.getStyleClass().add("auth-check");
+        Hyperlink notice = new Hyperlink("Aydınlatma metnini");
+        notice.getStyleClass().add("auth-link");
+        notice.setOnAction(e -> showNotice());
+        Label noticeText = Ui.label("okudum", "auth-link-text");
+        noticeText.setOnMouseClicked(e -> noticeRead.setSelected(!noticeRead.isSelected()));
+        HBox noticeRow = new HBox(4, noticeRead, notice, noticeText);
+        noticeRow.setAlignment(Pos.CENTER_LEFT);
+        VBox checks = new VBox(6, noticeRow, trustDevice);
+        VBox action = new VBox(8, checks, registerStatus, registerSubmit);
         Node link = switchLink("Hesabınız var mı?", "Giriş yap", false);
 
         Node[] nodes = {title, name, phone, password, repeat, code, action, link};
@@ -583,7 +594,37 @@ public final class LoginView extends VBox {
                 failure -> failed(registerSubmit, registerStatus, failure));
     }
 
+    /** KVKK m.10 aydınlatma metni (taslak, resources/com/desktop/aydinlatma-metni.txt). "Okudum" kutuyu işaretler. */
+    private void showNotice() {
+        TextArea text = new TextArea(noticeText());
+        text.setEditable(false);
+        text.setWrapText(true);
+        text.setPrefSize(620, 420);
+        Button close = Ui.button("Kapat", null);
+        close.setCancelButton(true);
+        close.setOnAction(e -> Dialogs.close());
+        Button read = Ui.primary("Okudum", Material2OutlinedAL.CHECK);
+        read.setDefaultButton(true);
+        read.setOnAction(e -> {
+            noticeRead.setSelected(true);
+            Dialogs.close();
+        });
+        Dialogs.show("Aydınlatma metni", text, close, read);
+    }
+
+    static String noticeText() {
+        try (var in = LoginView.class.getResourceAsStream("/com/desktop/aydinlatma-metni.txt")) {
+            return in == null ? "Aydınlatma metni bulunamadı."
+                    : new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+        } catch (java.io.IOException e) {
+            return "Aydınlatma metni okunamadı.";
+        }
+    }
+
     private String validateRegister() {
+        if (!noticeRead.isSelected()) {
+            return "Kayıt olmak için aydınlatma metnini okuyup onaylayın.";
+        }
         String nameError = Inputs.nameError(registerName.getText());
         if (nameError != null) {
             return nameError;
