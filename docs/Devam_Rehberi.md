@@ -97,7 +97,7 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 | 3. Karşılıklı teslim (kasa) | **Konuşuldu: yapılmayacak** (gerekçe aşağıda) |
 | Güvenlik: tehdit modeli ve test planı | **Konuşuldu**, [Security.md](Security.md)'de. §7 buna göre güncellendi |
 | 4. İnternete açılma | **Konuşuldu**, kararlar aşağıda. Demo sunucusu Railway'de |
-| Telefon maskesi `(5xx) xxx xx xx`, alan kısıtları, profilde ad değiştirme, "Beni hatırla" (DPAPI, 30 gün) | **Kodlandı** (2026-11-06 gece), Crypto_Design §7.4, Security S6. Sunucu tarafı `main` ile Railway'e gider; **masaüstü sürümü (2.0.1) henüz çıkmadı** |
+| Telefon maskesi `(5xx) xxx xx xx`, alan kısıtları, profilde ad değiştirme, "Beni hatırla" (DPAPI, 30 gün) | **Kodlandı** (2026-11-06 gece), Crypto_Design §7.4, Security S6. Masaüstü **2.0.1** ile yayında (GitHub release `v2.0.1`: MSI, kurulumsuz ZIP, `release.json`; zorunlu değil, çünkü Akıllı Uygulama Denetimi açık bilgisayarda ZIP kullanan MSI'ı kuramaz) |
 | TOTP ile giriş | **Yapıldı, isteğe bağlı** (2026-11-06): profilden açılır; girişte ve sıfırlamada kod, kurtarma kodları (§7.4) |
 
 ## 1. Temel dönüşüm: alınan kararlar (özet)
