@@ -119,6 +119,11 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
   (Reports API: `rejected`, hata `1330`). Vonage'ın Türkiye kuralları: harfli gönderen adı (ör. `GuvenliPay`) önceden
   kayıt ister, numaralı gönderen desteklenmez, `INFO`/`SMS` gibi genel adlar yasak. Kayıt Vonage panelindeki Global
   Sender ID Portal'dan yapılır. Kayıt olmadan Türkiye'ye SMS gitmez.
+- **WhatsApp sandbox denemesi (2026-11-06): çalıştı.** Kayıt kodu WhatsApp'a geldi; kodla kayıt tamamlandı ve giriş
+  yapıldı. Demo ayarları: `VONAGE_CHANNEL=whatsapp`, `VONAGE_FROM=14157386102`,
+  `VONAGE_MESSAGES_URL=https://messages-sandbox.nexmo.com/v1/messages`. Sınır: sadece sandbox'a katılmış numaralara
+  gider (Vonage paneli → Messages Sandbox → WhatsApp; telefondan katılma mesajı). Gerçek kullanım için kayıtlı SMS
+  gönderen adı ya da Meta onaylı WhatsApp Business hesabı gerekir.
 - Railway proje token'ı sohbette paylaşıldı; kurulum işleri bitince panelden yenilenmeli.
 
 ## Kodlama sırası
