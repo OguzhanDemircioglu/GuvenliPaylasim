@@ -136,16 +136,16 @@ public final class AuthService {
     }
 
     /**
-     * Parola kuralları istemcide uygulanır; sunucu parolanın kendisini hiç görmez (Security.md S2: en az 12 karakter).
-     * Yaygın parola listesi kontrolü henüz yok.
+     * Parola kuralları istemcide uygulanır; sunucu parolanın kendisini hiç görmez (Security.md S2): en az 12 karakter,
+     * harf + rakam, yaygın kelime/isim, klavye dizisi ve kişisel bilgi kontrolü (PasswordStrength).
+     *
+     * @param personal parolada geçmemesi gereken ad soyad ve telefon
      */
-    public static String validateNewPassword(char[] password, char[] repeat) {
+    public static String validateNewPassword(char[] password, char[] repeat, String... personal) {
         String value = new String(password);
-        if (value.length() < 12) {
-            return "Parola en az 12 karakter olmalıdır.";
-        }
-        if (!value.chars().anyMatch(Character::isDigit) || !value.chars().anyMatch(Character::isLetter)) {
-            return "Parola hem harf hem rakam içermelidir.";
+        String weak = PasswordStrength.check(value, personal);
+        if (weak != null) {
+            return weak;
         }
         if (!value.equals(new String(repeat))) {
             return "Parolalar birbiriyle aynı değil.";

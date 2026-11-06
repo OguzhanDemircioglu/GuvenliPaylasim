@@ -1,7 +1,46 @@
 # Devam Rehberi
 
-> Son güncelleme: 2026-11-06. Bu dosya "nerede kaldık, sırada ne var" sorusunun cevabıdır.
+> Son güncelleme: 2026-11-06 (akşam). Bu dosya "nerede kaldık, sırada ne var" sorusunun cevabıdır.
 > Yeni bir oturuma başlarken önce bunu ve [Security.md](Security.md)'yi, sonra [Crypto_Design.md §7](Crypto_Design.md#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu)'yi ve [§8](Crypto_Design.md#8-gizlilik-sunucu-daha-kısa-süre-bilsin)'i okuyun.
+
+## Nerede kaldık (2026-11-06 akşam) — buradan başlayın
+
+**v2 sunucu tarafı ve masaüstü kodu bitti, `main`'de ve Railway'de canlı.** Kodlama sırasının 1–7. adımları tamam
+(aşağıda ✅). Yaygın parola kontrolü de yapıldı. Geriye kalan iş tek: **v2 masaüstü sürümünün (MSI) yayını.**
+
+### Sıradaki iş: v2 MSI yayını
+Yayındaki 1.0.5 (v1) canlı v2 sunucusuyla çalışmaz; kullanıcılar şu an demo sunucusuna bağlanamıyor.
+1. Karar: masaüstünün varsayılan sunucu adresi (`desktop/src/main/resources/com/desktop/app.properties`,
+   `server.url`) Railway (`https://guvenlipaylasim.up.railway.app`) mı olsun, `http://localhost:8080` mi kalsın?
+   Sabitleme (`server.pins`) sadece https adreste devreye girer.
+2. Sürüm numarası (ör. 2.0.0) ve yayın: güncelleme imza anahtarı `release-keys/update-private-key.txt` gerekir
+   (git'te yok; bu dosyanın olduğu bilgisayarda yapılmalı). Yayın adımları: [Update_Design.md](Update_Design.md).
+3. Yayından sonra README'deki "1.0.5 hâlâ v1" notları ve indirme bağlantısı güncellenir.
+
+### Bilinen açıklar ve sonraya kalanlar
+- Günlük 200 kutu sınırı silinen kutuları saymıyor (sayım var olan kutulardan); kesin sayaç ayrı iş.
+- Güncelleme imza anahtarı hâlâ düz dosya (acil madde, Hatırlatmalar).
+- Security.md test planında eksik: uç noktaların sistematik IDOR testi, OWASP Dependency-Check, fuzz, sızma testi.
+- Gerçek kullanıcıya açılmadan önce: kayıtlı SMS gönderen adı ya da Meta onaylı WhatsApp hesabı (şu an WhatsApp
+  sandbox; sadece sandbox'a katılmış numaralar kod alır), KVKK (sunucu Türkiye dışında).
+
+### Başka bilgisayarda (evde) çalışmaya başlamak
+- `git pull` (dal: `main`). `v2` dalı birleştirildi, artık kullanılmıyor.
+- JDK 25 gerekir. Bu makinede: `~/.jdks/corretto-25.0.4.1`. Maven wrapper (`mvnw`) kurum ağındaki sertifika iptal
+  kontrolü yüzünden indiremedi; yerel Maven (`C:\tools\apache-maven-3.9.9`) kullanıldı. Evde `./mvnw` muhtemelen
+  çalışır.
+- Testler: `server/` ve `desktop/` klasörlerinde `mvn test` (son durum: sunucu 142, masaüstü 50 test, hepsi geçiyor).
+- Yerel sunucu: `server/.env` git'te yok. Gerekenler: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (Aiven ya da yerel
+  PostgreSQL), **`DB_SCHEMA=gps_v2`** (eski `guvenli_paylasim` şeması v1'dir). `SERVER_SEAL_KEY` dev'de verilmezse
+  herkesin bildiği sabit dev anahtarı kullanılır. `MESSAGING_PROVIDER` verilmezse doğrulama kodları sunucu log'una
+  yazılır (WhatsApp gerekmez). Çalıştırma: `mvn spring-boot:run -Dspring-boot.run.profiles=dev`.
+- Demo kullanıcıları (sadece dev): `5550000001`–`5550000004`, parola `DemoParola2026!`.
+- Masaüstünü yerel sunucuya bağlamak: varsayılan `http://localhost:8080`; Railway için
+  `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`.
+- Ekran görüntüsü aracı: `desktop` testlerindeki `com.desktop.ui.views.ScreenshotTour` (yerel sunucu açıkken).
+- Railway: proje `faithful-enthusiasm`, servis `GuvenliPaylasim` (kök `/server`), `main`'e her push deploy eder.
+  Claude için Railway MCP bu bilgisayarın `~/.claude.json` dosyasında (proje token'ı ile) tanımlı; evde yoksa Railway
+  panelinden yeni token alınıp `railway mcp local` aynı şekilde eklenir. Sohbette paylaşılan token yenilenmeli.
 
 ## Çalışma kuralı
 
@@ -20,9 +59,12 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 
 | Konu | Durum |
 |---|---|
-| v1 (rollü, birimli prototip) | Çalışıyor, sürüm 1.0.5 yayında |
-| 1. Temel dönüşüm (herkes kullanıcı, telefon, davet kodu, kişiler) | **Konuşuldu**, kararlar Crypto_Design §7'de. Kodlanmadı |
-| 2. Gizlilik | **Konuşuldu**, kararlar Crypto_Design §8'de. Kodlanmadı |
+| v1 (rollü, birimli prototip) | Masaüstü 1.0.5 yayında, ama sunucu artık v2; 1.0.5 bağlanamaz |
+| v2 sunucu | **Canlı** (Railway, `main`) |
+| v2 masaüstü | **Kod hazır, MSI yayınlanmadı** (sıradaki iş) |
+| 1. Temel dönüşüm (herkes kullanıcı, telefon, davet kodu, kişiler) | **Kodlandı**, Crypto_Design §7 |
+| 2. Gizlilik | **Kodlandı**, Crypto_Design §8 |
+| Yaygın parola kontrolü | **Yapıldı** (masaüstünde, `PasswordStrength`) |
 | 3. Karşılıklı teslim (kasa) | **Konuşuldu: yapılmayacak** (gerekçe aşağıda) |
 | Güvenlik: tehdit modeli ve test planı | **Konuşuldu**, [Security.md](Security.md)'de. §7 buna göre güncellendi |
 | 4. İnternete açılma | **Konuşuldu**, kararlar aşağıda. Demo sunucusu Railway'de |

@@ -523,7 +523,7 @@ public final class LoginView extends VBox {
             return phoneError;
         }
         String passwordError = AuthService.validateNewPassword(registerPassword.getPassword().toCharArray(),
-                registerRepeat.getPassword().toCharArray());
+                registerRepeat.getPassword().toCharArray(), registerName.getText(), registerPhone.getText());
         if (passwordError != null) {
             return passwordError;
         }
@@ -619,7 +619,7 @@ public final class LoginView extends VBox {
             String error = AuthService.validatePhone(phone.getText());
             if (error == null) {
                 error = AuthService.validateNewPassword(password.getPassword().toCharArray(),
-                        repeat.getPassword().toCharArray());
+                        repeat.getPassword().toCharArray(), phone.getText());
             }
             if (error == null && !validCode(code.getText())) {
                 error = "WhatsApp'a gelen 6 haneli kodu yazın.";

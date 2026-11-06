@@ -49,8 +49,9 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
     şifrelenir. Sadece DB dökümü ele geçerse deneme yapılamaz. **Uygulandı (2026-11-06):** `ServerSeal`,
     `SERVER_SEAL_KEY`; AAD kolon adıdır. Sınır: veritabanına yazabilen biri aynı kolondaki iki değeri satırlar arasında
     yer değiştirebilir (bu S2'nin değil S3'ün kapsamıdır). Anahtar kaybolursa bütün hesaplar açılamaz.
-  - **Güçlü parola şartı.** En az 12 karakter (uygulandı, 3. adım); yaygın parola ve sözlük listesiyle (Türkçe dahil)
-    kontrol (henüz yok). Kontrol
+  - **Güçlü parola şartı.** En az 12 karakter ve harf + rakam; yaygın kelime/isim kökü (Türkçe dahil, gömülü sözlük,
+    rakamla yazılmış harfler çözülür), klavye ve sıra dizileri, tekrar ve kişinin kendi adı/telefonu reddedilir
+    (uygulandı, masaüstü `PasswordStrength`, `weak-words.txt`). Kontrol
     istemcide yapılır, çünkü parola sunucuya gitmez.
 - **Kabul:** DB ile birlikte sunucu anahtarı da ele geçerse (S3) koruma PBKDF2 (600.000 tur) ve parola gücüne kalır.
   Argon2id dış kripto kütüphanesi gerektirdiği için şimdilik kullanılmaz.

@@ -33,7 +33,7 @@ final class PasswordForm extends VBox {
 
         submit.setOnAction(e -> {
             String invalid = AuthService.validateNewPassword(next.getPassword().toCharArray(),
-                    repeat.getPassword().toCharArray());
+                    repeat.getPassword().toCharArray(), session.user().fullName(), session.user().phone());
             if (current.getPassword().isEmpty()) {
                 invalid = "Mevcut parolanızı girin.";
             }
