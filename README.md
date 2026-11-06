@@ -21,7 +21,8 @@
 
 ## Uygulama ne yapıyor?
 
-> Bu bölüm geliştirilmekte olan **v2**'yi anlatır. Yayındaki 1.0.5 sürümü hâlâ v1'dir (rollü, birimli prototip).
+> Bu bölüm **v2**'yi anlatır. Demo sunucusu v2 ile çalışıyor; yayındaki masaüstü 1.0.5 ise hâlâ v1'dir (rollü,
+> birimli prototip) ve v2 sunucusuna bağlanamaz. v2 masaüstü sürümü yakında yayınlanacak.
 
 Kimsenin açamayacağı bir kutuya dosya ya da mesaj koyarsınız. Kutu sadece alıcının bilgisayarında açılır. Sunucu
 sadece taşıyıcıdır; içeriği hiçbir zaman göremez.
@@ -72,7 +73,8 @@ ekranında da gösterilir.
 
 > Uygulama varsayılan olarak `http://localhost:8080` adresindeki sunucuya bağlanır. Başka bir sunucu için
 > `GPS_SERVER_URL` ortam değişkeni verilir (ör. `GPS_SERVER_URL=https://paylasim.kurum.local`).
-> Demo sunucusu: `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`
+> Demo sunucusu (v2): `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`. Kayıt kodu WhatsApp sandbox'ından
+> gelir; telefonun önce Vonage sandbox numarasına katılma mesajı atmış olması gerekir.
 
 ---
 

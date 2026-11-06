@@ -95,16 +95,18 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 
 ## Demo kurulumu (Railway)
 
-> 2026-11-06'da kuruldu. Bugün çalışan kod **v1**'dir.
+> 2026-11-06'da kuruldu; aynı gün `v2` `main`'e birleştirildi (`51e8ed6`). Railway'de çalışan kod **v2**'dir.
+> Yayındaki masaüstü 1.0.5 (v1) bu sunucuyla çalışmaz; v2 masaüstü sürümü (MSI) henüz yayınlanmadı.
 
 | Konu | Değer |
 |---|---|
 | Proje | `faithful-enthusiasm`, ortam `production` |
 | Servisler | `GuvenliPaylasim` (GitHub `main`, kök klasör `/server`, Railpack, JDK 25), `Postgres` (Railway şablonu, volume'lu) |
 | Adres | `https://guvenlipaylasim.up.railway.app` (HTTP → HTTPS yönlendirilir), sağlık: `/actuator/health` |
-| Profil | `prod`: Swagger ve dev-login kapalı, demo kullanıcıları (V007) yüklenmez |
+| Profil | `prod`: Swagger ve dev-login kapalı, demo kullanıcıları (V001) yüklenmez; herkes kendisi kayıt olur |
 | JWT anahtarları | `JWT_PRIVATE_KEY_PEM` / `JWT_PUBLIC_KEY_PEM` değişkenlerinde; başlangıç komutu bunları `/tmp/keys`'e yazar |
-| İlk admin | `ADMIN_EMAIL` / `ADMIN_PASSWORD` değişkenlerinde (Railway panelinde görülür) |
+| Şema | `DB_SCHEMA=gps_v2` (v1 tabloları eski `guvenlipaylasim` şemasında duruyor, kullanılmıyor) |
+| Doğrulama mesajı | `MESSAGING_PROVIDER=vonage`, WhatsApp sandbox (`VONAGE_CHANNEL=whatsapp`) |
 | Veritabanı | `DB_URL` vb. `${{Postgres.*}}` referanslarıyla, özel ağdan (`postgres.railway.internal`) |
 
 - `main`'e her push otomatik deploy eder.
@@ -128,9 +130,9 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 
 ## Kodlama sırası
 
-> v2 kodu `v2` dalında yazılır. Railway sadece `main`'i deploy eder; sunucu tarafı kullanılabilir olunca (en az 1–3.
-> adımlar) `v2` `main`'e birleştirilir. Birleştirmeden önce Railway'de `DB_SCHEMA=gps_v2` yapılır ve `ADMIN_EMAIL` /
-> `ADMIN_PASSWORD` değişkenleri silinir (v1 tabloları eski şemada kalır, Crypto_Design §7.11).
+> v2 kodu `v2` dalında yazıldı ve 2026-11-06'da `main`'e birleştirildi. Birleştirmeden önce Railway'de
+> `DB_SCHEMA=gps_v2` deploy tetiklenmeden ayarlandı; `ADMIN_EMAIL` / `ADMIN_PASSWORD` birleştirmeden sonra silindi.
+> Bundan sonraki işler doğrudan `main`'de ya da kısa ömürlü dallarda yapılır; `main`'e her push deploy eder.
 
 Kararlar netleşince güncellenir.
 
