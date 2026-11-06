@@ -6,12 +6,17 @@ import com.server.common.exception.UnauthorizedException;
 import com.server.common.message.GlobalMessages;
 import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
+import com.server.modules.auth.dto.PasswordResetRequest;
 import com.server.modules.auth.dto.SessionInfo;
 import com.server.modules.auth.dto.SessionUser;
+import com.server.modules.document.DocumentService;
 import com.server.modules.key.KeyService;
 import com.server.modules.user.Phones;
 import com.server.modules.user.User;
 import com.server.modules.user.UserRepository;
+import com.server.modules.verification.VerificationMessages;
+import com.server.modules.verification.VerificationPurpose;
+import com.server.modules.verification.VerificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,13 +40,16 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final SessionProperties properties;
     private final KeyService keyService;
+    private final VerificationService verificationService;
+    private final DocumentService documentService;
     /** Kayıtlı olmayan numaralarda da şifre kontrolü yapılır; cevap süresinden kullanıcının varlığı anlaşılmasın. */
     private final String dummyPasswordHash;
 
     public AuthServiceImpl(UserRepository userRepository, UserSessionRepository sessionRepository,
                            LoginAttemptService loginAttemptService,
                            AccessTokenIssuer accessTokenIssuer, PasswordEncoder passwordEncoder,
-                           SessionProperties properties, KeyService keyService) {
+                           SessionProperties properties, KeyService keyService,
+                           VerificationService verificationService, DocumentService documentService) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.loginAttemptService = loginAttemptService;
@@ -49,6 +57,8 @@ public class AuthServiceImpl implements AuthService {
         this.passwordEncoder = passwordEncoder;
         this.properties = properties;
         this.keyService = keyService;
+        this.verificationService = verificationService;
+        this.documentService = documentService;
         this.dummyPasswordHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
@@ -134,6 +144,20 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         keyService.saveOnPasswordChange(userId, request.keys());
         sessionRepository.revokeAllByUserIdExcept(userId, currentSessionId, Instant.now());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(PasswordResetRequest request) {
+        String phone = Phones.toE164(request.phone());
+        verificationService.verify(phone, VerificationPurpose.PASSWORD_RESET, request.code());
+        User user = userRepository.findByPhone(phone)
+                .orElseThrow(() -> new BusinessException(VerificationMessages.CODE_INVALID));
+        user.setPassword(passwordEncoder.encode(request.password()));
+        keyService.replaceOnReset(user.getId(), request.keys());
+        // Eski özel anahtar olmadan bu kutular hiçbir zaman açılamaz (Crypto_Design §7.5).
+        documentService.deleteAllReceived(user.getId());
+        sessionRepository.revokeAllByUserId(user.getId(), Instant.now());
     }
 
     /**

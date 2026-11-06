@@ -225,6 +225,28 @@ class DocumentServiceImplTest {
         assertThat(document.getSenderId()).isEqualTo(SENDER);
     }
 
+    @Test
+    void passwordResetDeletesEveryReceivedBoxAndPurgesWhereLastRecipient() {
+        DocumentRecipient onlyRecipient = recipient(AYSE, "wrapped-1");
+        DocumentRecipient sharedRecipient = recipient(AYSE, "wrapped-2");
+        sharedRecipient.setDocumentId(DOCUMENT_ID + 1);
+        Document purged = document();
+        when(recipientRepository.findByRecipientIdAndDeletedAtIsNull(AYSE))
+                .thenReturn(List.of(onlyRecipient, sharedRecipient));
+        when(recipientRepository.existsByDocumentIdAndDeletedAtIsNull(DOCUMENT_ID)).thenReturn(false);
+        when(recipientRepository.existsByDocumentIdAndDeletedAtIsNull(DOCUMENT_ID + 1)).thenReturn(true);
+        when(documentRepository.findById(DOCUMENT_ID)).thenReturn(Optional.of(purged));
+
+        service.deleteAllReceived(AYSE);
+
+        assertThat(onlyRecipient.getWrappedKey()).isNull();
+        assertThat(sharedRecipient.getWrappedKey()).isNull();
+        assertThat(onlyRecipient.getDeletedAt()).isNotNull();
+        assertThat(sharedRecipient.getDeletedAt()).isNotNull();
+        assertThat(purged.getPayload()).isNull();
+        verify(documentRepository, never()).findById(DOCUMENT_ID + 1);
+    }
+
     private void assertRecipientInvalid(RecipientKeyRequest key) {
         assertThatThrownBy(() -> service.send(SENDER, request(key)))
                 .isInstanceOf(BusinessException.class)

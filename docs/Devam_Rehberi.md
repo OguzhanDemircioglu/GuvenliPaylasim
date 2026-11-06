@@ -109,8 +109,11 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 
 - `main`'e her push otomatik deploy eder.
 - Masaüstünden bağlanmak için: `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`.
-- Vonage değerleri (API key, secret, application ID, private key) Railway panelinde servisin Variables kısmına
-  girilir; repoya ve sohbete yazılmaz. Değişken adları WhatsApp gateway kodlanınca belirlenir.
+- WhatsApp için Railway panelinde servisin Variables kısmına girilecekler (repoya ve sohbete yazılmaz):
+  `MESSAGING_PROVIDER=vonage`, `VONAGE_API_KEY`, `VONAGE_API_SECRET`, `VONAGE_WHATSAPP_FROM` (sandbox numarası),
+  `VONAGE_MESSAGES_URL` (varsayılan sandbox: `https://messages-sandbox.nexmo.com/v1/messages`). Basic auth kullanıldığı
+  için application ID ve private key gerekmez. `MESSAGING_PROVIDER` verilmezse kod sadece sunucu log'una yazılır.
+  İsteğe bağlı: `VERIFICATION_DAILY_LIMIT` (varsayılan 200).
 - Railway proje token'ı sohbette paylaşıldı; kurulum işleri bitince panelden yenilenmeli.
 
 ## Kodlama sırası
@@ -124,7 +127,10 @@ Kararlar netleşince güncellenir.
 1. ✅ (2026-11-06, `v2` dalı) Sunucu: rolleri, birimleri ve yönetim API'lerini kaldırmak; `User` modelini ad soyad +
    telefon olarak yeniden kurmak; şemayı sıfırlamak (yeni şema `gps_v2`); demo verisini yeniden yazmak.
    Geçici: kayıt henüz telefon doğrulamasız (2. adım); `AuthSecrets` v2 tuzuna geçti, masaüstü istemci 3. adımda.
-2. Sunucu: SMS doğrulamalı kayıt ve parola sıfırlama; Vonage `SmsGateway`; SMS sınırları.
+2. ✅ (2026-11-06, `v2` dalı) Sunucu: WhatsApp kodlu kayıt ve parola sıfırlama (`register/start|complete`,
+   `password-reset/start|complete`); `VonageWhatsAppGateway`; numara/IP/günlük sınırlar; kuyruktan gönderim.
+   Kayıtta anahtarlar da gelir. Sıfırlamada gelen kutular silinir, oturumlar kapanır. Yerelde uçtan uca denendi;
+   start yanıt süresi kayıtlı ve kayıtsız numarada aynı (medyan farkı 3–10 ms / ~690 ms).
 3. Kripto (istemci ve sunucu): telefon tuzlu türetme; anahtarların kayıtta üretilmesi; test vektörlerinin
    güncellenmesi.
 4. Davet kodu ve kişiler: sunucu tabloları ve API'leri, istemcide "Kod ile al" ve kişi listesi ekranları.

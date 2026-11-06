@@ -16,4 +16,10 @@ public interface KeyService {
      * Açık anahtarlar değişmez; değişirse eski belgeler açılamaz hale gelirdi.
      */
     void saveOnPasswordChange(Long userId, KeyBundleRequest request);
+
+    /**
+     * Parola sıfırlamada (Crypto_Design §7.5) eski özel anahtarlar açılamaz; istemcinin ürettiği yeni anahtar çifti
+     * eskisinin yerine geçer. Açık anahtarlar da değişir, kişilerin istemcisi bunu "anahtarı değişti" olarak görür.
+     */
+    void replaceOnReset(Long userId, KeyBundleRequest request);
 }

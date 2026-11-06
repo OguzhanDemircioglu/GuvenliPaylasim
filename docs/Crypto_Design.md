@@ -133,14 +133,19 @@ Kimsenin açamayacağı bir kutuya dosya ya da mesaj konur; kutu sadece alıcın
   Veritabanında E.164 olarak tutulur: `+905XXXXXXXXX`. Benzersizdir.
 - Numara **SMS koduyla doğrulanmadan** hesap açılmaz. Doğrulama olmasaydı biri başkasının numarasıyla kayıt olup
   o numaraya bırakılan kutuları almaya çalışabilirdi.
-  - `POST /api/auth/register/start {phone}` → 6 haneli SMS kodu (5 dk geçerli, en fazla 3 deneme).
-  - `POST /api/auth/register/complete {phone, smsCode, fullName, authSecret, keyBundle}` → hesap açılır.
+  - `POST /api/auth/register/start {phone}` → 6 haneli kod (5 dk geçerli, en fazla 3 deneme). Cevap her zaman
+    `verification_code_sent`.
+  - `POST /api/auth/register/complete {phone, code, fullName, password (authSecret), keys}` → hesap ve anahtarlar
+    aynı transaction'da açılır.
+  - Kod sunucuda açık tutulmaz: `SHA-256(amaç | telefon | kod)`. Yanlış, süresi dolmuş, hakkı bitmiş ya da hiç
+    üretilmemiş kod aynı cevabı alır (`verification_code_invalid`). Bir amaçla üretilen kod öteki amaç için geçmez.
 - Anahtarlar **kayıtta** üretilir (v1'de ilk girişteydi). Böylece "anahtarı olmayan kullanıcı" durumu kalkar.
 - Doğrulama kodu **WhatsApp** ile gider: Vonage Messages API (`SmsGateway` arayüzünün yeni uygulaması). Bu belgede
   "SMS kodu" bu doğrulama mesajı anlamındadır. Demo'da Vonage sandbox kullanılır (alıcı numara önce sandbox'a
   katılır); gerçek kullanımda WhatsApp Business hesabı ve Meta onaylı doğrulama şablonu gerekir. Erişim bilgileri
   sadece ortam değişkeninden okunur, repoya girmez. Dev'de `SimulatedSmsGateway` kalır.
-- `register/start` numaranın zaten kayıtlı olup olmadığını **söylemez**; kayıtlı numaraya SMS gitmez ama yanıt aynıdır.
+- `register/start` numaranın zaten kayıtlı olup olmadığını **söylemez**; kayıtlı numaraya mesaj gitmez ama yanıt aynıdır.
+  Her iki durumda da aynı kayıtlar yazılır; mesaj kuyruktan, istek thread'inden ayrı gönderilir (Security S4).
 
 ### 7.3 Parola türetme (§2 değişikliği)
 
@@ -166,7 +171,9 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
 
 ### 7.5 Parola sıfırlama
 
-- Telefon + SMS kodu ile yeni parola belirlenir. İstemci **yeni anahtar çifti** üretir.
+- Telefon + doğrulama kodu ile yeni parola belirlenir. İstemci **yeni anahtar çifti** üretir.
+  `POST /api/auth/password-reset/start {phone}` (kod sadece kayıtlı numaraya gider, cevap her zaman aynı) ve
+  `POST /api/auth/password-reset/complete {phone, code, password, keys}`.
 - Eski özel anahtarlar eski parolayla kilitliydi, yeni anahtarla açılamaz. Bu yüzden sıfırlamada:
   - kullanıcıya gelmiş bütün kutular silinir (sarmalı anahtarlar silinir, son alıcıysa içerik purge edilir, §4.5),
   - bütün oturumları kapatılır,

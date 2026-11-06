@@ -2,6 +2,7 @@ package com.server.modules.auth;
 
 import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
+import com.server.modules.auth.dto.PasswordResetRequest;
 
 public interface AuthService {
 
@@ -17,4 +18,11 @@ public interface AuthService {
 
     /** Kullanıcının kendi şifresini değiştirmesi; diğer oturumları kapanır, mevcut oturum açık kalır. */
     void changePassword(Long userId, Long currentSessionId, ChangePasswordRequest request);
+
+    /**
+     * Parolasını unutan kullanıcı (Crypto_Design §7.5): WhatsApp kodu doğrulanır, parola ve anahtarlar yenilenir,
+     * kullanıcıya gelmiş bütün kutular silinir, bütün oturumlar kapanır. Kayıtsız numara için kod hiç gönderilmediği
+     * için sonuç her zaman "kod geçersiz"dir.
+     */
+    void resetPassword(PasswordResetRequest request);
 }

@@ -24,6 +24,8 @@ public interface DocumentRecipientRepository extends JpaRepository<DocumentRecip
 
     Optional<DocumentRecipient> findByDocumentIdAndRecipientIdAndDeletedAtIsNull(Long documentId, Long recipientId);
 
+    List<DocumentRecipient> findByRecipientIdAndDeletedAtIsNull(Long recipientId);
+
     boolean existsByDocumentIdAndDeletedAtIsNull(Long documentId);
 
     @Query("""

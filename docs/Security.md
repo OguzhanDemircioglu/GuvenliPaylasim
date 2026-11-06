@@ -117,7 +117,7 @@ test" listesi bu belgenin ekine yazılır.
 | İki yönlü kod (S3) | Sunucu sahte alıcı ya da gönderen anahtarı verirse kişi eklenmez ve kutu açılmaz |
 | Anahtar değişikliği (S5) | Anahtarı değişen kişiye kodsuz gönderim istemcide ve sunucuda reddedilir |
 | Yetki (S4) | Her uç nokta için başka kullanıcının kimliğiyle erişim denemesi (IDOR); oturumsuz erişim |
-| Numara tarama (S4) | Kayıtlı ve kayıtsız numara için yanıt gövdesi aynı; yanıt süresi farkı istatistiksel olarak ayırt edilemez |
+| Numara tarama (S4) | Kayıtlı ve kayıtsız numara için yanıt gövdesi aynı; yanıt süresi farkı istatistiksel olarak ayırt edilemez. İlk ölçüm (2026-11-06, yerel sunucu, uzak DB, 20'şer istek): `register/start` medyan farkı 2,6 ms, `password-reset/start` 10,2 ms (~690 ms yanıtta) |
 | Hız sınırları (S4, S8) | Her sınır aşılınca reddedilir; IP değiştirerek ya da paralel isteklerle atlatılamaz |
 | Silme (Crypto_Design §8) | Süresi dolan, açılınca silinen ve alıcının sildiği kutunun DB'de hiçbir satırı kalmaz |
 | DB dökümü (S2) | DB'deki anahtar paketi ve `authSecret` özeti, sunucu anahtarı olmadan çözülemez |

@@ -52,6 +52,15 @@ public class KeyServiceImpl implements KeyService {
         key.setUpdatedAt(Instant.now());
     }
 
+    @Override
+    @Transactional
+    public void replaceOnReset(Long userId, KeyBundleRequest request) {
+        UserKey replacement = newKey(userId, request);
+        repository.deleteById(userId);
+        repository.flush();
+        repository.save(replacement);
+    }
+
     private static UserKey newKey(Long userId, KeyBundleRequest request) {
         requireValidPublicKey("X25519", request.encryptionPublicKey());
         requireValidPublicKey("Ed25519", request.signingPublicKey());

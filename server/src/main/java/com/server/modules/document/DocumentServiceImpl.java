@@ -88,8 +88,20 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     @Transactional
     public void delete(Long documentId, Long recipientId) {
-        DocumentRecipient recipient = findRecipient(documentId, recipientId);
+        deleteRecipient(findRecipient(documentId, recipientId), Instant.now());
+    }
+
+    @Override
+    @Transactional
+    public void deleteAllReceived(Long recipientId) {
         Instant now = Instant.now();
+        for (DocumentRecipient recipient : recipientRepository.findByRecipientIdAndDeletedAtIsNull(recipientId)) {
+            deleteRecipient(recipient, now);
+        }
+    }
+
+    private void deleteRecipient(DocumentRecipient recipient, Instant now) {
+        Long documentId = recipient.getDocumentId();
         recipient.setWrappedKey(null);
         recipient.setDeletedAt(now);
         recipientRepository.flush();

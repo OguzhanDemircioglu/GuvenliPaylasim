@@ -5,10 +5,15 @@ import com.server.common.exception.LoginBlockedException;
 import com.server.common.exception.UnauthorizedException;
 import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
+import com.server.modules.auth.dto.PasswordResetRequest;
+import com.server.modules.document.DocumentService;
 import com.server.modules.key.KeyService;
 import com.server.modules.key.dto.KeyBundleRequest;
 import com.server.modules.user.User;
 import com.server.modules.user.UserRepository;
+import com.server.modules.verification.VerificationMessages;
+import com.server.modules.verification.VerificationPurpose;
+import com.server.modules.verification.VerificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,6 +63,10 @@ class AuthServiceImplTest {
     private PasswordEncoder passwordEncoder;
     @Mock
     private KeyService keyService;
+    @Mock
+    private VerificationService verificationService;
+    @Mock
+    private DocumentService documentService;
 
     private AuthServiceImpl service;
 
@@ -65,7 +74,8 @@ class AuthServiceImplTest {
     void setUp() {
         service = new AuthServiceImpl(userRepository, sessionRepository, loginAttemptService,
                 accessTokenIssuer, passwordEncoder,
-                new SessionProperties(Duration.ofDays(90), Duration.ofSeconds(30), false), keyService);
+                new SessionProperties(Duration.ofDays(90), Duration.ofSeconds(30), false), keyService,
+                verificationService, documentService);
     }
 
     @Test
@@ -268,6 +278,43 @@ class AuthServiceImplTest {
                 .hasMessage(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         verify(keyService, never()).saveOnPasswordChange(any(), any());
         verify(sessionRepository, never()).revokeAllByUserIdExcept(any(), any(), any());
+    }
+
+    @Test
+    void passwordResetReplacesSecretAndKeysDeletesReceivedBoxesAndClosesAllSessions() {
+        User user = user();
+        KeyBundleRequest keys = new KeyBundleRequest("new-enc", "new-sig", "new-bundle");
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("new-secret")).thenReturn("new-hash");
+
+        service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret", keys));
+
+        verify(verificationService).verify(PHONE, VerificationPurpose.PASSWORD_RESET, "123456");
+        assertThat(user.getPassword()).isEqualTo("new-hash");
+        verify(keyService).replaceOnReset(USER_ID, keys);
+        verify(documentService).deleteAllReceived(USER_ID);
+        verify(sessionRepository).revokeAllByUserId(eq(USER_ID), any());
+    }
+
+    @Test
+    void passwordResetWithWrongCodeChangesNothing() {
+        doThrow(new BusinessException(VerificationMessages.CODE_INVALID))
+                .when(verificationService).verify(PHONE, VerificationPurpose.PASSWORD_RESET, "123456");
+
+        assertThatThrownBy(() -> service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret",
+                new KeyBundleRequest("e", "s", "b")))).hasMessage(VerificationMessages.CODE_INVALID);
+        verify(keyService, never()).replaceOnReset(any(), any());
+        verify(documentService, never()).deleteAllReceived(any());
+        verify(sessionRepository, never()).revokeAllByUserId(any(), any());
+    }
+
+    @Test
+    void passwordResetForUnknownPhoneGetsTheSameAnswerAsWrongCode() {
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret",
+                new KeyBundleRequest("e", "s", "b")))).hasMessage(VerificationMessages.CODE_INVALID);
+        verify(keyService, never()).replaceOnReset(any(), any());
     }
 
     private void stubSessionInfo(User user) {

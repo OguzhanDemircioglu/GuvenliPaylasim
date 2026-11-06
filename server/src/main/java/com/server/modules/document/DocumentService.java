@@ -21,5 +21,8 @@ public interface DocumentService {
     /** "Okudum ve sil". Son alıcı da sildiğinde şifreli içerik veritabanından kalıcı olarak silinir. */
     void delete(Long documentId, Long recipientId);
 
+    /** Parola sıfırlamada (Crypto_Design §7.5): kullanıcıya gelmiş bütün kutular, tek tek silinmiş gibi silinir. */
+    void deleteAllReceived(Long recipientId);
+
     List<SentItemResponse> sent(Long senderId);
 }
