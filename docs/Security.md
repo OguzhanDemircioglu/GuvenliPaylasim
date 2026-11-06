@@ -110,6 +110,11 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
     donanım anahtarına taşınmalı; imzalama ayrı bir adım olmalı.
   - Güncelleme bildirimi bir son geçerlilik tarihi taşımalı; eski bir bildirim tekrar sunularak güncellemenin
     gizlenmesi (dondurma saldırısı) engellenir.
+- **Kabul (2026-11-07):** Akıllı Uygulama Denetimi açık bilgisayarda MSI hiç başlatılmaz; uygulama "ZIP'i indir" ile
+  kurulumsuz ZIP'in GitHub adresini tarayıcıda açar. Bu ZIP'i kullanıcı elle indirip açar; **ZIP'in özeti imzalı
+  değildir**, yani GitHub hesabını ele geçiren biri bu yoldan değiştirilmiş bir ZIP sunabilir. Açılan adres sadece bu
+  deponun `https://github.com/<depo>/` adresi olabilir (`UpdateService.safeRepositoryUrl`). Kapatmak için ZIP'in
+  özeti de `release.json`'da imzalanmalı ve uygulama ZIP'i kendisi indirip doğrulamalı (Update_Design §2b).
 
 ### S8. Doğrulama mesajını (WhatsApp / SMS) kötüye kullanan
 - **Garanti:** Mesaj servisi fatura saldırısına ve taciz amaçlı kullanıma kapalıdır. Kanal WhatsApp'tır

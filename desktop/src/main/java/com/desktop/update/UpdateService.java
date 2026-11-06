@@ -44,9 +44,15 @@ public final class UpdateService {
     private static final String MANIFEST_ASSET = "release.json";
     private static final Preferences PREFS = Preferences.userNodeForPackage(UpdateService.class);
 
-    /** Kullanıcıya gösterilecek güncelleme bilgisi. */
+    private static final String PORTABLE_SUFFIX = "-kurulumsuz.zip";
+    private static final String DOWNLOAD_PREFIX = "gps-update";
+
+    /**
+     * Kullanıcıya gösterilecek güncelleme bilgisi. {@code portableUrl}: kurulumsuz ZIP (MSI engellenen bilgisayarlar
+     * için); sürümde yoksa sürüm sayfası. Sadece bu deponun GitHub adresi olabilir.
+     */
     public record Release(Version version, String notes, Instant deadline, boolean mandatory, String installerName,
-                          String installerUrl, String sha256, String signature) {
+                          String installerUrl, String sha256, String signature, String portableUrl) {
 
         public boolean blocking(Instant now) {
             return mandatory || !now.isBefore(deadline);
@@ -96,6 +102,7 @@ public final class UpdateService {
         if (!enabled()) {
             return new Check.UpToDate();
         }
+        deleteOldDownloads(Path.of(System.getProperty("java.io.tmpdir")), clock.instant());
         try {
             Release release = latest();
             if (release == null || !release.version().isNewerThan(current)) {
@@ -132,7 +139,7 @@ public final class UpdateService {
             throw new IOException("Kurulum dosyası indirilemedi (HTTP " + response.statusCode() + ")");
         }
         long total = response.headers().firstValueAsLong("Content-Length").orElse(-1);
-        Path target = Files.createTempDirectory("gps-update").resolve(release.installerName());
+        Path target = Files.createTempDirectory(DOWNLOAD_PREFIX).resolve(release.installerName());
         MessageDigest sha;
         try {
             sha = MessageDigest.getInstance("SHA-256");
@@ -159,6 +166,58 @@ public final class UpdateService {
         return target;
     }
 
+    /**
+     * Akıllı Uygulama Denetimi (Smart App Control) açıksa Windows kod imzası olmayan MSI'ı reddeder ("Sistem
+     * yöneticisi, bu yüklemeyi engelleyecek ilkeler ayarladı", msiexec 1625). Bu durumda MSI hiç başlatılmaz;
+     * kullanıcıya kurulumsuz ZIP gösterilir. Değerlendirme modu (2) engellemez. Okunamazsa engel yok sayılır.
+     */
+    public boolean installerBlocked() {
+        try {
+            Process reg = new ProcessBuilder("reg", "query", "HKLM\\SYSTEM\\CurrentControlSet\\Control\\CI\\Policy",
+                    "/v", "VerifiedAndReputablePolicyState").redirectErrorStream(true).start();
+            String output = new String(reg.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+            reg.waitFor(5, java.util.concurrent.TimeUnit.SECONDS);
+            return smartAppControlEnforced(output);
+        } catch (IOException e) {
+            return false;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+    }
+
+    /** {@code reg query} çıktısı: {@code VerifiedAndReputablePolicyState    REG_DWORD    0x1} → açık. */
+    static boolean smartAppControlEnforced(String regOutput) {
+        return regOutput.lines()
+                .filter(line -> line.contains("VerifiedAndReputablePolicyState"))
+                .anyMatch(line -> line.trim().endsWith("0x1"));
+    }
+
+    /** Önceki açılışlarda indirilmiş ve bir saatten eski kurulum dosyaları silinir (msiexec kendi kopyasını tutar). */
+    static void deleteOldDownloads(Path tempDir, Instant now) {
+        try (var dirs = Files.newDirectoryStream(tempDir, DOWNLOAD_PREFIX + "*")) {
+            for (Path dir : dirs) {
+                if (Files.isDirectory(dir) && Files.getLastModifiedTime(dir).toInstant()
+                        .isBefore(now.minus(Duration.ofHours(1)))) {
+                    try (var files = Files.list(dir)) {
+                        for (Path file : files.toList()) {
+                            Files.deleteIfExists(file);
+                        }
+                    }
+                    Files.deleteIfExists(dir);
+                }
+            }
+        } catch (IOException | RuntimeException ignored) {
+            // Temizlik başarısız olursa bir sonraki açılışta tekrar denenir.
+        }
+    }
+
+    /** Sadece bu deponun GitHub adresleri tarayıcıda açılır; başka adres sürüm sayfasına çevrilir. */
+    static String safeRepositoryUrl(String url, String repository) {
+        String base = "https://github.com/" + repository + "/";
+        return url != null && url.startsWith(base) && !url.contains("..") ? url : base + "releases/latest";
+    }
+
     /** Doğrulanmış kurulum dosyasını başlatır. MSI, Windows Installer ile açılır. */
     public void launchInstaller(Path installer) throws IOException {
         String name = installer.getFileName().toString().toLowerCase();
@@ -183,9 +242,13 @@ public final class UpdateService {
 
         String manifestUrl = null;
         String installerUrl = null;
+        String portableUrl = release.path("html_url").asString(null);
         for (JsonNode asset : release.path("assets")) {
-            if (MANIFEST_ASSET.equals(asset.path("name").asString())) {
+            String name = asset.path("name").asString();
+            if (MANIFEST_ASSET.equals(name)) {
                 manifestUrl = asset.path("browser_download_url").asString();
+            } else if (name.endsWith(PORTABLE_SUFFIX)) {
+                portableUrl = asset.path("browser_download_url").asString();
             }
         }
         if (manifestUrl == null) {
@@ -208,7 +271,8 @@ public final class UpdateService {
                 published.plus(config.updateGracePeriod()),
                 manifest.path("mandatory").asBoolean(false),
                 installerName, installerUrl,
-                manifest.path("sha256").asString(), manifest.path("signature").asString());
+                manifest.path("sha256").asString(), manifest.path("signature").asString(),
+                safeRepositoryUrl(portableUrl, config.updateRepository()));
     }
 
     private Check offlineDecision(Exception cause) {

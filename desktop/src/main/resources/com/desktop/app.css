@@ -288,6 +288,11 @@
     -fx-border-width: 0;
 }
 
+.auth-version {
+    -fx-text-fill: -color-fg-subtle;
+    -fx-font-size: 11px;
+}
+
 .auth-check {
     -fx-text-fill: -color-fg-default;
 }

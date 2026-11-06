@@ -36,6 +36,21 @@
   `release-keys/retired-1.0.4/` altında durur, artık kullanılmaz. Ders: özel anahtar tek bilgisayarda ve yedekli
   tutulur; yayından önce `sign` sonucu gömülü açık anahtarla doğrulanır.
 
+## 2b. MSI engellenirse (Akıllı Uygulama Denetimi, 2026-11-07)
+
+- Windows Akıllı Uygulama Denetimi açıksa (`HKLM\SYSTEM\CurrentControlSet\Control\CI\Policy`,
+  `VerifiedAndReputablePolicyState = 1`) kod imzası olmayan MSI reddedilir (msiexec 1625, günlükte 1718). Engellendiğinde
+  Windows önce bir uyarı penceresi açtığı için `msiexec`'in sonucunu beklemek güvenilir değil; bu yüzden durum
+  açılışta kayıttan okunur (`UpdateService.installerBlocked`). Değerlendirme modu (2) engellemez.
+- Açıksa güncelleme ekranında "Şimdi güncelle" yerine açıklama ve **"ZIP'i indir"** çıkar; tarayıcıda sürümdeki
+  `*-kurulumsuz.zip` (yoksa sürüm sayfası) açılır. Uygulama kapanmaz; süre dolmadıysa "Daha sonra" kalır. Süre
+  dolduysa uygulama yine açılmaz, ama kullanıcının ZIP'i indirme yolu vardır.
+- Bu yüzden bir sonraki sürüm de **zorunlu** işaretlenmez (ZIP kullananların süresi tanınsın).
+- Açılışta bir saatten eski `%TEMP%\gps-update*` indirmeleri silinir.
+- Sınır: ZIP'in özeti imzalı değil (Security.md S7). Tam çözüm: `release.json`'a ZIP özeti ve ayrı imza, uygulamanın
+  ZIP'i indirip doğrulaması ve kapanınca kendi klasörünün yerine açması (konuşulmadı).
+- Kalıcı çözüm kod imzalama sertifikası (SignPath Foundation, Devam_Rehberi).
+
 ## 3. Ağa ulaşılamazsa
 
 - Kurum ağı proxy üzerinden çıkar. Proxy `HTTPS_PROXY` ortam değişkeninden, yoksa Windows ayarından alınır.

@@ -57,11 +57,13 @@ public final class UpdateGate extends StackPane {
             case UpdateService.Check.UpToDate up -> onContinue.run();
             case UpdateService.Check.Unavailable unavailable -> onContinue.run();
             case UpdateService.Check.OfflineBlocked blocked -> showOfflineBlocked(blocked.required());
-            case UpdateService.Check.Available available -> showAvailable(available.release());
+            case UpdateService.Check.Available available -> Async.run(updates::installerBlocked,
+                    blocked -> showAvailable(available.release(), blocked),
+                    e -> showAvailable(available.release(), false));
         }
     }
 
-    private void showAvailable(UpdateService.Release release) {
+    private void showAvailable(UpdateService.Release release, boolean installerBlocked) {
         boolean blocking = release.blocking(Instant.now());
         Label title = Ui.label(blocking ? "Güncelleme gerekli" : "Yeni sürüm hazır", Styles.TITLE_2);
         Label subtitle = Ui.muted("Sürüm " + updates.current() + " → " + release.version());
@@ -86,6 +88,19 @@ public final class UpdateGate extends StackPane {
 
         card.getChildren().setAll(Ui.iconBadge(Material2OutlinedMZ.SYSTEM_UPDATE, blocking ? "warning" : "accent", 56),
                 title, subtitle, when, notes, verified, install);
+        if (installerBlocked) {
+            // MSI başlatılırsa Windows reddeder ve uygulama boşuna kapanır; yerine kurulumsuz ZIP gösterilir.
+            Label why = Ui.muted("Bu bilgisayarda Windows Akıllı Uygulama Denetimi açık ve kurulum dosyasını (MSI) "
+                    + "engelliyor. Yeni sürümü kurulumsuz ZIP olarak indirin, bir klasöre çıkarın ve "
+                    + "GuvenliPaylasim.exe'yi çalıştırın. Hatırlanan oturumunuz ve ayarlarınız korunur.");
+            why.setWrapText(true);
+            Button zip = Ui.primary("ZIP'i indir", Material2OutlinedMZ.OPEN_IN_NEW);
+            zip.setDefaultButton(true);
+            zip.setMaxWidth(Double.MAX_VALUE);
+            zip.setOnAction(e -> openInBrowser(release.portableUrl()));
+            card.getChildren().setAll(Ui.iconBadge(Material2OutlinedMZ.SYSTEM_UPDATE, blocking ? "warning" : "accent",
+                    56), title, subtitle, when, notes, why, zip);
+        }
         if (!blocking) {
             Button later = Ui.button("Daha sonra", null, Styles.FLAT);
             later.setMaxWidth(Double.MAX_VALUE);
@@ -116,6 +131,17 @@ public final class UpdateGate extends StackPane {
                 Button later = Ui.button("Daha sonra", null, Styles.FLAT);
                 later.setOnAction(e -> onContinue.run());
                 card.getChildren().add(later);
+            }
+        });
+    }
+
+    /** Adres UpdateService.safeRepositoryUrl ile sadece bu deponun GitHub sayfası olabilir. */
+    private static void openInBrowser(String url) {
+        Thread.ofVirtual().start(() -> {
+            try {
+                java.awt.Desktop.getDesktop().browse(java.net.URI.create(url));
+            } catch (Exception e) {
+                Platform.runLater(() -> com.desktop.ui.Toasts.info("Tarayıcı açılamadı. Adres: " + url));
             }
         });
     }

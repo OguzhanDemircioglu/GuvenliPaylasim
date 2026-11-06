@@ -3,6 +3,7 @@ package com.desktop.ui.views;
 import atlantafx.base.controls.CustomTextField;
 import atlantafx.base.controls.PasswordTextField;
 import com.desktop.api.ApiException;
+import com.desktop.config.AppConfig;
 import com.desktop.service.AuthService;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
@@ -96,6 +97,7 @@ public final class LoginView extends VBox {
     private VBox loginBox;
     private VBox registerBox;
     private ParallelTransition running;
+    private final HBox versionRow = new HBox();
 
     public LoginView(AuthService auth, Consumer<Session> onLoggedIn) {
         this.auth = auth;
@@ -134,8 +136,20 @@ public final class LoginView extends VBox {
         registerInfo.setMouseTransparent(true);
         loginInfo.setMouseTransparent(true);
 
-        card.getChildren().addAll(rotatingPanel(), sweepingPanel(), loginBox, loginInfo, registerBox, registerInfo);
+        versionRow.getChildren().add(Ui.label("Sürüm " + AppConfig.get().version(), "auth-version"));
+        versionRow.setPrefWidth(WIDTH);
+        versionRow.setLayoutY(HEIGHT - 32);
+        versionRow.setPadding(new Insets(0, 20, 0, 20));
+        versionRow.setMouseTransparent(true);
+
+        card.getChildren().addAll(rotatingPanel(), sweepingPanel(), loginBox, loginInfo, registerBox, registerInfo,
+                versionRow);
         return card;
+    }
+
+    /** Sürüm girişte sol altta, kayıtta sağ altta; ekranlar arası geçiş sırasında görünmez. */
+    private void placeVersion(boolean register) {
+        versionRow.setAlignment(register ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
     }
 
     private static void place(VBox box, double x, Insets padding) {
@@ -395,6 +409,8 @@ public final class LoginView extends VBox {
         panel2.set(register ? 1 : 0);
         loginBox.setDisable(register);
         registerBox.setDisable(!register);
+        placeVersion(register);
+        versionRow.setOpacity(1);
     }
 
     private void switchTo(boolean register) {
@@ -423,6 +439,13 @@ public final class LoginView extends VBox {
         registerBox.setDisable(!register);
         loginSubmit.setDefaultButton(!register);
         registerSubmit.setDefaultButton(register);
+        versionRow.setOpacity(0);
+        all.setOnFinished(e -> {
+            placeVersion(register);
+            Timeline show = new Timeline(new KeyFrame(Duration.millis(250),
+                    new KeyValue(versionRow.opacityProperty(), 1, EASE)));
+            show.play();
+        });
         running = all;
         all.play();
     }
