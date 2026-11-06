@@ -28,12 +28,20 @@ public final class ApiClient {
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .build();
 
+    private static final javax.net.ssl.SSLContext SSL_CONTEXT =
+            PinnedTrust.context(com.desktop.config.AppConfig.get().serverPins());
+
     private final String baseUrl;
-    // Sunucu kurum ağındadır: proxy kullanılmaz. Refresh token HttpOnly cookie olarak burada tutulur.
+    /**
+     * Proxy kullanılmaz. Refresh token HttpOnly cookie olarak burada tutulur. TLS sadece 1.3 ve sunucu sertifikası
+     * sabitlenmiş köklere zincirlenmeli (PinnedTrust, Security.md S1).
+     */
     private final HttpClient http = HttpClient.newBuilder()
             .proxy(HttpClient.Builder.NO_PROXY)
             .cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL))
             .connectTimeout(Duration.ofSeconds(5))
+            .sslContext(SSL_CONTEXT)
+            .sslParameters(PinnedTrust.parameters())
             .build();
     private volatile String accessToken;
 
@@ -111,6 +119,8 @@ public final class ApiClient {
                 request.method(method, HttpRequest.BodyPublishers.noBody());
             }
             return http.send(request.build(), HttpResponse.BodyHandlers.ofString());
+        } catch (javax.net.ssl.SSLHandshakeException e) {
+            throw new ApiException(0, Messages.SERVER_IDENTITY_FAILED);
         } catch (IOException e) {
             throw new ApiException(0, Messages.CONNECTION_FAILED);
         } catch (InterruptedException e) {

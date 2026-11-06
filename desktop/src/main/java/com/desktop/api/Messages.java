@@ -8,9 +8,12 @@ import java.util.Map;
 public final class Messages {
 
     public static final String CONNECTION_FAILED = "connection_failed";
+    public static final String SERVER_IDENTITY_FAILED = "server_identity_failed";
 
     private static final Map<String, String> TEXTS = Map.ofEntries(
             Map.entry(CONNECTION_FAILED, "Sunucuya bağlanılamadı. Ağ bağlantınızı kontrol edin."),
+            Map.entry(SERVER_IDENTITY_FAILED, "Sunucunun kimliği doğrulanamadı; bağlantı güvenli değil ve kesildi. "
+                    + "Başka bir ağdan deneyin ya da yöneticinize bildirin."),
             Map.entry("unexpected_error", "Beklenmeyen bir hata oluştu."),
             Map.entry("invalid_request", "İstek geçersiz."),
             Map.entry("access_denied", "Bu işlem için yetkiniz yok."),

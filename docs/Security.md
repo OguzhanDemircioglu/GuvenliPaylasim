@@ -33,6 +33,11 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
 - **Kabul:** IP adresi ve trafik zamanı görünür.
 - **Demo sınırı (Railway):** Sertifikayı Railway yönetir ve anahtarı yenilemede değişebilir. Demo'da sabitleme kendi
   anahtarımıza değil Let's Encrypt kök sertifikalarına yapılır. Kendi alan adı ve anahtarına geçince düzeltilir.
+- **Uygulandı (2026-11-06, `PinnedTrust`):** sertifika önce Java güven deposuyla doğrulanır, sonra doğrulanmış
+  zincirde (kök dahil) ISRG Root X1, ISRG Root X2 ya da ISRG Root YE anahtarı aranır (`server.pins`, SPKI SHA-256).
+  Bağlantı sadece TLS 1.3. Sabit tutmazsa "Sunucunun kimliği doğrulanamadı" hatası verilir. Ara sertifikalara
+  sabitleme yapılmaz (yıllık değişirler). Güncelleme kanalı (GitHub) bu sabitlemenin dışındadır; orada imza
+  doğrulaması koruma sağlar (S7).
 
 ### S2. Veritabanını çalan
 - **Garanti:** İçeriği, davet kodlarını ve özel anahtarları göremez; parolaları kendi bilgisayarında deneyemez.
@@ -41,7 +46,9 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
 - **Önlemler:**
   - **Sunucuda ikinci kilit.** Özel anahtar paketi ve `authSecret` özeti, veritabanına yazılmadan önce veritabanı
     dışında tutulan bir sunucu anahtarıyla (ortam değişkeni ya da anahtar kasası) AES-256-GCM ile bir kez daha
-    şifrelenir. Sadece DB dökümü ele geçerse deneme yapılamaz.
+    şifrelenir. Sadece DB dökümü ele geçerse deneme yapılamaz. **Uygulandı (2026-11-06):** `ServerSeal`,
+    `SERVER_SEAL_KEY`; AAD kolon adıdır. Sınır: veritabanına yazabilen biri aynı kolondaki iki değeri satırlar arasında
+    yer değiştirebilir (bu S2'nin değil S3'ün kapsamıdır). Anahtar kaybolursa bütün hesaplar açılamaz.
   - **Güçlü parola şartı.** En az 12 karakter (uygulandı, 3. adım); yaygın parola ve sözlük listesiyle (Türkçe dahil)
     kontrol (henüz yok). Kontrol
     istemcide yapılır, çünkü parola sunucuya gitmez.
@@ -121,8 +128,8 @@ test" listesi bu belgenin ekine yazılır.
 | Numara tarama (S4) | Kayıtlı ve kayıtsız numara için yanıt gövdesi aynı; yanıt süresi farkı istatistiksel olarak ayırt edilemez. İlk ölçüm (2026-11-06, yerel sunucu, uzak DB, 20'şer istek): `register/start` medyan farkı 2,6 ms, `password-reset/start` 10,2 ms (~690 ms yanıtta) |
 | Hız sınırları (S4, S8) | Her sınır aşılınca reddedilir; IP değiştirerek ya da paralel isteklerle atlatılamaz |
 | Silme (Crypto_Design §8) | Süresi dolan, açılınca silinen ve alıcının sildiği kutunun DB'de hiçbir satırı kalmaz. **Var:** `DocumentServiceImplTest`; uçtan uca deneme veritabanını doğrudan sorgulayarak üç durumda da satır kalmadığını kontrol eder |
-| DB dökümü (S2) | DB'deki anahtar paketi ve `authSecret` özeti, sunucu anahtarı olmadan çözülemez |
-| TLS (S1) | Sabitlenmemiş sertifikayla bağlantı reddedilir; TLS 1.2 altı ve düz HTTP reddedilir |
+| DB dökümü (S2) | DB'deki anahtar paketi ve `authSecret` özeti, sunucu anahtarı olmadan çözülemez. **Var:** `ServerSealTest` (yanlış anahtar, başka kolon, değiştirilmiş değer); yerel veritabanında bütün satırların `s1:` önekiyle kilitlendiği ve bcrypt özetinin görünmediği sorgulandı |
+| TLS (S1) | Sabitlenmemiş sertifikayla bağlantı reddedilir; TLS 1.2 altı ve düz HTTP reddedilir. **Var:** `PinnedTrustTest`; canlı deneme: Railway'e bağlanır, yanlış sabitle ve başka otoritenin sertifikasıyla (`api.github.com`) el sıkışma reddedilir. Düz HTTP sadece yerel geliştirmede (`localhost`) kullanılır |
 | Güncelleme (S7) | İmzasız, daha eski ve süresi dolmuş bildirim reddedilir |
 | İstemci (S6) | Oturum kapatıldıktan sonra diskte jeton ya da anahtar yok |
 | Bağımlılıklar | OWASP Dependency-Check her derlemede; yüksek önemli bulgu derlemeyi durdurur |

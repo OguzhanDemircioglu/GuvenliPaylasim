@@ -105,6 +105,7 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 | Adres | `https://guvenlipaylasim.up.railway.app` (HTTP → HTTPS yönlendirilir), sağlık: `/actuator/health` |
 | Profil | `prod`: Swagger ve dev-login kapalı, demo kullanıcıları (V001) yüklenmez; herkes kendisi kayıt olur |
 | JWT anahtarları | `JWT_PRIVATE_KEY_PEM` / `JWT_PUBLIC_KEY_PEM` değişkenlerinde; başlangıç komutu bunları `/tmp/keys`'e yazar |
+| İkinci kilit | `SERVER_SEAL_KEY` (rastgele 32 bayt, Base64). **Kaybolursa bütün hesaplar açılamaz:** Railway panelinden alınıp veritabanı yedeğinden ayrı, çevrimdışı bir yere yedeklenmeli |
 | Şema | `DB_SCHEMA=gps_v2` (v1 tabloları eski `guvenlipaylasim` şemasında duruyor, kullanılmıyor) |
 | Doğrulama mesajı | `MESSAGING_PROVIDER=vonage`, WhatsApp sandbox (`VONAGE_CHANNEL=whatsapp`) |
 | Veritabanı | `DB_URL` vb. `${{Postgres.*}}` referanslarıyla, özel ağdan (`postgres.railway.internal`) |
@@ -155,8 +156,10 @@ Kararlar netleşince güncellenir.
    Kodsuz gönderim sunucuda sadece doğrulanmış ve anahtarı değişmemiş kişiye kabul edilir. İki kullanıcıyla uçtan uca
    denendi (21 kontrol): yanlış ve başkasının kodu reddedilir, kod bir kez kullanılır, iki taraf doğrulanır, anahtarı
    değişen kişiye gönderim reddedilir, yeni kodla yeniden doğrulanır, silme iki yönlüdür.
-5. Anahtar değişikliği: doğrulanmamış kişi ve yeni kod (§7.8) **4. adımda yapıldı** (istemci "anahtarı değişti"
-   gösterir, sunucu kodsuz gönderimi reddeder). Kalanlar: sertifika sabitleme, sunucuda ikinci kilit.
+5. ✅ (2026-11-06, `main`) Anahtar değişikliği (§7.8) 4. adımda yapıldı. Sunucuda ikinci kilit: parola özetleri ve
+   özel anahtar paketleri `SERVER_SEAL_KEY` ile kilitli (V003 mevcut kayıtları kilitledi; Railway'de de uygulandı).
+   Sertifika sabitleme: masaüstü sadece TLS 1.3 ve Let's Encrypt köklerine (X1, X2, YE) zincirlenen sertifika kabul
+   eder; Railway'e karşı ve başka otoriteye karşı denendi.
 6. ✅ (2026-11-06, `main`) Gizlilik (§8): kutunun ömrü (1 saat, 1 gün, 7 gün varsayılan, 30 gün), açılınca sil (iki
    adımlı onay), iz bırakmayan silme (satır silinir, son alıcıysa belge de), ömrü dolan kutuların zamanlanmış silinmesi,
    gönderilenlerde sadece yaşayan kutular. Kotalar: günde 200 kutu, 500 MB. Masaüstünde Yeni Gönderi'de "Kutunun ömrü"
@@ -170,6 +173,8 @@ Kararlar netleşince güncellenir.
 
 - **Acil, v2'den bağımsız:** `release-keys/update-private-key.txt` düz dosya olarak duruyor. Ele geçiren herkese imzalı
   zararlı sürüm dağıtabilir. Parolayla şifrelenmeli ya da donanım anahtarına taşınmalı.
+- Railway'deki `SERVER_SEAL_KEY` **yedeklenmeli** (veritabanı yedeğinden ayrı). Kaybolursa bütün parolalar ve
+  anahtar paketleri açılamaz; herkes parola sıfırlamak zorunda kalır ve gelen kutuları silinir.
 - `release-keys/update-private-key.txt` (git'e girmez) güvenli bir yere **yedeklenmeli**. Kaybolursa güncelleme
   anahtarı yine değişir ve kullanıcılar elle kurulum yapmak zorunda kalır (1.0.5'te olduğu gibi).
 - 1.0.4 kullananlar 1.0.5'i bir kez elle kurmalı.

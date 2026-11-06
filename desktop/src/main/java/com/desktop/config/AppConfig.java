@@ -32,6 +32,11 @@ public final class AppConfig {
         return stripTrailingSlash(value("server.url"));
     }
 
+    /** Sunucu sertifikası için sabitlenmiş açık anahtarlar (PinnedTrust). */
+    public java.util.Set<String> serverPins() {
+        return com.desktop.api.PinnedTrust.parse(value("server.pins"));
+    }
+
     public String updateRepository() {
         return value("update.repository").trim();
     }

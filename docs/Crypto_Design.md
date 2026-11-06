@@ -163,7 +163,8 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
   gitmediği için kontrol istemcide yapılır (Security S2).
 - **Sunucuda ikinci kilit:** özel anahtar paketi ve `authSecret` özeti, veritabanına yazılmadan önce veritabanı
   dışında tutulan bir sunucu anahtarıyla AES-256-GCM ile bir kez daha şifrelenir. Sadece DB dökümünü ele geçiren
-  biri parola deneyemez (Security S2).
+  biri parola deneyemez (Security S2). Biçim `"s1:" + Base64(nonce | şifreli | etiket)`, AAD kolon adı
+  (`users.password_hash`, `user_keys.private_key_bundle`); anahtar `SERVER_SEAL_KEY` (32 bayt).
 
 ### 7.4 Giriş
 
