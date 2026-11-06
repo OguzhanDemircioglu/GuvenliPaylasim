@@ -1,7 +1,7 @@
 # Devam Rehberi
 
 > Son güncelleme: 2026-11-06. Bu dosya "nerede kaldık, sırada ne var" sorusunun cevabıdır.
-> Yeni bir oturuma başlarken önce bunu, sonra [Crypto_Design.md §7](Crypto_Design.md#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu)'yi okuyun.
+> Yeni bir oturuma başlarken önce bunu, sonra [Crypto_Design.md §7](Crypto_Design.md#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu)'yi ve [§8](Crypto_Design.md#8-gizlilik-sunucu-daha-kısa-süre-bilsin)'i okuyun.
 
 ## Çalışma kuralı
 
@@ -22,7 +22,7 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 |---|---|
 | v1 (rollü, birimli prototip) | Çalışıyor, sürüm 1.0.5 yayında |
 | 1. Temel dönüşüm (herkes kullanıcı, telefon, davet kodu, kişiler) | **Konuşuldu**, kararlar Crypto_Design §7'de. Kodlanmadı |
-| 2. Gizlilik | **Konuşulacak** |
+| 2. Gizlilik | **Konuşuldu**, kararlar Crypto_Design §8'de. Kodlanmadı |
 | 3. Karşılıklı teslim (kasa) | **Konuşulacak** |
 | 4. İnternete açılma | **Konuşulacak** |
 | TOTP ile giriş | Konuşuldu: istenir; ilk parçadan sonra eklenecek (§7.4) |
@@ -42,23 +42,19 @@ Ayrıntı Crypto_Design §7'de.
   Kişilere "anahtarı değişti" uyarısı çıkar.
 - Telefon numarası değiştirilemez (parola telefonla türetiliyor). Geçişte veritabanı şeması sıfırlanır.
 
-## 2. Gizlilik: konuşulacaklar
+## 2. Gizlilik: alınan kararlar (özet)
 
-Amaç: sunucu daha az şey bilsin.
+Ayrıntı Crypto_Design §8'de. Yaklaşım: sunucu daha az şey değil, **daha kısa süre** bilir.
 
-- **Gizli gönderen.** Gönderenin kimliği ve imzası da kutunun içine şifrelenir; sunucu sadece "bu kutu şu alıcıya"
-  bilgisini görür. Signal'in "sealed sender" yöntemine benzer.
-  - Soru: Kişi listesi sunucuda tutulduğu sürece sunucu kimin kiminle konuştuğunu zaten biliyor. Gizli gönderen bu
-    durumda ne kadar kazandırır? Kişi listesi de şifrelenmeli mi?
-  - Soru: "Gönderilenler" ekranında okunma durumu nasıl gösterilecek?
-- **Süreli kutu.** Gönderen bir ömür seçer (1 saat, 1 gün, 7 gün). Süre dolunca kutu, açılmamış olsa bile sunucudan
-  kalıcı olarak silinir.
-  - Soru: Varsayılan süre ne olsun? Süresiz kutu olacak mı?
-- **Bir kez açılır.** Alıcı açtığı anda kutu sunucudan silinir; bugünkü "Okudum ve sil" otomatik olur.
-  - Soru: Her kutu için mi geçerli, yoksa gönderenin seçtiği bir seçenek mi? Açarken bağlantı koparsa ne olacak?
-- **Kalan bilgilerin azaltılması.** Okundu/silindi kayıtları bugün denetim için kalıcı tutuluyor; bunlar da süre
-  dolunca silinir.
-  - Soru: Hangi kayıtlar ne kadar süre tutulsun?
+- **Süreli kutu.** Gönderen ömür seçer: 1 saat, 1 gün, 7 gün (varsayılan), 30 gün. Süresiz kutu yok. Süre dolunca
+  kutu ve kimden-kime-ne zaman bilgisi sunucudan tamamen silinir.
+- **Açılınca sil.** Gönderenin seçtiği bir seçenek, varsayılan kapalı. Alıcı kutuyu açıp doğruladıktan sonra onay
+  gönderir, sunucu ancak o zaman siler (bağlantı koparsa kutu kaybolmaz).
+- **Okunma durumu.** Kutu yaşadığı sürece gönderen görür. Kutu silinince gönderilenler listesinden de kalkar.
+- **Kayıtlar.** Kalıcı denetim kaydı yok; §4.5'teki "kim-kime kalır" kuralı kalkar. Giriş denemeleri 24 saat,
+  kapatılmış oturumlar 7 gün.
+- **Gizli gönderen (teslim jetonu) ertelendi.** IP ve zamanlama sızıntısı yüzünden kazancı sınırlı. v2'de kişi
+  kaydı ayrı tabloda tutulur, gönderim yetkisi tek yerde kontrol edilir; ileride jetona geçilebilir.
 
 ## 3. Karşılıklı teslim (kasa): konuşulacaklar
 
@@ -96,7 +92,7 @@ Kararlar netleşince güncellenir.
    güncellenmesi.
 4. Davet kodu ve kişiler: sunucu tabloları ve API'leri, istemcide "Kod ile al" ve kişi listesi ekranları.
 5. Anahtar değişikliği uyarısı.
-6. Konuşmalarda kabul edilen 2. ve 4. kısım maddeleri.
+6. Gizlilik (§8): süreli kutu, açılınca sil, kayıt silme işi. Konuşmalarda kabul edilen 4. kısım maddeleri.
 7. TOTP.
 8. Her adımda unit testler; sonunda yeni sürüm (MSI) ve README güncellemesi.
 

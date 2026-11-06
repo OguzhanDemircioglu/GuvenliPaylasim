@@ -249,4 +249,88 @@ ve özel anahtar paketleri yeni türetmeyle açılmaz. Henüz prod verisi olmad�
 
 ### 7.12 Kapsam dışı (sonraki parçalar)
 
-- TOTP (§7.4), gizli gönderen, süreli / tek okumalık kutu, büyük dosyalar için parçalı yükleme.
+- TOTP (§7.4), büyük dosyalar için parçalı yükleme.
+- Gizli gönderen ve teslim jetonu (§8.6).
+- Süreli ve açılınca silinen kutu §8'de tasarlandı; v2 ile birlikte kodlanır.
+
+## 8. Gizlilik: sunucu daha kısa süre bilsin
+
+> Konuşuldu (2026-11-06). v2 (§7) ile birlikte kodlanır.
+
+### 8.1 Yaklaşım
+
+Sunucu, kişiler arası gönderimi kabul etmek için gönderenin kim olduğunu bilmek zorundadır (§7.7). Bu yüzden v2'de
+"sunucu daha az şey bilsin" yerine **"sunucu daha kısa süre bilsin"** hedeflenir. Kutuyla ilgili her bilgi (içerik,
+kimden, kime, ne zaman, okundu mu) kutunun ömrü bitince sunucudan tamamen silinir. Kalıcı denetim kaydı tutulmaz.
+
+### 8.2 Süreli kutu
+
+- Her kutunun bir ömrü vardır. Gönderen şunlardan birini seçer: **1 saat, 1 gün, 7 gün (varsayılan), 30 gün**.
+  Süresiz kutu yoktur.
+- Ömür gönderim anından başlar. Sunucu `documents.expires_at` alanını tutar ve sınırı (en fazla 30 gün) kendisi
+  denetler.
+- Süre dolunca zamanlanmış iş, kutu açılmış olsa da olmasa da, `documents` ve `document_recipients` satırlarını
+  **kalıcı olarak siler**. İçerikle birlikte kimden, kime ve ne zaman bilgisi de gider.
+- Davet kodlu kutu (§7.6):
+  - Kod girilmezse kutu, davetin süresi dolunca silinir.
+  - Kod girilirse kutu kendi ömrünü yaşar. Bu ömür de gönderim anından sayılır; davet süresi kutunun ömründen uzun
+    olamaz.
+
+### 8.3 Açılınca sil
+
+- Gönderen kutu başına **"açılınca sil"** seçeneğini işaretleyebilir. Varsayılan olarak kapalıdır.
+- Açma iki adımda yapılır, böylece bağlantı koparsa kutu kaybolmaz:
+  1. İstemci kutuyu indirir, şifresini çözer ve imzayı doğrular.
+  2. İstemci `POST /api/documents/{id}/opened` ile onay gönderir. Sunucu kutuyu ancak bu onayla siler.
+  Onay gelmezse kutu ömrü dolana kadar durur ve alıcı tekrar deneyebilir.
+- Birden çok alıcılı kutuda, açan alıcının satırı silinir. Son alıcı da açınca kutu tamamen silinir.
+- **Sınır:** Alıcı açılan dosyayı kaydedebilir ya da ekran görüntüsü alabilir. "Açılınca sil", kutunun sunucuda
+  kalmayacağı anlamına gelir, kopyalanamayacağı anlamına gelmez. Arayüzde bu açıkça yazılır.
+- Seçenek kapalıyken bugünkü "Okudum ve sil" düğmesi kalır. Alıcı silince kendi satırı tamamen silinir (§8.5).
+
+### 8.4 Gönderilenler ve okunma durumu
+
+- Kutu yaşadığı sürece gönderen her alıcı için "okundu" ya da "okunmadı" durumunu görür (`read_at`).
+- Kutu silinince (ömrü dolunca, açılınca ya da bütün alıcılar silince) gönderenin listesinden de kalkar.
+- Kalıcı gönderim geçmişi istenirse bu, ileride gönderenin kendi bilgisayarında yerel olarak tutulur. Sunucuya
+  yazılmaz.
+
+### 8.5 Kayıtların saklanma süresi (§4.5 değişikliği)
+
+| Kayıt | Saklama |
+|---|---|
+| Kutu, alıcı satırları, `read_at` | Kutunun ömrü kadar, sonra tamamen silinir |
+| Alıcının sildiği kutu | Alıcının satırı hemen silinir. Son alıcıysa kutu da hemen silinir |
+| Davet (§7.6) | Kod girilince ya da süresi dolunca silinir |
+| Giriş denemeleri | 24 saat (bugünkü gibi) |
+| Kapatılmış oturumlar | 7 gün (bugünkü gibi) |
+| SMS kodları ve sayaçları | Süresi dolunca |
+
+§4.5'teki "`payload` null yapılır, kim-kime-ne zaman denetim için kalır" kuralı v2'de kalkar. `purged_at` ve
+`deleted_at` alanlarına gerek kalmaz; satırlar doğrudan silinir.
+
+### 8.6 Gizli gönderen ve teslim jetonu (ertelendi)
+
+Bu yöntemle sunucu kutunun kimden geldiğini hiç bilmez. v2'de yapılmaz, ama v2'nin veri modeli buna geçişi
+zorlaştırmayacak şekilde kurulur.
+
+**Tasarım taslağı:**
+- Davet kodu girilince her iki taraf, karşı tarafa **kişiye özel** rastgele bir jeton (128 bit) verir. Jeton uçtan
+  uca şifreli gider. Sunucu alıcının yanında sadece `SHA-256(jeton)` değerlerini tutar.
+- Gönderim oturumsuz yapılır: `POST /api/deliver {alıcı, jeton, kutu}`. Sunucu jetonun özetini alıcının kümesinde
+  sabit zamanlı karşılaştırmayla arar. `sender_id` tutulmaz.
+- Gönderenin kimliği ve imzası kutunun içindedir. Alıcı imzayı kişi kaydındaki açık anahtarla doğrular.
+- Kişi silmek, o jetonun özetini silmek demektir.
+- Kişi listesi sunucudan kalkar ve istemcide şifreli tutulur. Anahtar değişikliği uyarısı (§7.8) da istemciye geçer.
+
+**Sınırlar (ertelemenin gerekçesi):**
+- IP adresi ve zamanlama, oturumlu istekle oturumsuz gönderimi eşleştirmeye yeter. Tor ya da proxy olmadan bu
+  sızıntı kapanmaz.
+- Jeton özetinin sunucuya kaydedildiği an, hangi jetonun kime verildiğini ele verebilir.
+- Hız sınırı ve kota kullanıcı başına uygulanamaz; jeton ya da alıcı başına uygulanır.
+- Gönderilenler listesi sunucudan gelemez; istemci kutu kimliklerini yerel olarak tutar.
+- Kazanç sadece kötü niyetli sunucu senaryosunda belirgindir. "Sunucu ele geçirilirse ne bulunur" sorusuna süreli
+  kutu ve kayıt silme (§8.2, §8.5) çok daha ucuza benzer bir cevap verir.
+
+**v2 için kural:** Kişi kaydı ayrı bir tabloda tutulur ve gönderim yetkisi tek bir yerde kontrol edilir. Böylece
+ileride bu kontrol jeton kontrolüyle değiştirilebilir.
