@@ -5,15 +5,15 @@
 <h1 align="center">Güvenli Paylaşım</h1>
 
 <p align="center">
-  Kurum içi, <b>uçtan uca şifreli</b> belge paylaşım sistemi
+  <b>Uçtan uca şifreli</b> dosya ve mesaj paylaşımı
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v1.0.5/GuvenliPaylasim-1.0.5.msi">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.0/GuvenliPaylasim-2.0.0.msi">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Sürüm 1.0.5 · Tıklayınca kurulum dosyası doğrudan iner · Uygulama yeni sürümleri açılışta kendisi kurar ·
+  <sub>Sürüm 2.0.0 · Tıklayınca kurulum dosyası doğrudan iner · Uygulama yeni sürümleri açılışta kendisi kurar ·
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
 </p>
 
@@ -21,8 +21,8 @@
 
 ## Uygulama ne yapıyor?
 
-> Bu bölüm **v2**'yi anlatır. Demo sunucusu v2 ile çalışıyor; yayındaki masaüstü 1.0.5 ise hâlâ v1'dir (rollü,
-> birimli prototip) ve v2 sunucusuna bağlanamaz. v2 masaüstü sürümü yakında yayınlanacak.
+> **1.0.5 kullananlar:** 2.0.0'ı yukarıdaki düğmeden bir kez elle kurmalı. Güncelleme imza anahtarı değişti; 1.0.5
+> yeni sürümü kendisi kuramaz ve v2 sunucusuna bağlanamaz.
 
 Kimsenin açamayacağı bir kutuya dosya ya da mesaj koyarsınız. Kutu sadece alıcının bilgisayarında açılır. Sunucu
 sadece taşıyıcıdır; içeriği hiçbir zaman göremez.
@@ -32,7 +32,7 @@ sadece taşıyıcıdır; içeriği hiçbir zaman göremez.
 - **Sunucu (Spring + PostgreSQL):** Şifreli kutuları ve açık anahtarları tutar, kutuyu doğru kişiye teslim eder.
 
 **Akış**
-1. **Kayıt:** Ad soyad, telefon ve parola girilir; telefon SMS koduyla doğrulanır. Anahtarlar bu sırada bilgisayarda
+1. **Kayıt:** Ad soyad, telefon ve parola girilir; telefon WhatsApp'a gelen kodla doğrulanır. Anahtarlar bu sırada bilgisayarda
    üretilir.
 2. **İlk gönderim:** Alıcının telefonu girilir. Uygulama 16 karakterlik bir kod gösterir ve kutu bu kodla kilitlenir.
    Kodu alıcıya siz iletirsiniz (yüz yüze, telefonla).
@@ -40,14 +40,15 @@ sadece taşıyıcıdır; içeriği hiçbir zaman göremez.
 4. **Sonraki gönderimler:** Kod gerekmez, kutu doğrudan kişinin gelen kutusuna düşer.
 5. **Kutunun ömrü:** 1 saat ile 30 gün arasıdır. Süre dolunca her şey sunucudan silinir. İstenirse kutu "açılınca
    sil" olarak da gönderilebilir.
-6. **Parolayı unutan:** SMS ile sıfırlar, ama kendisine gelmiş kutuları kaybeder. Kişilerinin ekranında "anahtarı
+6. **Parolayı unutan:** WhatsApp koduyla sıfırlar, ama kendisine gelmiş kutuları kaybeder. Kişilerinin ekranında "anahtarı
    değişti" uyarısı çıkar.
 
 ## Nedir?
 
-Eski "Güvenli Bilgi Paylaşım Sistemi"nin (2016) yerini alacak prototip. Belgeler **gönderenin bilgisayarında**
-şifrelenip imzalanır, sadece **seçilen alıcıların bilgisayarında** çözülür. Sunucu dahil hiç kimse içeriği göremez;
-SMS ile parola gönderilmez.
+Eski "Güvenli Bilgi Paylaşım Sistemi"nden (2016) yola çıkan, herkesin eşit kullanıcı olduğu bir prototip. Kapsam
+tek bir kurumla sınırlı değildir; rol ve birim yoktur. Kutular **gönderenin bilgisayarında** şifrelenip imzalanır,
+sadece **alıcının bilgisayarında** çözülür. Sunucu dahil hiç kimse içeriği göremez; parola hiçbir kanaldan
+gönderilmez.
 
 ## Neden güvenli?
 
@@ -55,11 +56,12 @@ SMS ile parola gönderilmez.
 |---|---|---|
 | Anahtar paylaşımı | Anahtarlar alıcılara **SMS ile açık metin** gider | Paylaşılan parola yok; her kişinin kendi anahtar çifti var |
 | Anahtarın gücü | Kullanıcının yazdığı değer (`123`, `abc`) | Her belgeye rastgele 256 bit AES anahtarı |
-| Alıcıya özel erişim | Aynı anahtar bütün birimlere gider | Belge anahtarı her alıcıya ayrı ayrı sarmalanır |
-| Gönderenin kimliği | Kanıtlanamaz | Ed25519 imzası; sahte ya da değiştirilmiş belge açılmaz |
+| Alıcıya özel erişim | Aynı anahtar bütün birimlere gider | Kutunun anahtarı alıcının açık anahtarına sarmalanır |
+| İlk temas | — | Tek seferlik davet koduyla iki taraf birbirini doğrular; anahtarı değişen kişiye yeni kod gerekir |
+| Gönderenin kimliği | Kanıtlanamaz | Ed25519 imzası; sahte ya da değiştirilmiş kutu açılmaz |
 | Sunucu ele geçirilirse | İçerik açılabilir | Sunucuda sadece şifreli veri var, açacak anahtar yok |
-| Parola | Sunucuya gönderilir | Bilgisayardan çıkmaz |
-| Silme | İsteğe bağlı | Son alıcı da silince şifreli içerik kalıcı olarak silinir |
+| Parola | Sunucuya gönderilir | Bilgisayardan çıkmaz; sunucudaki özeti ayrıca sunucu anahtarıyla kilitli |
+| Silme | İsteğe bağlı | Her kutunun ömrü var (en fazla 30 gün); süre dolunca ya da "açılınca sil"de iz bırakmadan silinir |
 
 Ayrıntılar: [docs/Crypto_Design.md](docs/Crypto_Design.md). Aynı karşılaştırma uygulamada **Neden Güvenli?**
 ekranında da gösterilir.
@@ -71,10 +73,10 @@ ekranında da gösterilir.
 3. "Güvenli Paylaşım" Başlat menüsüne ve masaüstüne eklenir.
 4. Yeni bir sürüm yayımlandığında uygulama açılışta haber verir; imzasını doğruladıktan sonra kendisi kurar.
 
-> Uygulama varsayılan olarak `http://localhost:8080` adresindeki sunucuya bağlanır. Başka bir sunucu için
-> `GPS_SERVER_URL` ortam değişkeni verilir (ör. `GPS_SERVER_URL=https://paylasim.kurum.local`).
-> Demo sunucusu (v2): `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`. Kayıt kodu WhatsApp sandbox'ından
-> gelir; telefonun önce Vonage sandbox numarasına katılma mesajı atmış olması gerekir.
+> Uygulama varsayılan olarak demo sunucusuna (`https://guvenlipaylasim.up.railway.app`) bağlanır. Başka bir sunucu
+> için `GPS_SERVER_URL` ortam değişkeni verilir (ör. `GPS_SERVER_URL=https://paylasim.ornek.com`). Demo sunucusunda
+> kayıt kodu WhatsApp sandbox'ından gelir; telefonun önce Vonage sandbox numarasına katılma mesajı atmış olması
+> gerekir.
 
 ---
 
@@ -82,7 +84,7 @@ ekranında da gösterilir.
 
 | Klasör | İçerik |
 |---|---|
-| [server/](server/) | Spring Boot 4.1, Java 25, PostgreSQL 18. StarterApp şablonundan türetildi. Birimler, kullanıcılar, anahtar dizini, şifreli belgeler |
+| [server/](server/) | Spring Boot 4.1, Java 25, PostgreSQL 18. StarterApp şablonundan türetildi. Kullanıcılar, anahtar dizini, davet kodları, kişiler, şifreli kutular |
 | [desktop/](desktop/) | JavaFX 27 + AtlantaFX masaüstü istemci. Şifreleme, imza ve zorunlu güncelleme burada |
 | [docs/Devam_Rehberi.md](docs/Devam_Rehberi.md) | Nerede kaldık, sırada ne var (v2 yol haritası) |
 | [docs/Crypto_Design.md](docs/Crypto_Design.md) | Şifreleme tasarımı ve eski sistemle karşılaştırma |
@@ -115,39 +117,34 @@ ekranında da gösterilir.
    DB_URL=jdbc:postgresql://localhost:5432/guvenlipaylasim
    DB_USERNAME=guvenlipaylasim
    DB_PASSWORD=...
-   DB_SCHEMA=guvenlipaylasim
+   DB_SCHEMA=gps_v2
    ```
-   Aiven gibi bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require` eklenir. Ayrıntılar:
-   [server/README.md](server/README.md).
-3. **Sunucuyu başlat** (demo birimleri ve kullanıcıları ilk açılışta oluşur; http://localhost:8080):
+   Aiven gibi bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require` eklenir. `MESSAGING_PROVIDER` verilmezse
+   doğrulama kodları WhatsApp'a gitmez, sunucu log'una yazılır. Ayrıntılar: [server/README.md](server/README.md).
+3. **Sunucuyu başlat** (demo kullanıcıları ilk açılışta oluşur; http://localhost:8080):
    ```bash
    server\run-dev.cmd
    ```
-4. **İstemciyi iki kez başlat** (iki pencere = iki kullanıcı):
+4. **İstemciyi iki kez başlat** (iki pencere = iki kullanıcı; `run.cmd` yerel sunucuya bağlanır):
    ```bash
    desktop\run.cmd
    ```
-5. **Demo hesapları** (parola `Demo12345!`):
+5. **Demo hesapları** (sadece dev profilinde; parola `DemoParola2026!`):
 
-   | E-posta | Birim |
+   | Telefon | Ad soyad |
    |---|---|
-   | `ayse.yilmaz@gps.local` | Ankara Valiliği |
-   | `mehmet.kaya@gps.local` | İstanbul Valiliği |
-   | `zeynep.demir@gps.local` | İstanbul Valiliği |
-   | `ali.celik@gps.local` | İzmir Valiliği |
-   | `admin@gps.local` (parola `Admin12345`) | Bilgi İşlem — yönetici |
+   | `5550000001` | Ayşe Yılmaz |
+   | `5550000002` | Mehmet Kaya |
+   | `5550000003` | Zeynep Demir |
+   | `5550000004` | Ali Çelik |
 
-   Her kullanıcının anahtarları **ilk girişinde** üretilir; belge gönderilebilmesi için alıcının bir kez giriş
-   yapmış olması gerekir.
-
-6. **Önerilen sunum akışı:** Mehmet ile giriş → **Neden Güvenli?** → **Yeni Gönderi** (Ankara Valiliği'ni seç,
-   şifreleme adımlarını göster) → Ayşe'nin penceresinde bildirim → belgeyi aç (imza doğrulandı) → **Okudum ve sil** →
-   Mehmet'te **Gönderilenler**'de "okudu ve sildi". Yönetici hesabıyla yeni kullanıcı açıp ilk girişte zorunlu parola
-   değişikliğini ve anahtar üretimini göster.
+6. **Önerilen sunum akışı:** Mehmet ile giriş → **Neden Güvenli?** → **Yeni Gönderi** (davet kodu ile, Ayşe'nin
+   telefonu; tek seferlik kodu göster) → Ayşe'nin penceresinde **Kod ile al** → kutu açılır, iki taraf kişi olur →
+   ikinci gönderim kodsuz ve bildirimle gelir → **Okudum ve sil** → Mehmet'in **Gönderilenler**'inden de kalkar.
 
 Demo verisini sıfırlamak için sunucu kapalıyken şemayı silin; bir sonraki açılışta yeniden oluşur:
 ```sql
-DROP SCHEMA guvenlipaylasim CASCADE;
+DROP SCHEMA gps_v2 CASCADE;
 ```
 
 ### Testler
@@ -171,7 +168,7 @@ desktop\package.cmd
 `desktop/dist/GuvenliPaylasim-<sürüm>.msi` üretilir (Java runtime içinde; kullanıcı başına kurulur, yönetici
 yetkisi istemez). Uygulama Windows'ta "Güvenli Paylaşım" adıyla görünür (Başlat menüsü, masaüstü, yüklü
 uygulamalar); Türkçe karakterler için WiX'e Türkçe kod sayfası (1254) `desktop/src/main/jpackage/` altından verilir.
-WiX 3.14 gerekir (`D:\Projeler\.tools\wix3` ya da PATH). İmzalama ve GitHub'a yükleme:
+WiX 3.14 gerekir (`Projeler\.tools\wix3` ya da PATH; `wix314-binaries.zip` oraya açılır). İmzalama ve GitHub'a yükleme:
 [docs/Update_Design.md §4](docs/Update_Design.md). Uygulama güncellemeleri
 `OguzhanDemircioglu/GuvenliPaylasim` deposunun Releases bölümünden okur.
 
@@ -179,7 +176,7 @@ Yeni sürüm yayımlanınca bu README'nin başındaki indirme bağlantısı ve s
 
 ### Henüz yapılmayanlar
 
-- Kurum SMS servisi (`SmsGateway` arayüzü hazır; şimdilik simülasyon).
-- LDAP girişi (bkz. Crypto_Design §6).
-- Prod sunucusuna kurulum. Ortam değişkenleri `server/.env.example`'daki liste (prod `.env` okumaz), ama sunucu,
-  HTTPS ve servis olarak çalıştırma henüz yok.
+- Gerçek kullanıcı için doğrulama kanalı: kayıtlı SMS gönderen adı ya da Meta onaylı WhatsApp hesabı (demo şu an
+  WhatsApp sandbox'ında; sadece sandbox'a katılmış numaralar kod alır).
+- KVKK: demo sunucusu Türkiye dışında; gerçek veriden önce aydınlatma metni ve sunucu yeri.
+- Sistematik IDOR testi, bağımlılık taraması, fuzz ve dışarıdan sızma testi ([docs/Security.md](docs/Security.md)).

@@ -30,6 +30,11 @@
   Yedeklenmeli ve sadece sürüm yayımlayanda durmalıdır. Kaybolursa yeni anahtar üretilir ve uygulamanın bir sonraki
   sürümü yeni açık anahtarla elle dağıtılır.
 - Açık anahtar: `desktop/src/main/resources/com/desktop/update-public-key.txt`.
+- **Anahtar geçmişi.** 1.0.4'e kadar ilk anahtar (`MCowBQYDK2VwAyEAz5Cm…`); 1.0.5 başka bir bilgisayarda üretilen
+  ikinci anahtar (`…FnRb…`); bu anahtarın özel kısmı sürüm yayımlanan bilgisayarda bulunamadığı için **2.0.0 üçüncü
+  anahtarla** (`…BDhP…`) çıktı. 1.0.5 kullananlar 2.0.0'ı bir kez elle kurar. Eski özel anahtar
+  `release-keys/retired-1.0.4/` altında durur, artık kullanılmaz. Ders: özel anahtar tek bilgisayarda ve yedekli
+  tutulur; yayından önce `sign` sonucu gömülü açık anahtarla doğrulanır.
 
 ## 3. Ağa ulaşılamazsa
 

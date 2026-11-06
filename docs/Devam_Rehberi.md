@@ -1,31 +1,37 @@
 # Devam Rehberi
 
-> Son güncelleme: 2026-11-06 (akşam). Bu dosya "nerede kaldık, sırada ne var" sorusunun cevabıdır.
+> Son güncelleme: 2026-11-06 (gece). Bu dosya "nerede kaldık, sırada ne var" sorusunun cevabıdır.
 > Yeni bir oturuma başlarken önce bunu ve [Security.md](Security.md)'yi, sonra [Crypto_Design.md §7](Crypto_Design.md#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu)'yi ve [§8](Crypto_Design.md#8-gizlilik-sunucu-daha-kısa-süre-bilsin)'i okuyun.
 
-## Nerede kaldık (2026-11-06 akşam) — buradan başlayın
+## Nerede kaldık (2026-11-06 gece) — buradan başlayın
 
 **v2 sunucu tarafı ve masaüstü kodu bitti, `main`'de ve Railway'de canlı.** Kodlama sırasının 1–7. adımları tamam
-(aşağıda ✅). Yaygın parola kontrolü de yapıldı. Geriye kalan iş tek: **v2 masaüstü sürümünün (MSI) yayını.**
+(aşağıda ✅). Yaygın parola kontrolü de yapıldı. **v2 masaüstü 2.0.0 hazırlandı; GitHub'a yüklenmesi bekliyor.**
 
-### Sıradaki iş: v2 MSI yayını
-Yayındaki 1.0.5 (v1) canlı v2 sunucusuyla çalışmaz; kullanıcılar şu an demo sunucusuna bağlanamıyor.
-1. Karar: masaüstünün varsayılan sunucu adresi (`desktop/src/main/resources/com/desktop/app.properties`,
-   `server.url`) Railway (`https://guvenlipaylasim.up.railway.app`) mı olsun, `http://localhost:8080` mi kalsın?
-   Sabitleme (`server.pins`) sadece https adreste devreye girer.
-2. Sürüm numarası (ör. 2.0.0) ve yayın: güncelleme imza anahtarı `release-keys/update-private-key.txt` gerekir
-   (git'te yok; bu dosyanın olduğu bilgisayarda yapılmalı). Yayın adımları: [Update_Design.md](Update_Design.md).
-3. Yayından sonra README'deki "1.0.5 hâlâ v1" notları ve indirme bağlantısı güncellenir.
+### 2.0.0 (2026-11-06 gece) — yapılanlar ve kalan
+- Varsayılan sunucu Railway (`server.url=https://guvenlipaylasim.up.railway.app`, sabitleme açık). `desktop\run.cmd`
+  `GPS_SERVER_URL` verilmezse yerel sunucuya (`http://localhost:8080`) bağlanır.
+- **Güncelleme imza anahtarı değişti.** "OğuzhanMonster" bilgisayarındaki `release-keys/` 1.0.4'ün eski anahtarıydı;
+  1.0.5'in anahtarı ("Oğuzhan Acer" bilgisayarında üretilmişti) burada yoktu. Yeni çift üretildi, açık anahtar
+  uygulamaya gömüldü; eski anahtar `release-keys/retired-1.0.4/`. 1.0.5 kullananlar 2.0.0'ı bir kez elle kurar.
+  Ayrıntı: [Update_Design.md §2](Update_Design.md).
+- MSI üretildi ve **zorunlu** olarak imzalandı (`desktop/dist/GuvenliPaylasim-2.0.0.msi` + `release.json`, git'te
+  yok); imza gömülü açık anahtarla doğrulandı. WiX 3.14.1 `C:\Projeler\.tools\wix3`'e açıldı.
+- **Kalan (elle):** GitHub'da `v2.0.0` etiketiyle release açılır, iki dosya eklenir. README'deki indirme düğmesi
+  zaten 2.0.0'ı gösteriyor; release açılana kadar düğme 404 verir.
+- **Kalan:** yeni özel anahtar (`release-keys/update-private-key.txt`) bu bilgisayardan başka, çevrimdışı bir yere
+  yedeklenmeli; Acer'daki 1.0.5 anahtarı artık kullanılmaz.
 
-### Doküman borcu (MSI'dan önce ya da birlikte yapılmalı)
-v2 kodlanırken §7, §8, Security.md ve bu rehber güncel tutuldu; şunlar hâlâ v1'i anlatıyor:
+### Doküman borcu (2.0.0'dan sonra)
+README'nin v1 bölümleri 2.0.0 ile düzeltildi. v2 kodlanırken §7, §8, Security.md ve bu rehber güncel tutuldu;
+şunlar hâlâ v1'i anlatıyor:
 - **Backend_Architecture.md** (en büyüğü): roller, menüler, birimler, ilk süperadmin, MapStruct, `BaseService`, soft
   delete, kayıt hız sınırı silindi; yeni modüller (invite, contact, verification, totp, `ServerSeal`, kutu ömrü,
   temizlik işleri, `SendQuota`) hiç anlatılmıyor.
 - **Crypto_Design.md §1–§6**: e-posta tuzu, ilk girişte anahtar, yönetici sıfırlaması, birime gönderim, SMS
   bildirimi. §7 başlığındaki "Planlandı" notu da eski. §7–§8'e göre yeniden yazılmalı ya da "v1 (tarihçe)" diye
   ayrılmalı.
-- **README.md**: "Nedir?" ve "Neden güvenli?" bölümleri v1 (birimler, SMS). **server/README.md**: v1 izleri.
+- **server/README.md**: v1 izleri.
 
 ### Bilinen açıklar ve sonraya kalanlar
 - Günlük 200 kutu sınırı silinen kutuları saymıyor (sayım var olan kutulardan); kesin sayaç ayrı iş.
@@ -69,9 +75,9 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 
 | Konu | Durum |
 |---|---|
-| v1 (rollü, birimli prototip) | Masaüstü 1.0.5 yayında, ama sunucu artık v2; 1.0.5 bağlanamaz |
+| v1 (rollü, birimli prototip) | Masaüstü 1.0.5; sunucu artık v2, 1.0.5 bağlanamaz |
 | v2 sunucu | **Canlı** (Railway, `main`) |
-| v2 masaüstü | **Kod hazır, MSI yayınlanmadı** (sıradaki iş) |
+| v2 masaüstü | **2.0.0 imzalandı**, GitHub release'i açılmayı bekliyor |
 | 1. Temel dönüşüm (herkes kullanıcı, telefon, davet kodu, kişiler) | **Kodlandı**, Crypto_Design §7 |
 | 2. Gizlilik | **Kodlandı**, Crypto_Design §8 |
 | Yaygın parola kontrolü | **Yapıldı** (masaüstünde, `PasswordStrength`) |
@@ -230,8 +236,9 @@ Kararlar netleşince güncellenir.
   zararlı sürüm dağıtabilir. Parolayla şifrelenmeli ya da donanım anahtarına taşınmalı.
 - Railway'deki `SERVER_SEAL_KEY` **yedeklenmeli** (veritabanı yedeğinden ayrı). Kaybolursa bütün parolalar ve
   anahtar paketleri açılamaz; herkes parola sıfırlamak zorunda kalır ve gelen kutuları silinir.
-- `release-keys/update-private-key.txt` (git'e girmez) güvenli bir yere **yedeklenmeli**. Kaybolursa güncelleme
-  anahtarı yine değişir ve kullanıcılar elle kurulum yapmak zorunda kalır (1.0.5'te olduğu gibi).
-- 1.0.4 kullananlar 1.0.5'i bir kez elle kurmalı.
+- `release-keys/update-private-key.txt` (git'e girmez, 2.0.0 ile değişti) güvenli bir yere **yedeklenmeli** ve sürüm
+  sadece bu dosyanın olduğu bilgisayardan yayımlanmalı. Kaybolursa anahtar yine değişir ve kullanıcılar elle kurulum
+  yapmak zorunda kalır (1.0.5'te ve 2.0.0'da olduğu gibi).
+- 1.0.4 ve 1.0.5 kullananlar 2.0.0'ı bir kez elle kurmalı.
 - Vonage erişim bilgileri sadece `server/.env`'e (yerel) ya da ortam değişkenine yazılır, repoya girmez.
 - Commit ve push her değişiklikten sonra sormadan yapılır.

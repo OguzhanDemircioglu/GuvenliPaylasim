@@ -28,7 +28,7 @@ set "MODULES=java.base,java.compiler,java.datatransfer,java.xml,java.prefs,java.
   --name "Güvenli Paylaşım" ^
   --app-version %VERSION% ^
   --vendor "Bilgi İşlem" ^
-  --description "Kurum içi uçtan uca şifreli belge paylaşımı" ^
+  --description "Uçtan uca şifreli dosya ve mesaj paylaşımı" ^
   --input target\libs ^
   --main-jar desktop-%VERSION%.jar ^
   --main-class com.desktop.Launcher ^
