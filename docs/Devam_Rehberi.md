@@ -109,11 +109,16 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 
 - `main`'e her push otomatik deploy eder.
 - Masaüstünden bağlanmak için: `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`.
-- WhatsApp için Railway panelinde servisin Variables kısmına girilecekler (repoya ve sohbete yazılmaz):
-  `MESSAGING_PROVIDER=vonage`, `VONAGE_API_KEY`, `VONAGE_API_SECRET`, `VONAGE_WHATSAPP_FROM` (sandbox numarası),
-  `VONAGE_MESSAGES_URL` (varsayılan sandbox: `https://messages-sandbox.nexmo.com/v1/messages`). Basic auth kullanıldığı
-  için application ID ve private key gerekmez. `MESSAGING_PROVIDER` verilmezse kod sadece sunucu log'una yazılır.
-  İsteğe bağlı: `VERIFICATION_DAILY_LIMIT` (varsayılan 200).
+- Doğrulama mesajı için Railway panelinde servisin Variables kısmına girilecekler (repoya ve sohbete yazılmaz):
+  `MESSAGING_PROVIDER=vonage`, `VONAGE_API_KEY`, `VONAGE_API_SECRET`, `VONAGE_CHANNEL` (`sms` | `whatsapp`),
+  `VONAGE_FROM` (SMS'te gönderen adı, WhatsApp'ta gönderen numara), `VONAGE_MESSAGES_URL` (varsayılan
+  `https://api.nexmo.com/v1/messages`; WhatsApp sandbox için `https://messages-sandbox.nexmo.com/v1/messages`).
+  Basic auth kullanıldığı için application ID ve private key gerekmez. `MESSAGING_PROVIDER` verilmezse kod sadece
+  sunucu log'una yazılır. İsteğe bağlı: `VERIFICATION_DAILY_LIMIT` (varsayılan 200).
+- **SMS denemesi (2026-11-06):** Vonage Messages API'ye gönderilen kayıt SMS'i Vodafone Türkiye tarafından reddedildi
+  (Reports API: `rejected`, hata `1330`). Vonage'ın Türkiye kuralları: harfli gönderen adı (ör. `GuvenliPay`) önceden
+  kayıt ister, numaralı gönderen desteklenmez, `INFO`/`SMS` gibi genel adlar yasak. Kayıt Vonage panelindeki Global
+  Sender ID Portal'dan yapılır. Kayıt olmadan Türkiye'ye SMS gitmez.
 - Railway proje token'ı sohbette paylaşıldı; kurulum işleri bitince panelden yenilenmeli.
 
 ## Kodlama sırası

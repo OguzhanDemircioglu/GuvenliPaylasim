@@ -15,16 +15,16 @@ import java.util.concurrent.Flow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-/** Vonage Messages API isteğinin biçimi: WhatsApp kanalı, numara başında + olmadan, Basic auth. */
-class VonageWhatsAppGatewayTest {
+/** Vonage Messages API isteğinin biçimi: seçilen kanal, numara başında + olmadan, Basic auth. */
+class VonageMessageGatewayTest {
 
-    private static final String URL = "https://messages-sandbox.nexmo.com/v1/messages";
+    private static final String URL = "https://api.nexmo.com/v1/messages";
     private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
     @Test
-    void requestUsesWhatsAppChannelBasicAuthAndNumberWithoutPlus() {
-        VonageWhatsAppGateway gateway = new VonageWhatsAppGateway(
-                new VonageProperties("key", "secret", "14157386102", URL), jsonMapper);
+    void smsRequestUsesBasicAuthSenderNameAndNumberWithoutPlus() {
+        VonageMessageGateway gateway = new VonageMessageGateway(
+                new VonageProperties("key", "secret", "sms", "GuvenliPay", URL), jsonMapper);
 
         HttpRequest request = gateway.buildRequest("+905551234567", "Kodunuz: 123456");
 
@@ -33,16 +33,29 @@ class VonageWhatsAppGatewayTest {
         assertThat(request.headers().firstValue("Authorization")).contains(
                 "Basic " + Base64.getEncoder().encodeToString("key:secret".getBytes(StandardCharsets.UTF_8)));
         JsonNode body = jsonMapper.readTree(body(request));
-        assertThat(body.get("channel").asString()).isEqualTo("whatsapp");
+        assertThat(body.get("channel").asString()).isEqualTo("sms");
         assertThat(body.get("message_type").asString()).isEqualTo("text");
-        assertThat(body.get("from").asString()).isEqualTo("14157386102");
+        assertThat(body.get("from").asString()).isEqualTo("GuvenliPay");
         assertThat(body.get("to").asString()).isEqualTo("905551234567");
         assertThat(body.get("text").asString()).isEqualTo("Kodunuz: 123456");
     }
 
     @Test
-    void missingCredentialsFailAtStartup() {
-        assertThatThrownBy(() -> new VonageWhatsAppGateway(new VonageProperties("key", "", "1", URL), jsonMapper))
+    void whatsAppChannelCanBeSelected() {
+        VonageMessageGateway gateway = new VonageMessageGateway(
+                new VonageProperties("key", "secret", "whatsapp", "14157386102", URL), jsonMapper);
+
+        JsonNode body = jsonMapper.readTree(body(gateway.buildRequest("+905551234567", "x")));
+        assertThat(body.get("channel").asString()).isEqualTo("whatsapp");
+    }
+
+    @Test
+    void missingCredentialsOrUnknownChannelFailAtStartup() {
+        assertThatThrownBy(() -> new VonageMessageGateway(
+                new VonageProperties("key", "", "sms", "GuvenliPay", URL), jsonMapper))
+                .isInstanceOf(IllegalStateException.class);
+        assertThatThrownBy(() -> new VonageMessageGateway(
+                new VonageProperties("key", "secret", "telegram", "GuvenliPay", URL), jsonMapper))
                 .isInstanceOf(IllegalStateException.class);
     }
 

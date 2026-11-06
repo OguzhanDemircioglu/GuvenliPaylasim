@@ -15,18 +15,22 @@ import java.time.Duration;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
- * Doğrulama kodunu WhatsApp ile gönderir: Vonage Messages API, Basic auth (Crypto_Design §7.2).
+ * Doğrulama kodunu Vonage Messages API ile (Basic auth) SMS ya da WhatsApp olarak gönderir (Crypto_Design §7.2).
  * Sadece app.messaging.provider=vonage (MESSAGING_PROVIDER) iken oluşur; yoksa SimulatedSmsGateway kullanılır.
  * <p>
- * Demo'da Vonage sandbox kullanılır: alıcı numara önce sandbox numarasına WhatsApp'tan katılma mesajı atmalıdır.
- * Gerçek hesapta Meta onaylı bir doğrulama şablonu gerekir; o zaman gövde şablon mesajına çevrilir.
+ * SMS: deneme hesabında sadece Vonage panelinde doğrulanmış numaralara gider; Türkiye'de harfli gönderen adı BTK
+ * kaydı ister, kayıtsız ad operatörde değiştirilebilir ya da engellenebilir.
+ * WhatsApp: sandbox'ta alıcı önce sandbox numarasına katılma mesajı atmalıdır; gerçek hesapta Meta onaylı şablon gerekir.
  */
 @Slf4j
 @Component
 @ConditionalOnProperty(name = "app.messaging.provider", havingValue = "vonage")
-public class VonageWhatsAppGateway implements SmsGateway {
+public class VonageMessageGateway implements SmsGateway {
+
+    private static final Set<String> CHANNELS = Set.of("sms", "whatsapp");
 
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
 
@@ -34,11 +38,14 @@ public class VonageWhatsAppGateway implements SmsGateway {
     private final JsonMapper jsonMapper;
     private final HttpClient httpClient;
 
-    public VonageWhatsAppGateway(VonageProperties properties, JsonMapper jsonMapper) {
+    public VonageMessageGateway(VonageProperties properties, JsonMapper jsonMapper) {
         if (isBlank(properties.apiKey()) || isBlank(properties.apiSecret()) || isBlank(properties.from())
                 || isBlank(properties.url())) {
             throw new IllegalStateException("Vonage messaging is enabled but VONAGE_API_KEY, VONAGE_API_SECRET, "
-                    + "VONAGE_WHATSAPP_FROM or VONAGE_MESSAGES_URL is missing");
+                    + "VONAGE_FROM or VONAGE_MESSAGES_URL is missing");
+        }
+        if (!CHANNELS.contains(properties.channel())) {
+            throw new IllegalStateException("VONAGE_CHANNEL must be sms or whatsapp");
         }
         this.properties = properties;
         this.jsonMapper = jsonMapper;
@@ -69,7 +76,7 @@ public class VonageWhatsAppGateway implements SmsGateway {
         body.put("to", phone.startsWith("+") ? phone.substring(1) : phone);
         body.put("message_type", "text");
         body.put("text", message);
-        body.put("channel", "whatsapp");
+        body.put("channel", properties.channel());
 
         String credentials = properties.apiKey() + ":" + properties.apiSecret();
         return HttpRequest.newBuilder(URI.create(properties.url()))
