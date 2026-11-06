@@ -1,7 +1,7 @@
 # Devam Rehberi
 
 > Son güncelleme: 2026-11-06. Bu dosya "nerede kaldık, sırada ne var" sorusunun cevabıdır.
-> Yeni bir oturuma başlarken önce bunu, sonra [Crypto_Design.md §7](Crypto_Design.md#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu)'yi ve [§8](Crypto_Design.md#8-gizlilik-sunucu-daha-kısa-süre-bilsin)'i okuyun.
+> Yeni bir oturuma başlarken önce bunu ve [Security.md](Security.md)'yi, sonra [Crypto_Design.md §7](Crypto_Design.md#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu)'yi ve [§8](Crypto_Design.md#8-gizlilik-sunucu-daha-kısa-süre-bilsin)'i okuyun.
 
 ## Çalışma kuralı
 
@@ -24,7 +24,7 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 | 1. Temel dönüşüm (herkes kullanıcı, telefon, davet kodu, kişiler) | **Konuşuldu**, kararlar Crypto_Design §7'de. Kodlanmadı |
 | 2. Gizlilik | **Konuşuldu**, kararlar Crypto_Design §8'de. Kodlanmadı |
 | 3. Karşılıklı teslim (kasa) | **Konuşuldu: yapılmayacak** (gerekçe aşağıda) |
-| Güvenlik: tehdit modeli ve test planı (`docs/Security.md`) | **Yazılacak**, 4. kısımdan önce |
+| Güvenlik: tehdit modeli ve test planı | **Konuşuldu**, [Security.md](Security.md)'de. §7 buna göre güncellendi |
 | 4. İnternete açılma | **Konuşulacak** |
 | TOTP ile giriş | Konuşuldu: istenir; ilk parçadan sonra eklenecek (§7.4) |
 
@@ -71,13 +71,12 @@ Ayrıntı Crypto_Design §8'de. Yaklaşım: sunucu daha az şey değil, **daha k
 Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu yüzden:
 
 - Her özellik için ilk soru: "Hangi saldırı yüzeyini açıyor, bunu savunabilir miyiz?"
-- Kodlamadan önce `docs/Security.md` yazılır: saldırgan listesi, her biri için garanti ve kabul edilen sınırlar,
-  test planı. Ölçüt **OWASP ASVS Seviye 3**; ek olarak kripto test vektörleri ve fuzz, uç nokta başına yetki
+- [Security.md](Security.md): saldırgan listesi (S1–S9), her biri için garanti ve kabul edilen sınırlar, test
+  planı. Ölçüt **OWASP ASVS Seviye 3**; ek olarak kripto test vektörleri ve fuzz, uç nokta başına yetki
   (IDOR) ve hız sınırı testleri, bağımlılık taraması, en sonda dışarıdan sızma testi.
 - Kodlama sırasındaki bir adım, ilgili saldırı testleri yazılıp geçmeden "bitti" sayılmaz.
-- Şimdiden görülen riskler (Security.md'de ele alınacak): güncelleme imza anahtarının düz dosyada durması, kayıt ve
-  davette zamanlama farkıyla numara tarama, SMS pompalama, SIM kopyalama sonrası anahtar değişikliği uyarısının
-  geçilmesi, masaüstünde anahtarların bellekte ve diskte kalması.
+- Alınan kararlar: sunucuda ikinci kilit ve 12+ karakter parola (S2), iki yönlü davet kodu (S3), anahtar değişince
+  yeni kod (S5), sertifika sabitleme (S1), SMS sistem geneli tavanı (S8).
 
 ## 4. İnternete açılma: konuşulacaklar
 
@@ -103,7 +102,7 @@ Kararlar netleşince güncellenir.
 3. Kripto (istemci ve sunucu): telefon tuzlu türetme; anahtarların kayıtta üretilmesi; test vektörlerinin
    güncellenmesi.
 4. Davet kodu ve kişiler: sunucu tabloları ve API'leri, istemcide "Kod ile al" ve kişi listesi ekranları.
-5. Anahtar değişikliği uyarısı.
+5. Anahtar değişikliği: doğrulanmamış kişi ve yeni kod (§7.8). Sertifika sabitleme, sunucuda ikinci kilit.
 6. Gizlilik (§8): süreli kutu, açılınca sil, kayıt silme işi. Konuşmalarda kabul edilen 4. kısım maddeleri.
 7. TOTP.
 8. Her adımda unit testler ve ilgili saldırı testleri (Security.md); sonunda yeni sürüm (MSI) ve README güncellemesi.

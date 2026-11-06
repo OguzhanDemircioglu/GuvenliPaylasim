@@ -150,6 +150,12 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
 İleride değiştirilebilir: istemci parolayı bildiği için yeni numarayla `authSecret`'ı ve özel anahtar paketini yeniden
 üretebilir; bu ayrı bir iş olarak bırakılır.
 
+- **Parola şartı:** en az 12 karakter; yaygın parola ve sözlük listesiyle (Türkçe dahil) kontrol. Parola sunucuya
+  gitmediği için kontrol istemcide yapılır (Security S2).
+- **Sunucuda ikinci kilit:** özel anahtar paketi ve `authSecret` özeti, veritabanına yazılmadan önce veritabanı
+  dışında tutulan bir sunucu anahtarıyla AES-256-GCM ile bir kez daha şifrelenir. Sadece DB dökümünü ele geçiren
+  biri parola deneyemez (Security S2).
+
 ### 7.4 Giriş
 
 - Telefon + parola. Sunucuya `authSecret` gider (§2), parola bilgisayardan çıkmaz.
@@ -164,7 +170,7 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
   - bütün oturumları kapatılır,
   - **kişi listesi kalır**,
   - kullanıcının telefonuna bırakılmış, henüz **kodu girilmemiş davetler kalır** (onlar kodla kilitli, §7.6).
-- Kişilerine ilk gönderimde "anahtarı değişti" uyarısı çıkar (§7.8).
+- Kişilerinin listesinde **doğrulanmamış** olur; ona göndermek için yeni davet kodu gerekir (§7.8).
 
 ### 7.6 İlk temas: davet kodu
 
@@ -181,8 +187,14 @@ Birbirini kişi olarak eklememiş iki kişi arasında ilk kutu **davet kodu** il
    doğrulayıcı = HKDF-SHA256(kod, tuz = "", bilgi = "gps-invite-verify/v1", 32 bayt)
    sarmalı     = 0x01 | AES-256-GCM(kodKey, K || gönderenin parmak izi, AAD = SHA-256(payload))
    ```
-4. Sunucuya gidenler: alıcı telefonu, son geçerlilik zamanı, `payload`, imza, `sarmalı`, `SHA-256(doğrulayıcı)`.
-   Kodun kendisi ve `kodKey` sunucuya **gitmez**.
+   Ayrıca kabul mührünü doğrulamak için (aşağıda, alıcı adım 5):
+   ```
+   mühürKey     = HKDF-SHA256(kod, tuz = "", bilgi = "gps-invite-mac/v1", 32 bayt)
+   kendiSarmalı = mühürKey'in gönderenin kendi açık anahtarına sarmalanmış hali (§4.2)
+   ```
+   Gönderenin bilgisayarı kodu saklamaz; kabul günler sonra gelse bile `mühürKey`'i kendi özel anahtarıyla açar.
+4. Sunucuya gidenler: alıcı telefonu, son geçerlilik zamanı, `payload`, imza, `sarmalı`, `kendiSarmalı`,
+   `SHA-256(doğrulayıcı)`. Kodun kendisi, `kodKey` ve `mühürKey` sunucuya **gitmez**.
 5. Kod gönderenin ekranında gösterilir (SMS ile gönderilmez). Gönderen kodu kendi kanalıyla (yüz yüze, telefon,
    başka bir mesajlaşma uygulaması) alıcıya iletir.
 
@@ -194,7 +206,19 @@ Birbirini kişi olarak eklememiş iki kişi arasında ilk kutu **davet kodu** il
    anahtarlarının parmak izini kutunun içindekiyle karşılaştırır. Tutmazsa kutu açılmaz (sunucu araya sahte anahtar
    koymuş demektir).
 4. İstemci `K`'yı kendi açık anahtarına yeniden sarmalar (§4.2) ve kaydeder; davetteki `sarmalı` silinir.
-5. İki taraf birbirinin **kişi listesine** eklenir (§7.7).
+5. İstemci **kabul mührü** üretip sunucuya bırakır:
+   ```
+   mühür = HMAC-SHA256(mühürKey, "gps-invite-accept/v1" || gönderenin parmak izi || alıcının parmak izi)
+   ```
+6. B'nin listesine A hemen eklenir (A'nın anahtarını kutunun içindeki parmak iziyle doğruladı).
+
+**Gönderen, kabulden sonra (iki yönlü doğrulama):**
+1. A'nın istemcisi `kendiSarmalı`'yı açıp `mühürKey`'i alır, B'nin sunucudan gelen açık anahtarlarının parmak iziyle
+   mührü yeniden hesaplar ve karşılaştırır.
+2. Tutarsa B, A'nın listesine eklenir. Tutmazsa eklenmez ve A'ya "doğrulama başarısız" gösterilir (sunucu B yerine
+   sahte anahtar vermiş demektir). Doğrulanana kadar A, B'ye kodsuz gönderemez.
+
+Böylece sunucu iki yönde de araya sahte anahtar koyamaz (Security S3).
 
 **Kurallar:**
 - Kod girilene kadar alıcı **hiçbir şey görmez**: sunucu "bekleyen kutunuz var" bilgisini vermez, bildirim göndermez.
@@ -207,26 +231,32 @@ Birbirini kişi olarak eklememiş iki kişi arasında ilk kutu **davet kodu** il
 ### 7.7 Kişiler
 
 - Kod girilince iki yönlü kayıt oluşur: A'nın listesinde B, B'nin listesinde A.
-  Kayıtta karşı tarafın **o anki parmak izi** de tutulur.
+  Kayıtta karşı tarafın **doğrulanmış parmak izi** de tutulur. Kayıt, sahibinin Ed25519 anahtarıyla imzalanır
+  (`sahip telefonu || kişi telefonu || parmak izi`); istemci kendi imzası tutmayan kaydı kabul etmez. Böylece kayıt
+  sunucuda dursa da sunucu parmak izini değiştiremez.
 - Kişiye gönderim kodsuzdur: §4.2'deki gibi alıcının açık anahtarına sarmalanır, kutu doğrudan gelen kutusuna
   düşer, uygulama içi bildirim gider. Sunucu gönderimi sadece kişi kaydı varsa kabul eder.
 - Kişilere SMS bildirimi gönderilmez (SMS sadece doğrulama ve sıfırlama içindir).
 - Bir taraf kişiyi silerse kayıt **iki yönde de** silinir. Tekrar göndermek için yeni davet kodu gerekir.
 
-### 7.8 Anahtar değişikliği uyarısı
+### 7.8 Anahtar değişikliği: yeni kod gerekir
 
-Kişinin güncel parmak izi kayıttaki parmak izinden farklıysa (parolasını sıfırlamıştır) istemci ilk gönderimden önce
-"X'in anahtarı değişti" uyarısı gösterir ve onay ister. Onaydan sonra kayıttaki parmak izi güncellenir.
-Bu, numarası kopyalanıp (SIM swap) parolası sıfırlanan birine kişilerinin farkında olmadan dosya göndermesini önler.
+Kişinin sunucudan gelen güncel parmak izi, kayıttaki imzalı parmak izinden farklıysa (parolasını sıfırlamıştır ya da
+sunucu sahte anahtar veriyordur) kişi **doğrulanmamış** olur:
 
-Sınır: kayıttaki parmak izi sunucuda tutulur; kötü niyetli bir sunucu bunu da değiştirebilir. Kesin doğrulama için
-parmak izi telefonda karşılaştırılmaya devam eder (§3).
+- İstemci ona kodsuz göndermez; "X'in anahtarı değişti, göndermek için yeni davet kodu gerekir" der.
+- Sonraki gönderim §7.6'daki gibi yeni bir davet koduyla yapılır. Kod kabul edilince kayıttaki parmak izi yenisiyle
+  değiştirilir ve yeniden imzalanır.
+- Sunucu da anahtarı değişmiş kişiye kodsuz gönderimi reddeder (kayıt "doğrulanmamış" işaretlenir).
+
+Gerekçe: sadece "Devam et" düğmesi olan bir uyarı kolayca geçilir. Kod dış kanaldan (yüz yüze, telefonla) gerçek kişiye
+iletildiği için, numarasını kopyalayıp (SIM swap) parolasını sıfırlayan biri bunu geçemez (Security S5).
 
 ### 7.9 Kötüye kullanım sınırları
 
 | Konu | Sınır |
 |---|---|
-| SMS (kayıt, sıfırlama) | numara başına saatte 3, IP başına saatte 10 |
+| SMS (kayıt, sıfırlama) | sadece TR mobil (`^5\d{9}$`); numara başına saatte 3, IP başına saatte 10; sistem geneli günlük tavan (aşılınca SMS durur, alarm) |
 | SMS kodu | 5 dk geçerli, 3 deneme |
 | Davet oluşturma | kullanıcı başına günde 20 |
 | Kod girme | kullanıcı başına 5 hatalı deneme → 1 saat bekleme |
