@@ -7,6 +7,7 @@ import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
 import com.server.modules.auth.dto.PasswordResetRequest;
 import com.server.modules.document.DocumentService;
+import com.server.modules.totp.TotpService;
 import com.server.modules.key.KeyService;
 import com.server.modules.key.dto.KeyBundleRequest;
 import com.server.modules.user.User;
@@ -67,6 +68,8 @@ class AuthServiceImplTest {
     private VerificationService verificationService;
     @Mock
     private DocumentService documentService;
+    @Mock
+    private TotpService totpService;
 
     private AuthServiceImpl service;
 
@@ -75,7 +78,7 @@ class AuthServiceImplTest {
         service = new AuthServiceImpl(userRepository, sessionRepository, loginAttemptService,
                 accessTokenIssuer, passwordEncoder,
                 new SessionProperties(Duration.ofDays(90), Duration.ofSeconds(30), false), keyService,
-                verificationService, documentService);
+                verificationService, documentService, totpService);
     }
 
     @Test
@@ -86,7 +89,7 @@ class AuthServiceImplTest {
         when(sessionRepository.save(any(UserSession.class))).thenAnswer(invocation -> withId(invocation.getArgument(0)));
         stubSessionInfo(user);
 
-        AuthResult result = service.login(new LoginRequest(PHONE_INPUT, "secret"), CLIENT);
+        AuthResult result = service.login(new LoginRequest(PHONE_INPUT, "secret", null), CLIENT);
 
         assertThat(result.refreshToken()).isNotBlank();
         assertThat(result.sessionInfo().accessToken()).isEqualTo("access-token");
@@ -105,7 +108,7 @@ class AuthServiceImplTest {
         when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user()));
         when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
 
-        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "wrong"), CLIENT))
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "wrong", null), CLIENT))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage(AuthMessages.INVALID_CREDENTIALS);
         verify(loginAttemptService).recordFailure(ATTEMPT_KEY);
@@ -116,7 +119,7 @@ class AuthServiceImplTest {
     void unknownPhoneIsCountedAndGetsTheSameAnswer() {
         when(userRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret"), CLIENT))
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", null), CLIENT))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage(AuthMessages.INVALID_CREDENTIALS);
         // Kayıtlı olmayan numarada da şifre kontrolü yapılır (zamanlama farkı olmasın).
@@ -128,7 +131,7 @@ class AuthServiceImplTest {
     void blockedLoginIsRejectedEvenWithCorrectPassword() {
         doThrow(new LoginBlockedException(AuthMessages.LOGIN_BLOCKED)).when(loginAttemptService).ensureNotBlocked(ATTEMPT_KEY);
 
-        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret"), CLIENT))
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", null), CLIENT))
                 .isInstanceOf(LoginBlockedException.class)
                 .hasMessage(AuthMessages.LOGIN_BLOCKED);
         verify(userRepository, never()).findByPhone(anyString());
@@ -287,7 +290,7 @@ class AuthServiceImplTest {
         when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
         when(passwordEncoder.encode("new-secret")).thenReturn("new-hash");
 
-        service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret", keys));
+        service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret", keys, null));
 
         verify(verificationService).verify(PHONE, VerificationPurpose.PASSWORD_RESET, "123456");
         assertThat(user.getPassword()).isEqualTo("new-hash");
@@ -302,7 +305,7 @@ class AuthServiceImplTest {
                 .when(verificationService).verify(PHONE, VerificationPurpose.PASSWORD_RESET, "123456");
 
         assertThatThrownBy(() -> service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret",
-                new KeyBundleRequest("e", "s", "b")))).hasMessage(VerificationMessages.CODE_INVALID);
+                new KeyBundleRequest("e", "s", "b"), null))).hasMessage(VerificationMessages.CODE_INVALID);
         verify(keyService, never()).replaceOnReset(any(), any());
         verify(documentService, never()).deleteAllReceived(any());
         verify(sessionRepository, never()).revokeAllByUserId(any(), any());
@@ -313,8 +316,80 @@ class AuthServiceImplTest {
         when(userRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret",
-                new KeyBundleRequest("e", "s", "b")))).hasMessage(VerificationMessages.CODE_INVALID);
+                new KeyBundleRequest("e", "s", "b"), null))).hasMessage(VerificationMessages.CODE_INVALID);
         verify(keyService, never()).replaceOnReset(any(), any());
+    }
+
+    @Test
+    void totpUserWithoutCodeIsAskedForItAndNotCountedAsFailure() {
+        User user = user();
+        user.setTotpEnabled(true);
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("secret", "hash")).thenReturn(true);
+
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", null), CLIENT))
+                .isInstanceOf(UnauthorizedException.class)
+                .hasMessage(AuthMessages.TOTP_REQUIRED);
+        verify(loginAttemptService, never()).recordFailure(any());
+        verify(sessionRepository, never()).save(any());
+    }
+
+    @Test
+    void wrongTotpCodeCountsAsAFailedLogin() {
+        User user = user();
+        user.setTotpEnabled(true);
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("secret", "hash")).thenReturn(true);
+        when(totpService.verify(USER_ID, "000000")).thenReturn(false);
+
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", "000000"), CLIENT))
+                .hasMessage(AuthMessages.TOTP_INVALID);
+        verify(loginAttemptService).recordFailure(ATTEMPT_KEY);
+        verify(sessionRepository, never()).save(any());
+    }
+
+    @Test
+    void wrongPasswordNeverRevealsWhetherTotpIsOn() {
+        User user = user();
+        user.setTotpEnabled(true);
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
+
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "wrong", null), CLIENT))
+                .hasMessage(AuthMessages.INVALID_CREDENTIALS);
+        verify(totpService, never()).verify(any(), any());
+    }
+
+    @Test
+    void correctTotpCodeOpensTheSession() {
+        User user = user();
+        user.setTotpEnabled(true);
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("secret", "hash")).thenReturn(true);
+        when(totpService.verify(USER_ID, "123456")).thenReturn(true);
+        when(sessionRepository.save(any(UserSession.class))).thenAnswer(invocation -> withId(invocation.getArgument(0)));
+        stubSessionInfo(user);
+
+        assertThat(service.login(new LoginRequest(PHONE_INPUT, "secret", "123456"), CLIENT).refreshToken()).isNotBlank();
+    }
+
+    @Test
+    void passwordResetOfATotpUserNeedsTheCode() {
+        User user = user();
+        user.setTotpEnabled(true);
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
+        KeyBundleRequest keys = new KeyBundleRequest("e", "s", "b");
+
+        assertThatThrownBy(() -> service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret", keys, null)))
+                .hasMessage(AuthMessages.TOTP_REQUIRED);
+        when(totpService.verifyWithin(user, "999999")).thenReturn(false);
+        assertThatThrownBy(() -> service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret", keys, "999999")))
+                .hasMessage(AuthMessages.TOTP_INVALID);
+        verify(keyService, never()).replaceOnReset(any(), any());
+
+        when(totpService.verifyWithin(user, "ABCDE-FGHJK")).thenReturn(true);
+        service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret", keys, "ABCDE-FGHJK"));
+        verify(keyService).replaceOnReset(USER_ID, keys);
     }
 
     private void stubSessionInfo(User user) {

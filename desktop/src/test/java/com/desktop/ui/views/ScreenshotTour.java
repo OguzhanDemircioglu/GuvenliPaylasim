@@ -174,6 +174,17 @@ public final class ScreenshotTour {
         nav(shell, 4);
         pause(800);
         snap(stage, "07-anahtarim" + suffix);
+        onFx(() -> {
+            shell.lookupAll(".button").stream().filter(n -> n instanceof Button b && "Aç".equals(b.getText()))
+                    .findFirst().ifPresent(n -> ((Button) n).fire());
+            return null;
+        });
+        pause(1500);
+        snap(stage, "07c-iki-adimli-kurulum" + suffix);
+        onFx(() -> {
+            com.desktop.ui.Dialogs.close();
+            return null;
+        });
         nav(shell, 5);
         pause(800);
         snap(stage, "07b-neden-guvenli" + suffix);

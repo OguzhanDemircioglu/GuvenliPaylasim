@@ -26,7 +26,7 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 | 3. Karşılıklı teslim (kasa) | **Konuşuldu: yapılmayacak** (gerekçe aşağıda) |
 | Güvenlik: tehdit modeli ve test planı | **Konuşuldu**, [Security.md](Security.md)'de. §7 buna göre güncellendi |
 | 4. İnternete açılma | **Konuşuldu**, kararlar aşağıda. Demo sunucusu Railway'de |
-| TOTP ile giriş | **Ertelendi** (2026-11-06): şimdilik yapılmayacak; giriş telefon + parola (§7.4) |
+| TOTP ile giriş | **Yapıldı, isteğe bağlı** (2026-11-06): profilden açılır; girişte ve sıfırlamada kod, kurtarma kodları (§7.4) |
 
 ## 1. Temel dönüşüm: alınan kararlar (özet)
 
@@ -166,7 +166,10 @@ Kararlar netleşince güncellenir.
    ve "Açılınca sil", Gelen Kutusu'nda kalan süre ve "Açılınca silinir" etiketi; açılınca silinen içerik kaydedilene
    kadar ekranda kalır. Uçtan uca denendi (18 kontrol, veritabanı doğrudan sorgulanarak): açılınca silinen,
    "okudum ve sil" ile silinen ve ömrü dolan kutunun hiçbir satırı kalmıyor.
-7. ~~TOTP~~ — ertelendi (2026-11-06). İleride istenirse §7.4'teki tasarımla eklenir.
+7. ✅ (2026-11-06, `main`) TOTP, isteğe bağlı: Anahtarım ekranında "İki adımlı doğrulama" kartı (QR kod, elle
+   girilecek anahtar, ilk kodla açma, 10 kurtarma kodu, parola + kodla kapatma). Girişte ve parola sıfırlamada kod
+   istenir. RFC 6238 test değerleri sunucu testinde; uçtan uca 20 kontrol geçti (kod ve kurtarma kodu bir kez geçer,
+   sıfırlama ikinci adım olmadan reddedilir, anahtar veritabanında kilitli, kurtarma kodlarının sadece özeti var).
 8. Her adımda unit testler ve ilgili saldırı testleri (Security.md); sonunda yeni sürüm (MSI) ve README güncellemesi.
 
 ## Hatırlatmalar

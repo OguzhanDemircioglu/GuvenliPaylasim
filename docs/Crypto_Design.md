@@ -169,8 +169,18 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
 ### 7.4 Giriş
 
 - Telefon + parola. Sunucuya `authSecret` gider (§2), parola bilgisayardan çıkmaz.
-- **TOTP** (Authenticator uygulaması) ikinci adım olarak tasarlandı ama **ertelendi** (2026-11-06); şimdilik yok. SMS ile giriş kodu
-  kullanılmaz (ücretli ve SIM kopyalamaya açık).
+- **TOTP (isteğe bağlı, 2026-11-06):** kullanıcı profilinden (Anahtarım) açar. RFC 6238: HMAC-SHA1, 30 sn, 6 hane,
+  ±1 adım saat kayması; aynı kod ikinci kez kabul edilmez (son kullanılan adım tutulur). Anahtar 160 bit, Base32;
+  sunucuda ikinci kilitle saklanır (`users.totp_secret`). İlk kod doğrulanınca açılır ve 10 tek kullanımlık kurtarma
+  kodu (`XXXXX-XXXXX`, Crockford) bir kez gösterilir; sunucuda sadece `SHA-256("gps-recovery/v1|" + kullanıcı + "|" +
+  kod)` tutulur.
+  - Giriş: parola doğruysa ve TOTP açıksa `auth_totp_required` döner; istemci kodu sorup tekrar dener. Yanlış kod
+    yanlış parola gibi sayılır (5 deneme / 1 saat). Parola yanlışsa TOTP'nin açık olup olmadığı belli olmaz.
+  - Parola sıfırlama: WhatsApp koduna ek olarak Authenticator ya da kurtarma kodu istenir (SIM kopyalama, Security
+    S5). Kurtarma kodu da yoksa o numara bir daha açılamaz (yönetici yok); bu bilinçli bir tercihtir.
+  - Kapatma: mevcut parola + Authenticator ya da kurtarma kodu; kurtarma kodları silinir.
+  - API: `POST /api/auth/totp/setup|enable|disable`; `SessionUser.totpEnabled`.
+  SMS ile giriş kodu kullanılmaz (ücretli ve SIM kopyalamaya açık).
 
 ### 7.5 Parola sıfırlama
 
@@ -309,7 +319,7 @@ ve özel anahtar paketleri yeni türetmeyle açılmaz. Henüz prod verisi olmad�
 
 ### 7.12 Kapsam dışı (sonraki parçalar)
 
-- TOTP (§7.4, ertelendi), büyük dosyalar için parçalı yükleme.
+- Büyük dosyalar için parçalı yükleme.
 - Gizli gönderen ve teslim jetonu (§8.6).
 - Karşılıklı teslim (kasa): **yapılmaz.** İçerik doğrulanamaz, sunucuya saldırıya açık durumlu bir karar mantığı
   ekler ve kapsam dışı bırakılan takas sistemine dönüşür (gerekçe: Devam_Rehberi §3).

@@ -12,6 +12,8 @@ public final class SealedColumns {
 
     public static final String PASSWORD_HASH = "users.password_hash";
     public static final String PRIVATE_KEY_BUNDLE = "user_keys.private_key_bundle";
+    public static final String TOTP_SECRET = "users.totp_secret";
+    public static final String TOTP_PENDING_SECRET = "users.totp_pending_secret";
 
     private SealedColumns() {
     }
@@ -34,6 +36,48 @@ public final class SealedColumns {
         @Override
         public String convertToEntityAttribute(String column) {
             return seal.open(column, PASSWORD_HASH);
+        }
+    }
+
+    @Component
+    @Converter
+    public static class TotpSecret implements AttributeConverter<String, String> {
+
+        private final ServerSeal seal;
+
+        public TotpSecret(ServerSeal seal) {
+            this.seal = seal;
+        }
+
+        @Override
+        public String convertToDatabaseColumn(String attribute) {
+            return seal.seal(attribute, TOTP_SECRET);
+        }
+
+        @Override
+        public String convertToEntityAttribute(String column) {
+            return seal.open(column, TOTP_SECRET);
+        }
+    }
+
+    @Component
+    @Converter
+    public static class TotpPendingSecret implements AttributeConverter<String, String> {
+
+        private final ServerSeal seal;
+
+        public TotpPendingSecret(ServerSeal seal) {
+            this.seal = seal;
+        }
+
+        @Override
+        public String convertToDatabaseColumn(String attribute) {
+            return seal.seal(attribute, TOTP_PENDING_SECRET);
+        }
+
+        @Override
+        public String convertToEntityAttribute(String column) {
+            return seal.open(column, TOTP_PENDING_SECRET);
         }
     }
 

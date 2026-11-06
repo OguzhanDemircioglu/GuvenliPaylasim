@@ -12,14 +12,14 @@ public final class Dto {
     public enum DocumentKind { TEXT, FILE }
 
     /** {@code phone} E.164 ({@code +905XXXXXXXXX}); parola türetmede tuz olarak kullanılır. */
-    public record SessionUser(Long id, String phone, String fullName) {
+    public record SessionUser(Long id, String phone, String fullName, boolean totpEnabled) {
     }
 
     public record SessionInfo(String accessToken, long expiresIn, SessionUser user) {
     }
 
     /** {@code phone}: {@code 5XXXXXXXXX}. */
-    public record LoginRequest(String phone, String password) {
+    public record LoginRequest(String phone, String password, String totpCode) {
     }
 
     public record KeyBundle(String encryptionPublicKey, String signingPublicKey, String privateKeyBundle) {
@@ -34,7 +34,7 @@ public final class Dto {
     public record RegisterRequest(String phone, String code, String fullName, String password, KeyBundle keys) {
     }
 
-    public record PasswordResetRequest(String phone, String code, String password, KeyBundle keys) {
+    public record PasswordResetRequest(String phone, String code, String password, KeyBundle keys, String totpCode) {
     }
 
     /** Belge gönderilebilecek bir kişi ve açık anahtarları (kişiler 4. adımda gelir). */
@@ -66,6 +66,20 @@ public final class Dto {
 
     public record SentItem(Long id, DocumentKind kind, long sizeBytes, Instant createdAt, Instant expiresAt,
                            boolean deleteOnOpen, List<SentRecipient> recipients) {
+    }
+
+    // ---------- İki adımlı doğrulama (Crypto_Design §7.4) ----------
+
+    public record TotpSetup(String secret, String uri) {
+    }
+
+    public record TotpCodeRequest(String code) {
+    }
+
+    public record TotpDisableRequest(String password, String code) {
+    }
+
+    public record TotpEnabled(List<String> recoveryCodes) {
     }
 
     // ---------- Kişiler ve davet kodu (Crypto_Design §7.6–7.8) ----------

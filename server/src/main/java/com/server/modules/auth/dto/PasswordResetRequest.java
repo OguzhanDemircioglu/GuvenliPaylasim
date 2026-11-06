@@ -32,7 +32,11 @@ public record PasswordResetRequest(
 
         @NotNull(message = AuthMessages.KEYS_REQUIRED)
         @Valid
-        KeyBundleRequest keys) {
+        KeyBundleRequest keys,
+
+        /** TOTP açıksa zorunlu: Authenticator kodu ya da kurtarma kodu (SIM kopyalamaya karşı, Security.md S5). */
+        @Size(max = 20, message = AuthMessages.TOTP_INVALID)
+        String totpCode) {
 
     public PasswordResetRequest {
         phone = Phones.trim(phone);

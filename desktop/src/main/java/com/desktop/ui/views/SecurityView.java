@@ -16,7 +16,7 @@ import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.material2.Material2OutlinedAL;
 import org.kordamp.ikonli.material2.Material2OutlinedMZ;
 
-/** Kullanıcının anahtarları: parmak izi, kullanılan algoritmalar ve parola değiştirme. */
+/** Kullanıcının anahtarları: parmak izi, kullanılan algoritmalar, parola değiştirme ve iki adımlı doğrulama. */
 final class SecurityView extends ScrollPane {
 
     SecurityView(Context context) {
@@ -51,9 +51,10 @@ final class SecurityView extends ScrollPane {
 
         VBox left = new VBox(20, fingerprintCard, algorithmCard);
         HBox.setHgrow(left, Priority.ALWAYS);
-        passwordCard.setPrefWidth(420);
-        passwordCard.setMinWidth(380);
-        HBox body = new HBox(20, left, passwordCard);
+        VBox right = new VBox(20, passwordCard, new TwoFactorCard(context));
+        right.setPrefWidth(420);
+        right.setMinWidth(380);
+        HBox body = new HBox(20, left, right);
 
         VBox page = new VBox(Ui.header("Anahtarım", "Kimliğinizi kanıtlayan ve belgelerinizi açan anahtarlar"), body);
         page.getStyleClass().add("page");

@@ -13,11 +13,22 @@ public final class Session {
     private final ApiClient api;
     private final Dto.SessionUser user;
     private final UserKeys keys;
+    /** Profilden açılıp kapatılabildiği için oturum boyunca değişebilir. */
+    private volatile boolean totpEnabled;
 
     Session(ApiClient api, Dto.SessionUser user, UserKeys keys) {
         this.api = api;
         this.user = user;
         this.keys = keys;
+        this.totpEnabled = user.totpEnabled();
+    }
+
+    public boolean totpEnabled() {
+        return totpEnabled;
+    }
+
+    void totpEnabled(boolean enabled) {
+        this.totpEnabled = enabled;
     }
 
     public ApiClient api() {

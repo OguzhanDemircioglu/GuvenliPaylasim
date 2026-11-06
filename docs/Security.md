@@ -82,6 +82,9 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   gerçek kişiye iletildiği için numarayı ele geçiren saldırgan bunu geçemez.
 - **Kabul:** Parolayı SMS ile sıfırlayıp hesabı ele geçirebilir; boş bir hesap ve kişi listesi alır. Davet
   bekleyen kutuları açamaz, çünkü kodu bilmez.
+- **İsteğe bağlı ek önlem: TOTP** (Crypto_Design §7.4). Kullanıcı açtıysa parola sıfırlama Authenticator ya da
+  kurtarma kodu da ister; numarayı kopyalayan saldırgan hesabı ele geçiremez. Bedeli: Authenticator'ını ve kurtarma
+  kodlarını kaybeden kullanıcı o numarayla bir daha giremez.
 
 ### S6. Bilgisayarı çalınan kullanıcı
 - **Garanti:** Kapalı ya da oturumu kapalı bir bilgisayarda anahtar ve oturum yoktur.

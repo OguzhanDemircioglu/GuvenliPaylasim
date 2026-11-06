@@ -12,6 +12,9 @@ public final class AuthMessages {
     public static final String LOGIN_BLOCKED = "auth_login_blocked";
     public static final String CURRENT_PASSWORD_INCORRECT = "auth_current_password_incorrect";
     public static final String KEYS_REQUIRED = "auth_keys_required";
+    /** Parola doğru; TOTP açık ve kod gönderilmedi. İstemci kodu sorup tekrar dener. */
+    public static final String TOTP_REQUIRED = "auth_totp_required";
+    public static final String TOTP_INVALID = "auth_totp_invalid";
 
     private AuthMessages() {
     }

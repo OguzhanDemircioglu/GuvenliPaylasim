@@ -49,9 +49,9 @@ public final class ApiClient {
         this.baseUrl = baseUrl;
     }
 
-    /** {@code phone}: {@code 5XXXXXXXXX}. */
-    public Dto.SessionInfo login(String phone, String authSecret) {
-        Dto.SessionInfo session = post("/api/auth/login", new Dto.LoginRequest(phone, authSecret),
+    /** {@code phone}: {@code 5XXXXXXXXX}; {@code totpCode}: TOTP açıksa Authenticator ya da kurtarma kodu. */
+    public Dto.SessionInfo login(String phone, String authSecret, String totpCode) {
+        Dto.SessionInfo session = post("/api/auth/login", new Dto.LoginRequest(phone, authSecret, totpCode),
                 new TypeReference<>() {
                 });
         accessToken = session.accessToken();

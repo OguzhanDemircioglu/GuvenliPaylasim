@@ -7,6 +7,8 @@ import com.desktop.crypto.PasswordKeys;
 import com.desktop.crypto.UserKeys;
 import tools.jackson.core.type.TypeReference;
 
+import java.util.List;
+
 /**
  * Giriş, kayıt ve parola akışları (docs/Crypto_Design.md §2–3, v2: §7.2–7.5).
  * <ol>
@@ -29,8 +31,16 @@ public final class AuthService {
     }
 
     public Session login(String phone, char[] password) {
+        return login(phone, password, null);
+    }
+
+    /**
+     * {@code totpCode}: TOTP açık hesapta Authenticator kodu ya da kurtarma kodu. Kod gerekiyorsa ve verilmediyse
+     * sunucu {@code auth_totp_required} döner; ekran kodu sorup bu metodu kodla tekrar çağırır.
+     */
+    public Session login(String phone, char[] password, String totpCode) {
         String normalized = requirePhone(phone);
-        return login(normalized, PasswordKeys.derive(Phones.toE164(normalized), password));
+        return login(normalized, PasswordKeys.derive(Phones.toE164(normalized), password), blankToNull(totpCode));
     }
 
     /** Telefona WhatsApp ile kayıt kodu gönderilir. Numara kayıtlıysa kod gitmez ama cevap aynıdır. */
@@ -47,7 +57,7 @@ public final class AuthService {
         new ApiClient(serverUrl).post("/api/auth/register/complete",
                 new Dto.RegisterRequest(normalized, code.trim(), fullName.trim(), derived.authSecret(),
                         bundle(keys, derived.kek(), e164)), ANY);
-        return login(normalized, derived);
+        return login(normalized, derived, null);
     }
 
     /** Kayıtlı telefona WhatsApp ile sıfırlama kodu gönderilir. Numara kayıtlı değilse kod gitmez ama cevap aynıdır. */
@@ -59,20 +69,22 @@ public final class AuthService {
      * Yeni parola ve yeni anahtar çifti (Crypto_Design §7.5). Eski özel anahtarlar eski parolayla kilitli olduğu için
      * kullanıcıya gelmiş kutular sunucuda silinir; ardından yeni parolayla giriş yapılır.
      */
-    public Session completePasswordReset(String phone, String code, char[] newPassword) {
+    public Session completePasswordReset(String phone, String code, char[] newPassword, String totpCode) {
         String normalized = requirePhone(phone);
         String e164 = Phones.toE164(normalized);
         PasswordKeys.Derived derived = PasswordKeys.derive(e164, newPassword);
         UserKeys keys = UserKeys.generate();
         new ApiClient(serverUrl).post("/api/auth/password-reset/complete",
                 new Dto.PasswordResetRequest(normalized, code.trim(), derived.authSecret(),
-                        bundle(keys, derived.kek(), e164)), ANY);
-        return login(normalized, derived);
+                        bundle(keys, derived.kek(), e164), blankToNull(totpCode)), ANY);
+        // Az önce kullanılan Authenticator kodu tekrar geçmez; kurtarma kodu da tek kullanımlıktır. Bu yüzden
+        // sıfırlamadan sonraki giriş için kod yeniden istenebilir (auth_totp_required).
+        return login(normalized, derived, null);
     }
 
-    private Session login(String normalizedPhone, PasswordKeys.Derived derived) {
+    private Session login(String normalizedPhone, PasswordKeys.Derived derived, String totpCode) {
         ApiClient api = new ApiClient(serverUrl);
-        Dto.SessionUser user = api.login(normalizedPhone, derived.authSecret()).user();
+        Dto.SessionUser user = api.login(normalizedPhone, derived.authSecret(), totpCode).user();
 
         UserKeys keys = loadKeys(api, user.phone(), derived.kek());
         if (keys == null) {
@@ -94,6 +106,29 @@ public final class AuthService {
         session.api().put("/api/auth/password",
                 new Dto.ChangePasswordRequest(current.authSecret(), next.authSecret(),
                         bundle(session.keys(), next.kek(), e164)), ANY);
+    }
+
+    // ---------- İki adımlı doğrulama (Crypto_Design §7.4) ----------
+
+    public Dto.TotpSetup setupTotp(Session session) {
+        return session.api().post("/api/auth/totp/setup", null, new TypeReference<>() {
+        });
+    }
+
+    /** İlk kod doğrulanınca açılır; dönen kurtarma kodları sadece bir kez gösterilir. */
+    public List<String> enableTotp(Session session, String code) {
+        Dto.TotpEnabled enabled = session.api().post("/api/auth/totp/enable", new Dto.TotpCodeRequest(code.trim()),
+                new TypeReference<>() {
+                });
+        session.totpEnabled(true);
+        return enabled.recoveryCodes();
+    }
+
+    /** Kapatmak için mevcut parola (bu bilgisayarda authSecret'a çevrilir) ve Authenticator ya da kurtarma kodu. */
+    public void disableTotp(Session session, char[] currentPassword, String code) {
+        String secret = PasswordKeys.derive(session.user().phone(), currentPassword).authSecret();
+        session.api().post("/api/auth/totp/disable", new Dto.TotpDisableRequest(secret, code.trim()), ANY);
+        session.totpEnabled(false);
     }
 
     public void logout(Session session) {
@@ -123,6 +158,10 @@ public final class AuthService {
         return Phones.normalize(phone) == null
                 ? "Cep telefonunu 10 hane olarak yazın: 5XXXXXXXXX."
                 : null;
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private static String requirePhone(String phone) {

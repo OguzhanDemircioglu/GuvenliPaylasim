@@ -10,6 +10,7 @@ import com.server.modules.auth.dto.PasswordResetRequest;
 import com.server.modules.auth.dto.SessionInfo;
 import com.server.modules.auth.dto.SessionUser;
 import com.server.modules.document.DocumentService;
+import com.server.modules.totp.TotpService;
 import com.server.modules.key.KeyService;
 import com.server.modules.user.Phones;
 import com.server.modules.user.User;
@@ -42,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final KeyService keyService;
     private final VerificationService verificationService;
     private final DocumentService documentService;
+    private final TotpService totpService;
     /** Kayıtlı olmayan numaralarda da şifre kontrolü yapılır; cevap süresinden kullanıcının varlığı anlaşılmasın. */
     private final String dummyPasswordHash;
 
@@ -49,7 +51,8 @@ public class AuthServiceImpl implements AuthService {
                            LoginAttemptService loginAttemptService,
                            AccessTokenIssuer accessTokenIssuer, PasswordEncoder passwordEncoder,
                            SessionProperties properties, KeyService keyService,
-                           VerificationService verificationService, DocumentService documentService) {
+                           VerificationService verificationService, DocumentService documentService,
+                           TotpService totpService) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.loginAttemptService = loginAttemptService;
@@ -59,6 +62,7 @@ public class AuthServiceImpl implements AuthService {
         this.keyService = keyService;
         this.verificationService = verificationService;
         this.documentService = documentService;
+        this.totpService = totpService;
         this.dummyPasswordHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
@@ -73,6 +77,16 @@ public class AuthServiceImpl implements AuthService {
         if (!passwordEncoder.matches(request.password(), passwordHash) || user.isEmpty()) {
             loginAttemptService.recordFailure(attemptKey);
             throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
+        }
+        if (user.get().isTotpEnabled()) {
+            // Parola doğru. Kod yoksa istemci sorar ve tekrar dener; yanlış kod parola gibi sayılır (5 deneme).
+            if (request.totpCode() == null || request.totpCode().isBlank()) {
+                throw new UnauthorizedException(AuthMessages.TOTP_REQUIRED);
+            }
+            if (!totpService.verify(user.get().getId(), request.totpCode())) {
+                loginAttemptService.recordFailure(attemptKey);
+                throw new UnauthorizedException(AuthMessages.TOTP_INVALID);
+            }
         }
         loginAttemptService.clear(attemptKey);
         return openSession(user.get(), client);
@@ -153,6 +167,15 @@ public class AuthServiceImpl implements AuthService {
         verificationService.verify(phone, VerificationPurpose.PASSWORD_RESET, request.code());
         User user = userRepository.findByPhone(phone)
                 .orElseThrow(() -> new BusinessException(VerificationMessages.CODE_INVALID));
+        // TOTP açıksa numara tek başına yetmez (SIM kopyalama, Security.md S5).
+        if (user.isTotpEnabled()) {
+            if (request.totpCode() == null || request.totpCode().isBlank()) {
+                throw new BusinessException(AuthMessages.TOTP_REQUIRED);
+            }
+            if (!totpService.verifyWithin(user, request.totpCode())) {
+                throw new BusinessException(AuthMessages.TOTP_INVALID);
+            }
+        }
         user.setPassword(passwordEncoder.encode(request.password()));
         keyService.replaceOnReset(user.getId(), request.keys());
         // Eski özel anahtar olmadan bu kutular hiçbir zaman açılamaz (Crypto_Design §7.5).

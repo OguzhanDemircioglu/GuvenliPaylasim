@@ -2,6 +2,7 @@ package com.desktop.ui.views;
 
 import atlantafx.base.controls.CustomTextField;
 import atlantafx.base.controls.PasswordTextField;
+import com.desktop.api.ApiException;
 import com.desktop.service.AuthService;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
@@ -445,13 +446,55 @@ public final class LoginView extends VBox {
             showStatus(loginStatus, phoneError != null ? phoneError : "Parola zorunludur.", true);
             return;
         }
+        loginWith(null);
+    }
+
+    /** TOTP açık hesapta sunucu önce kodu ister ({@code auth_totp_required}); kod sorulup giriş tekrarlanır. */
+    private void loginWith(String totpCode) {
         busy(loginSubmit, loginStatus, "Parolanızdan anahtar türetiliyor ve anahtarlarınız açılıyor…");
-        Async.run(() -> auth.login(loginPhone.getText(), loginPassword.getPassword().toCharArray()),
+        Async.run(() -> auth.login(loginPhone.getText(), loginPassword.getPassword().toCharArray(), totpCode),
                 session -> {
                     loginPassword.clear();
                     onLoggedIn.accept(session);
                 },
-                failure -> failed(loginSubmit, loginStatus, failure));
+                failure -> {
+                    if (isTotpRequired(failure)) {
+                        loginSubmit.setDisable(false);
+                        showStatus(loginStatus, null, false);
+                        askTotp(this::loginWith);
+                    } else {
+                        failed(loginSubmit, loginStatus, failure);
+                    }
+                });
+    }
+
+    private static boolean isTotpRequired(Throwable failure) {
+        return failure instanceof ApiException api && "auth_totp_required".equals(api.key());
+    }
+
+    /** İki adımlı doğrulama kodu: Authenticator'daki 6 hane ya da kurtarma kodlarından biri. */
+    private static void askTotp(java.util.function.Consumer<String> onCode) {
+        TextField code = new TextField();
+        code.setPromptText("123456 ya da XXXXX-XXXXX");
+        code.getStyleClass().add("code-input");
+        Label help = Ui.muted("Authenticator uygulamanızdaki 6 haneli kodu yazın. Telefonunuz yanınızda değilse "
+                + "kurtarma kodlarınızdan birini kullanabilirsiniz; her kurtarma kodu bir kez geçer.");
+        help.setWrapText(true);
+        help.setMaxWidth(420);
+        Button cancel = Ui.button("Vazgeç", null);
+        cancel.setCancelButton(true);
+        cancel.setOnAction(e -> Dialogs.close());
+        Button submit = Ui.primary("Doğrula", Material2OutlinedAL.LOCK_OPEN);
+        submit.setDefaultButton(true);
+        submit.setOnAction(e -> {
+            if (code.getText().isBlank()) {
+                return;
+            }
+            Dialogs.close();
+            onCode.accept(code.getText().trim());
+        });
+        Dialogs.show("İki adımlı doğrulama", new VBox(12, help, code), cancel, submit);
+        code.requestFocus();
     }
 
     private void register() {
@@ -533,6 +576,8 @@ public final class LoginView extends VBox {
         password.setPromptText("Yeni parola (en az 12 karakter, harf ve rakam)");
         PasswordTextField repeat = new PasswordTextField();
         repeat.setPromptText("Yeni parola (tekrar)");
+        TextField totp = new TextField();
+        totp.setPromptText("Authenticator ya da kurtarma kodu (iki adımlı doğrulama açtıysanız)");
         Label warning = Ui.muted("Parola sıfırlanınca size gelmiş bütün belgeler silinir; eski parolanızla "
                 + "kilitliydiler ve yeni parolayla açılamazlar. Kişilerinize anahtarınızın değiştiği bildirilir.");
         warning.setWrapText(true);
@@ -586,21 +631,32 @@ public final class LoginView extends VBox {
             submit.setDisable(true);
             showStatus(status, "Yeni anahtarlarınız üretiliyor ve parolanız değiştiriliyor…", false);
             Async.run(() -> auth.completePasswordReset(phone.getText(), code.getText(),
-                            password.getPassword().toCharArray()),
+                            password.getPassword().toCharArray(), totp.getText()),
                     session -> {
                         Dialogs.close();
                         Toasts.success("Parolanız değiştirildi.");
                         onLoggedIn.accept(session);
                     },
                     failure -> {
+                        if (isTotpRequired(failure) && ((ApiException) failure).status() == 401) {
+                            // Parola değişti; sıfırlamada kullanılan kod tekrar geçmediği için giriş yeni kodla yapılır.
+                            Dialogs.close();
+                            loginPhone.setText(phone.getText());
+                            Toasts.success("Parolanız değiştirildi. Yeni parolanız ve Authenticator kodunuzla giriş yapın.");
+                            return;
+                        }
                         submit.setDisable(false);
-                        showStatus(status, Toasts.describe(failure), true);
+                        String message = isTotpRequired(failure)
+                                ? "Bu hesapta iki adımlı doğrulama açık: Authenticator ya da kurtarma kodunu yazın. "
+                                        + "WhatsApp kodu kullanıldı; yeni kod isteyin."
+                                : Toasts.describe(failure);
+                        showStatus(status, message, true);
                     });
         });
 
         HBox phoneRow = new HBox(10, phone, codeButton);
         HBox.setHgrow(phone, javafx.scene.layout.Priority.ALWAYS);
-        VBox body = new VBox(12, warning, phoneRow, code, password, repeat, status);
+        VBox body = new VBox(12, warning, phoneRow, code, password, repeat, totp, status);
         Dialogs.show("Parolamı unuttum", body, cancel, submit);
     }
 
