@@ -19,6 +19,29 @@
 
 ---
 
+## Uygulama ne yapıyor?
+
+> Bu bölüm geliştirilmekte olan **v2**'yi anlatır. Yayındaki 1.0.5 sürümü hâlâ v1'dir (rollü, birimli prototip).
+
+Kimsenin açamayacağı bir kutuya dosya ya da mesaj koyarsınız. Kutu sadece alıcının bilgisayarında açılır. Sunucu
+sadece taşıyıcıdır; içeriği hiçbir zaman göremez.
+
+**Parçalar**
+- **Masaüstü uygulaması (Java, MSI):** Şifreleme ve şifre çözme burada yapılır. Parola bilgisayardan hiç çıkmaz.
+- **Sunucu (Spring + PostgreSQL):** Şifreli kutuları ve açık anahtarları tutar, kutuyu doğru kişiye teslim eder.
+
+**Akış**
+1. **Kayıt:** Ad soyad, telefon ve parola girilir; telefon SMS koduyla doğrulanır. Anahtarlar bu sırada bilgisayarda
+   üretilir.
+2. **İlk gönderim:** Alıcının telefonu girilir. Uygulama 16 karakterlik bir kod gösterir ve kutu bu kodla kilitlenir.
+   Kodu alıcıya siz iletirsiniz (yüz yüze, telefonla).
+3. **Alıcı:** Kodu "Kod ile al" ekranına girer, kutu açılır ve iki taraf birbirinin kişi listesine eklenir.
+4. **Sonraki gönderimler:** Kod gerekmez, kutu doğrudan kişinin gelen kutusuna düşer.
+5. **Kutunun ömrü:** 1 saat ile 30 gün arasıdır. Süre dolunca her şey sunucudan silinir. İstenirse kutu "açılınca
+   sil" olarak da gönderilebilir.
+6. **Parolayı unutan:** SMS ile sıfırlar, ama kendisine gelmiş kutuları kaybeder. Kişilerinin ekranında "anahtarı
+   değişti" uyarısı çıkar.
+
 ## Nedir?
 
 Eski "Güvenli Bilgi Paylaşım Sistemi"nin (2016) yerini alacak prototip. Belgeler **gönderenin bilgisayarında**
