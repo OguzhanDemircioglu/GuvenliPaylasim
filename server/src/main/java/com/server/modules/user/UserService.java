@@ -9,4 +9,7 @@ public interface UserService {
      * transaction'da kaydedilir. Böylece "anahtarı olmayan kullanıcı" durumu oluşmaz.
      */
     void register(RegisterRequest request);
+
+    /** Ad soyad değişir; kişiler yeni adı bir sonraki listelemede görür. Kimlik doğrulaması parmak izine dayanır. */
+    void updateName(Long userId, String fullName);
 }

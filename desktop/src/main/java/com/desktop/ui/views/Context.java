@@ -17,6 +17,9 @@ final class Context {
     /** Gelen kutusu değişince kenar çubuğundaki sayaç yenilenir. */
     Runnable onInboxChanged = () -> {
     };
+    /** Profilde ad soyad değişince kenar çubuğundaki ad yenilenir. */
+    Runnable onProfileChanged = () -> {
+    };
 
     Context(Session session, AuthService auth) {
         this.session = session;

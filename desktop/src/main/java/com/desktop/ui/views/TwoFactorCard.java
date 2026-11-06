@@ -5,6 +5,7 @@ import atlantafx.base.theme.Styles;
 import com.desktop.api.Dto;
 import com.desktop.ui.Async;
 import com.desktop.ui.Dialogs;
+import com.desktop.ui.Inputs;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import com.google.zxing.BarcodeFormat;
@@ -88,7 +89,7 @@ final class TwoFactorCard extends VBox {
                 + "okutun ya da anahtarı elle girin.\n2. Uygulamanın gösterdiği 6 haneli kodu aşağıya yazın.");
         help.setWrapText(true);
         help.setMaxWidth(440);
-        TextField code = new TextField();
+        TextField code = Inputs.digits(new TextField(), 6);
         code.setPromptText("123456");
         code.getStyleClass().add("code-input");
         Label status = errorLabel();

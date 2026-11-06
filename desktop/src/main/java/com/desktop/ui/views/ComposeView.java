@@ -10,6 +10,7 @@ import com.desktop.service.InviteService;
 import com.desktop.ui.Async;
 import com.desktop.ui.Dialogs;
 import com.desktop.ui.Formats;
+import com.desktop.ui.Inputs;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import javafx.collections.FXCollections;
@@ -253,7 +254,8 @@ final class ComposeView extends VBox {
         ttl.getItems().setAll(new Ttl("1 saat", 1), new Ttl("1 gün", 24), new Ttl("3 gün", 72), new Ttl("7 gün", 168));
         ttl.getSelectionModel().select(1);
         ttl.setMaxWidth(Double.MAX_VALUE);
-        invitePhone.setPromptText("Alıcının cep telefonu (5XXXXXXXXX)");
+        Inputs.phone(invitePhone);
+        invitePhone.setPromptText("Alıcının cep telefonu (5xx) xxx xx xx");
         invitePhone.textProperty().addListener((obs, old, value) -> updateSummary());
         ttl.valueProperty().addListener((obs, old, value) -> updateSummary());
 

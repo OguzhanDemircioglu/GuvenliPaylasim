@@ -3,10 +3,15 @@ package com.desktop.ui.views;
 import atlantafx.base.theme.Styles;
 import atlantafx.base.theme.Tweaks;
 import com.desktop.crypto.UserKeys;
+import com.desktop.ui.Async;
+import com.desktop.ui.Formats;
+import com.desktop.ui.Inputs;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -49,19 +54,65 @@ final class SecurityView extends ScrollPane {
                 Ui.muted("Anahtarlarınız değişmez; sadece onları koruyan parola değişir. Size gelen belgeler "
                         + "açılmaya devam eder."), form);
 
-        VBox left = new VBox(20, fingerprintCard, algorithmCard);
+        VBox left = new VBox(20, profileCard(context), fingerprintCard, algorithmCard);
         HBox.setHgrow(left, Priority.ALWAYS);
         VBox right = new VBox(20, passwordCard, new TwoFactorCard(context));
         right.setPrefWidth(420);
         right.setMinWidth(380);
         HBox body = new HBox(20, left, right);
 
-        VBox page = new VBox(Ui.header("Anahtarım", "Kimliğinizi kanıtlayan ve belgelerinizi açan anahtarlar"), body);
+        VBox page = new VBox(Ui.header("Profilim", "Adınız, telefonunuz ve belgelerinizi açan anahtarlar"), body);
         page.getStyleClass().add("page");
         setContent(page);
         setFitToWidth(true);
         getStyleClass().add(Tweaks.EDGE_TO_EDGE);
         setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+    }
+
+    /** Ad soyad düzenlenir (sadece harf); telefon salt okunurdur, çünkü parola telefonla türetilir. */
+    private static VBox profileCard(Context context) {
+        TextField name = Inputs.name(new TextField(context.session.fullName()));
+        name.setMaxWidth(380);
+        TextField phone = new TextField(Formats.phone(context.session.user().phone()));
+        phone.setEditable(false);
+        phone.setFocusTraversable(false);
+        phone.setMaxWidth(380);
+        Label error = Ui.label("", "form-error");
+        error.setWrapText(true);
+        error.setManaged(false);
+        Button save = Ui.primary("Adı kaydet", Material2OutlinedMZ.SAVE);
+        save.disableProperty().bind(name.textProperty().map(text -> text.trim().equals(context.session.fullName())));
+        save.setOnAction(e -> {
+            String invalid = Inputs.nameError(name.getText());
+            error.setText(invalid == null ? "" : invalid);
+            error.setManaged(invalid != null);
+            if (invalid != null) {
+                return;
+            }
+            save.disableProperty().unbind();
+            save.setDisable(true);
+            Async.run(() -> {
+                        context.auth.updateName(context.session, name.getText());
+                        return true;
+                    },
+                    ok -> {
+                        name.setText(context.session.fullName());
+                        save.disableProperty().bind(name.textProperty()
+                                .map(text -> text.trim().equals(context.session.fullName())));
+                        context.onProfileChanged.run();
+                        Toasts.success("Adınız güncellendi.");
+                    },
+                    failure -> {
+                        save.setDisable(false);
+                        error.setText(Toasts.describe(failure));
+                        error.setManaged(true);
+                    });
+        });
+        return Ui.surface(Ui.label("Profil", "section-title"),
+                Ui.label("Ad soyad", "field-label"), name,
+                Ui.label("Cep telefonu", "field-label"), phone,
+                Ui.muted("Telefon numarası değiştirilemez: parolanız ve anahtarlarınız bu numaraya bağlıdır."),
+                error, save);
     }
 
     private static void addAlgorithm(GridPane grid, int row, Ikon ikon, String title, String value, String detail) {

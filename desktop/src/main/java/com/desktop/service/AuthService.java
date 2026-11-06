@@ -25,9 +25,84 @@ public final class AuthService {
     };
 
     private final String serverUrl;
+    private final RememberedLogin remembered;
 
     public AuthService(String serverUrl) {
+        this(serverUrl, RememberedLogin.defaultLocation());
+    }
+
+    public AuthService(String serverUrl, RememberedLogin remembered) {
         this.serverUrl = serverUrl;
+        this.remembered = remembered;
+    }
+
+    // ---------- Beni hatırla (Crypto_Design §7.4) ----------
+
+    /**
+     * Oturum bu bilgisayarda 30 gün hatırlanır: refresh token ve özel anahtarlar DPAPI ile şifreli dosyaya yazılır.
+     * Özel anahtarlar ayrıca kayda özel rastgele bir anahtarla kilitlenir (UserKeys.seal).
+     */
+    public void remember(Session session) {
+        String token = session.api().refreshToken();
+        if (token == null) {
+            throw new IllegalStateException("Oturum bilgisi alınamadı");
+        }
+        byte[] kek = new byte[32];
+        new java.security.SecureRandom().nextBytes(kek);
+        String phone = session.user().phone();
+        remembered.save(new RememberedLogin.Data(serverUrl, phone, token,
+                java.time.Instant.now().plus(RememberedLogin.VALIDITY).getEpochSecond(),
+                java.util.Base64.getEncoder().encodeToString(kek), session.keys().seal(kek, phone),
+                session.keys().encryptionPublicKey(), session.keys().signingPublicKey()));
+        keepRemembered(session);
+    }
+
+    /** Girişte "Beni hatırla" seçilmediyse bu bilgisayardaki eski kayıt (başka hesabınki olabilir) silinir. */
+    public void forget() {
+        remembered.clear();
+    }
+
+    public boolean hasRemembered() {
+        return remembered.exists();
+    }
+
+    /**
+     * Hatırlanan oturumu parola sormadan açar. Kayıt yoksa ya da süresi dolduysa boş döner. Sunucu oturumu kabul
+     * etmezse (çıkış yapılmış, parola değişmiş ya da sıfırlanmış) kayıt silinir ve hata fırlatılır; sunucuya
+     * ulaşılamazsa kayıt kalır.
+     */
+    public java.util.Optional<Session> resume() {
+        var data = remembered.load(serverUrl, java.time.Instant.now());
+        if (data.isEmpty()) {
+            return java.util.Optional.empty();
+        }
+        RememberedLogin.Data saved = data.get();
+        ApiClient api = new ApiClient(serverUrl);
+        Dto.SessionInfo info;
+        try {
+            info = api.resume(saved.refreshToken());
+        } catch (ApiException e) {
+            if (e.status() != 0) {
+                remembered.clear();
+            }
+            throw e;
+        }
+        remembered.updateRefreshToken(api.refreshToken());
+        if (!saved.phone().equals(info.user().phone())) {
+            remembered.clear();
+            api.logout();
+            return java.util.Optional.empty();
+        }
+        UserKeys keys = UserKeys.open(saved.bundle(), java.util.Base64.getDecoder().decode(saved.kek()),
+                saved.phone(), saved.encryptionPublicKey(), saved.signingPublicKey());
+        Session session = new Session(api, info.user(), keys);
+        keepRemembered(session);
+        return java.util.Optional.of(session);
+    }
+
+    private void keepRemembered(Session session) {
+        session.remembered(true);
+        session.api().onRefreshed(() -> remembered.updateRefreshToken(session.api().refreshToken()));
     }
 
     public Session login(String phone, char[] password) {
@@ -108,6 +183,13 @@ public final class AuthService {
                         bundle(session.keys(), next.kek(), e164)), ANY);
     }
 
+    /** Ad soyad değişir; telefon değiştirilemez (parola telefonla türetilir, Crypto_Design §7.3). */
+    public void updateName(Session session, String fullName) {
+        String name = fullName.trim();
+        session.api().put("/api/users/me/name", new Dto.UpdateNameRequest(name), ANY);
+        session.fullName(name);
+    }
+
     // ---------- İki adımlı doğrulama (Crypto_Design §7.4) ----------
 
     public Dto.TotpSetup setupTotp(Session session) {
@@ -131,7 +213,9 @@ public final class AuthService {
         session.totpEnabled(false);
     }
 
+    /** Çıkış: sunucudaki oturum kapanır ve "Beni hatırla" kaydı silinir. */
     public void logout(Session session) {
+        remembered.clear();
         session.api().logout();
     }
 
@@ -156,7 +240,7 @@ public final class AuthService {
     /** Ekranlarda kullanılır: geçersizse kullanıcıya gösterilecek mesaj, geçerliyse null. */
     public static String validatePhone(String phone) {
         return Phones.normalize(phone) == null
-                ? "Cep telefonunu 10 hane olarak yazın: 5XXXXXXXXX."
+                ? "Cep telefonunu (5xx) xxx xx xx biçiminde yazın."
                 : null;
     }
 

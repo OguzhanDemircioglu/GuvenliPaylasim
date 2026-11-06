@@ -3,6 +3,7 @@ package com.server.modules.auth.dto;
 import com.server.common.validation.MaxBytes;
 import com.server.modules.auth.AuthMessages;
 import com.server.modules.key.dto.KeyBundleRequest;
+import com.server.modules.user.FullNames;
 import com.server.modules.user.Phones;
 import com.server.modules.user.UserMessages;
 import com.server.modules.verification.VerificationMessages;
@@ -26,7 +27,8 @@ public record RegisterRequest(
         String code,
 
         @NotBlank(message = UserMessages.FULL_NAME_REQUIRED)
-        @Size(max = 100, message = UserMessages.FULL_NAME_TOO_LONG)
+        @Size(max = FullNames.MAX_LENGTH, message = UserMessages.FULL_NAME_TOO_LONG)
+        @Pattern(regexp = FullNames.PATTERN, message = UserMessages.FULL_NAME_INVALID)
         String fullName,
 
         @NotBlank(message = UserMessages.PASSWORD_REQUIRED)
@@ -40,5 +42,6 @@ public record RegisterRequest(
 
     public RegisterRequest {
         phone = Phones.trim(phone);
+        fullName = FullNames.trim(fullName);
     }
 }

@@ -45,6 +45,8 @@ public final class ShellView extends BorderPane {
     private final ToggleGroup nav = new ToggleGroup();
     private final Label inboxBadge = Ui.label("", "nav-badge");
     private final Label userPhone = Ui.label("", "user-unit");
+    private final Label userName = Ui.label("", "user-name");
+    private final StackPane userAvatar = new StackPane();
     private final Set<Long> knownDocuments = new HashSet<>();
     private final Timeline poller;
     private boolean firstPoll = true;
@@ -52,6 +54,7 @@ public final class ShellView extends BorderPane {
     public ShellView(App app, AuthService auth, Session session) {
         this.context = new Context(session, auth);
         context.onInboxChanged = this::pollInbox;
+        context.onProfileChanged = () -> showName(session.fullName());
 
         page.getStyleClass().add("content-area");
         setLeft(sidebar(app, session.user()));
@@ -88,7 +91,7 @@ public final class ShellView extends BorderPane {
                 navButton("Gönderilenler", Material2OutlinedAL.HISTORY, () -> new SentView(context)),
                 navButton("Kişiler", Material2OutlinedAL.CONTACTS, () -> new ContactsView(context)),
                 Ui.label("GÜVENLİK", "nav-section"),
-                navButton("Anahtarım", Material2OutlinedAL.FINGERPRINT, () -> new SecurityView(context)),
+                navButton("Profilim", Material2OutlinedAL.FINGERPRINT, () -> new SecurityView(context)),
                 navButton("Neden Güvenli?", Material2OutlinedMZ.VERIFIED_USER, WhyView::new));
 
         HBox securePill = Ui.row(6, Ui.icon(Material2OutlinedAL.LOCK, 13), Ui.label("Anahtarlarınız bu bilgisayarda"));
@@ -106,12 +109,12 @@ public final class ShellView extends BorderPane {
             app.logout();
         });
 
-        Label name = Ui.label(user.fullName(), "user-name");
-        name.setWrapText(true);
+        showName(user.fullName());
+        userName.setWrapText(true);
         userPhone.setWrapText(true);
-        VBox identity = Ui.column(1, name, userPhone);
+        VBox identity = Ui.column(1, userName, userPhone);
         HBox.setHgrow(identity, Priority.ALWAYS);
-        VBox userCard = Ui.column(8, Ui.row(10, Ui.avatar(user.fullName(), 18), identity),
+        VBox userCard = Ui.column(8, Ui.row(10, userAvatar, identity),
                 Ui.row(4, Ui.grow(), theme, logout));
         userCard.getStyleClass().add("user-card");
 
@@ -119,6 +122,11 @@ public final class ShellView extends BorderPane {
         VBox.setMargin(securePill, new Insets(0, 0, 10, 4));
         sidebar.getStyleClass().add("sidebar");
         return sidebar;
+    }
+
+    private void showName(String fullName) {
+        userName.setText(fullName);
+        userAvatar.getChildren().setAll(Ui.avatar(fullName, 18));
     }
 
     private ToggleButton navButton(String text, Ikon ikon, Supplier<Node> view) {

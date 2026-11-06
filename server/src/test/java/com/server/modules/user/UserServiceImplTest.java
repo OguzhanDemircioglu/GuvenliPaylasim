@@ -88,6 +88,26 @@ class UserServiceImplTest {
         verify(userRepository, never()).saveAndFlush(any());
     }
 
+    @Test
+    void nameIsUpdatedOnlyForTheGivenUser() {
+        User user = new User();
+        user.setFullName("Ayşe Yılmaz");
+        when(userRepository.findById(5L)).thenReturn(java.util.Optional.of(user));
+
+        service.updateName(5L, "  Ayşe Kaya ");
+
+        assertThat(user.getFullName()).isEqualTo("Ayşe Kaya");
+    }
+
+    @Test
+    void unknownUserCannotUpdateName() {
+        when(userRepository.findById(9L)).thenReturn(java.util.Optional.empty());
+
+        assertThatThrownBy(() -> service.updateName(9L, "Ayşe"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(com.server.common.message.GlobalMessages.RECORD_NOT_FOUND);
+    }
+
     private static RegisterRequest request(String phone, String fullName) {
         return new RegisterRequest(phone, "123456", fullName, "auth-secret", KEYS);
     }

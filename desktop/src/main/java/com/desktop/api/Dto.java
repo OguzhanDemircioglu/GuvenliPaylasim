@@ -25,6 +25,9 @@ public final class Dto {
     public record KeyBundle(String encryptionPublicKey, String signingPublicKey, String privateKeyBundle) {
     }
 
+    public record UpdateNameRequest(String fullName) {
+    }
+
     public record ChangePasswordRequest(String currentPassword, String newPassword, KeyBundle keys) {
     }
 

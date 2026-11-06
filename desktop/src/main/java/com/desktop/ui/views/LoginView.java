@@ -7,6 +7,7 @@ import com.desktop.service.AuthService;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
 import com.desktop.ui.Dialogs;
+import com.desktop.ui.Inputs;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import javafx.animation.Interpolator;
@@ -14,6 +15,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.ParallelTransition;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.property.DoubleProperty;
@@ -29,6 +31,7 @@ import javafx.scene.control.Control;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Tooltip;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.HBox;
@@ -70,14 +73,15 @@ public final class LoginView extends VBox {
     private final AuthService auth;
     private final Consumer<Session> onLoggedIn;
 
-    private final TextField loginPhone = new CustomTextField();
+    private final TextField loginPhone = Inputs.phone(new CustomTextField());
     private final PasswordTextField loginPassword = new PasswordTextField();
+    private final CheckBox rememberMe = new CheckBox("Beni hatırla");
     private final Button loginSubmit = submitButton("Giriş yap");
     private final Label loginStatus = statusLabel();
 
-    private final TextField registerName = new CustomTextField();
-    private final TextField registerPhone = new CustomTextField();
-    private final CustomTextField registerCode = new CustomTextField();
+    private final TextField registerName = Inputs.name(new CustomTextField());
+    private final TextField registerPhone = Inputs.phone(new CustomTextField());
+    private final CustomTextField registerCode = Inputs.digits(new CustomTextField(), 6);
     private final Hyperlink sendCode = new Hyperlink("Kod gönder");
     private final PasswordTextField registerPassword = new PasswordTextField();
     private final PasswordTextField registerRepeat = new PasswordTextField();
@@ -213,14 +217,17 @@ public final class LoginView extends VBox {
         loginSubmit.setDefaultButton(true);
 
         Node title = title("Giriş yap");
-        Node phone = floating("Cep telefonu (5XXXXXXXXX)", loginPhone, Material2OutlinedMZ.PHONE_ANDROID);
+        Node phone = floating("Cep telefonu (5xx) xxx xx xx", loginPhone, Material2OutlinedMZ.PHONE_ANDROID);
         Node password = floating("Parola", loginPassword, null);
         Hyperlink forgot = new Hyperlink("Parolamı unuttum");
         forgot.getStyleClass().add("auth-link");
         forgot.setOnAction(e -> openPasswordReset());
-        HBox forgotRow = new HBox(forgot);
-        forgotRow.setAlignment(Pos.CENTER_RIGHT);
-        VBox action = new VBox(10, loginStatus, loginSubmit, forgotRow);
+        rememberMe.getStyleClass().add("auth-check");
+        rememberMe.setTooltip(new Tooltip("Bu bilgisayarda 30 gün boyunca parola sorulmaz. Anahtarlarınız Windows "
+                + "hesabınıza bağlı olarak şifreli saklanır; ortak kullanılan bilgisayarda seçmeyin."));
+        HBox forgotRow = new HBox(rememberMe, Ui.grow(), forgot);
+        forgotRow.setAlignment(Pos.CENTER_LEFT);
+        VBox action = new VBox(10, forgotRow, loginStatus, loginSubmit);
         Node link = switchLink("Hesabınız yok mu?", "Kayıt ol", true);
 
         animate(title, false, 0, 21, -1.2, 0);
@@ -241,7 +248,7 @@ public final class LoginView extends VBox {
 
         Node title = title("Kayıt ol");
         Node name = floating("Ad soyad", registerName, Material2OutlinedMZ.PERSON_OUTLINE);
-        Node phone = floating("Cep telefonu (5XXXXXXXXX)", registerPhone, Material2OutlinedMZ.PHONE_ANDROID);
+        Node phone = floating("Cep telefonu (5xx) xxx xx xx", registerPhone, Material2OutlinedMZ.PHONE_ANDROID);
         Node password = floating("Parola (en az 12 karakter, harf ve rakam)", registerPassword, null);
         Node repeat = floating("Parola (tekrar)", registerRepeat, null);
         Node code = floating("WhatsApp kodu", registerCode, null);
@@ -452,7 +459,25 @@ public final class LoginView extends VBox {
     /** TOTP açık hesapta sunucu önce kodu ister ({@code auth_totp_required}); kod sorulup giriş tekrarlanır. */
     private void loginWith(String totpCode) {
         busy(loginSubmit, loginStatus, "Parolanızdan anahtar türetiliyor ve anahtarlarınız açılıyor…");
-        Async.run(() -> auth.login(loginPhone.getText(), loginPassword.getPassword().toCharArray(), totpCode),
+        String phone = loginPhone.getText();
+        char[] password = loginPassword.getPassword().toCharArray();
+        boolean remember = rememberMe.isSelected();
+        Async.run(() -> {
+                    Session session = auth.login(phone, password, totpCode);
+                    // Hatırlama başarısız olsa da giriş geçerlidir; sadece bir sonraki açılışta parola sorulur.
+                    try {
+                        if (remember) {
+                            auth.remember(session);
+                        } else {
+                            auth.forget();
+                        }
+                    } catch (RuntimeException e) {
+                        auth.forget();
+                        Platform.runLater(() -> Toasts.info("Oturum bu bilgisayarda hatırlanamadı; bir sonraki "
+                                + "açılışta parola sorulacak."));
+                    }
+                    return session;
+                },
                 session -> {
                     loginPassword.clear();
                     onLoggedIn.accept(session);
@@ -515,8 +540,9 @@ public final class LoginView extends VBox {
     }
 
     private String validateRegister() {
-        if (registerName.getText().isBlank()) {
-            return "Ad soyad zorunludur.";
+        String nameError = Inputs.nameError(registerName.getText());
+        if (nameError != null) {
+            return nameError;
         }
         String phoneError = AuthService.validatePhone(registerPhone.getText());
         if (phoneError != null) {
@@ -568,10 +594,11 @@ public final class LoginView extends VBox {
      * üretilir. Eski özel anahtarlar açılamadığı için kullanıcıya gelmiş belgeler silinir; bu önceden açıkça söylenir.
      */
     private void openPasswordReset() {
-        TextField phone = new TextField(loginPhone.getText());
-        phone.setPromptText("Cep telefonu (5XXXXXXXXX)");
-        TextField code = new TextField();
-        code.setPromptText("WhatsApp kodu");
+        TextField phone = Inputs.phone(new TextField());
+        phone.setText(loginPhone.getText());
+        phone.setPromptText("Cep telefonu (5xx) xxx xx xx");
+        TextField code = Inputs.digits(new TextField(), 6);
+        code.setPromptText("WhatsApp kodu (6 hane)");
         PasswordTextField password = new PasswordTextField();
         password.setPromptText("Yeni parola (en az 12 karakter, harf ve rakam)");
         PasswordTextField repeat = new PasswordTextField();

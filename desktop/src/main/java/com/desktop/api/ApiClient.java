@@ -31,22 +31,61 @@ public final class ApiClient {
     private static final javax.net.ssl.SSLContext SSL_CONTEXT =
             PinnedTrust.context(com.desktop.config.AppConfig.get().serverPins());
 
+    private static final String REFRESH_COOKIE = "refresh_token";
+    private static final String AUTH_PATH = "/api/auth";
+
     private final String baseUrl;
+    private final CookieManager cookies = new CookieManager(null, CookiePolicy.ACCEPT_ALL);
     /**
      * Proxy kullanılmaz. Refresh token HttpOnly cookie olarak burada tutulur. TLS sadece 1.3 ve sunucu sertifikası
      * sabitlenmiş köklere zincirlenmeli (PinnedTrust, Security.md S1).
      */
     private final HttpClient http = HttpClient.newBuilder()
             .proxy(HttpClient.Builder.NO_PROXY)
-            .cookieHandler(new CookieManager(null, CookiePolicy.ACCEPT_ALL))
+            .cookieHandler(cookies)
             .connectTimeout(Duration.ofSeconds(5))
             .sslContext(SSL_CONTEXT)
             .sslParameters(PinnedTrust.parameters())
             .build();
     private volatile String accessToken;
+    /** Refresh token her yenilemede değişir; "Beni hatırla" kaydı bununla güncel tutulur. */
+    private volatile Runnable onRefreshed = () -> {
+    };
 
     public ApiClient(String baseUrl) {
         this.baseUrl = baseUrl;
+    }
+
+    public void onRefreshed(Runnable listener) {
+        this.onRefreshed = listener;
+    }
+
+    /** Şu anki refresh token (cookie'den); yoksa null. */
+    public String refreshToken() {
+        return cookies.getCookieStore().get(URI.create(baseUrl + AUTH_PATH)).stream()
+                .filter(cookie -> REFRESH_COOKIE.equals(cookie.getName()) && !cookie.getValue().isEmpty())
+                .map(java.net.HttpCookie::getValue)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
+     * Kaydedilmiş refresh token'la oturum açar ("Beni hatırla"). Sunucu token'ı değiştirir; yenisi
+     * {@link #refreshToken()} ile okunur. Token geçersizse {@link ApiException} (401) fırlatılır.
+     */
+    public Dto.SessionInfo resume(String refreshToken) {
+        java.net.HttpCookie cookie = new java.net.HttpCookie(REFRESH_COOKIE, refreshToken);
+        cookie.setPath(AUTH_PATH);
+        cookie.setVersion(0);
+        // CookieManager, Domain'i olmayan sunucu cookie'sine host'u (noktasızsa host + ".local") yazar; aynı değer
+        // verilmezse sunucunun yenilediği cookie eskisinin yerine geçmez, ikisi birden gönderilir.
+        String host = URI.create(baseUrl).getHost();
+        cookie.setDomain(host.contains(".") ? host : host + ".local");
+        cookies.getCookieStore().add(URI.create(baseUrl), cookie);
+        Dto.SessionInfo session = read(send("POST", AUTH_PATH + "/refresh", null, false), new TypeReference<>() {
+        });
+        accessToken = session.accessToken();
+        return session;
     }
 
     /** {@code phone}: {@code 5XXXXXXXXX}; {@code totpCode}: TOTP açıksa Authenticator ya da kurtarma kodu. */
@@ -101,6 +140,7 @@ public final class ApiClient {
             return false;
         }
         accessToken = parse(response).path("data").path("accessToken").asString();
+        onRefreshed.run();
         return true;
     }
 

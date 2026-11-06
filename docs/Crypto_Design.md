@@ -169,7 +169,7 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
 ### 7.4 Giriş
 
 - Telefon + parola. Sunucuya `authSecret` gider (§2), parola bilgisayardan çıkmaz.
-- **TOTP (isteğe bağlı, 2026-11-06):** kullanıcı profilinden (Anahtarım) açar. RFC 6238: HMAC-SHA1, 30 sn, 6 hane,
+- **TOTP (isteğe bağlı, 2026-11-06):** kullanıcı profilinden (Profilim) açar. RFC 6238: HMAC-SHA1, 30 sn, 6 hane,
   ±1 adım saat kayması; aynı kod ikinci kez kabul edilmez (son kullanılan adım tutulur). Anahtar 160 bit, Base32;
   sunucuda ikinci kilitle saklanır (`users.totp_secret`). İlk kod doğrulanınca açılır ve 10 tek kullanımlık kurtarma
   kodu (`XXXXX-XXXXX`, Crockford) bir kez gösterilir; sunucuda sadece `SHA-256("gps-recovery/v1|" + kullanıcı + "|" +
@@ -181,6 +181,20 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
   - Kapatma: mevcut parola + Authenticator ya da kurtarma kodu; kurtarma kodları silinir.
   - API: `POST /api/auth/totp/setup|enable|disable`; `SessionUser.totpEnabled`.
   SMS ile giriş kodu kullanılmaz (ücretli ve SIM kopyalamaya açık).
+- **Beni hatırla (isteğe bağlı, 2026-11-06):** girişte seçilirse uygulama açılınca parola sorulmadan ana ekrana
+  geçilir. Masaüstü `%LOCALAPPDATA%\GuvenliPaylasim\remember.bin` dosyasına şunları yazar, dosyanın tamamı DPAPI
+  (`CryptProtectData`, kullanıcı kapsamı, entropi `gps-remember/v1`) ile şifrelidir: sunucu adresi, telefon, refresh
+  token, bitiş zamanı (giriş + 30 gün, uzatılmaz), kayda özel rastgele 32 baytlık anahtar ve özel anahtarların bu
+  anahtarla kilitli paketi (`UserKeys.seal`, §3 ile aynı biçim), açık anahtarlar. Açılışta refresh token ile
+  `POST /api/auth/refresh` çağrılır; sunucu token'ı değiştirir ve yenisi kayda yazılır (oturum sırasında her
+  yenilemede de). Sunucu 401 dönerse kayıt silinir ve giriş ekranı kalır; sunucuya ulaşılamazsa kayıt kalır.
+  Hatırlanan oturumda uygulama kapanırken sunucudaki oturum kapatılmaz; "Güvenli çıkış" kaydı siler ve oturumu
+  kapatır. "Beni hatırla" seçilmeden yapılan giriş eski kaydı siler. DPAPI Java'nın FFM arayüzüyle çağrılır (`Dpapi`);
+  ek kütüphane yok. Risk ve sınırlar: Security.md S6.
+- **Profil:** ad soyad değiştirilebilir (`PUT /api/users/me/name`); kural kayıtla aynı: harfle başlar, harf, boşluk,
+  kesme, nokta ve tire, en fazla 100 karakter (`FullNames`). Telefon değiştirilemez (§7.3). Masaüstünde telefon
+  `(5xx) xxx xx xx` biçiminde yazılır ve gösterilir; alana harf, ad alanına rakam, WhatsApp ve Authenticator kodu
+  alanına rakamdan başka karakter girmez (`Inputs`). Sunucuya giden biçim değişmedi (`5XXXXXXXXX`).
 
 ### 7.5 Parola sıfırlama
 

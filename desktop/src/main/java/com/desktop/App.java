@@ -3,10 +3,13 @@ package com.desktop;
 import atlantafx.base.controls.ModalPane;
 import atlantafx.base.theme.PrimerDark;
 import atlantafx.base.theme.PrimerLight;
+import com.desktop.api.ApiException;
 import com.desktop.config.AppConfig;
 import com.desktop.service.AuthService;
 import com.desktop.service.Session;
+import com.desktop.ui.Async;
 import com.desktop.ui.Overlays;
+import com.desktop.ui.Toasts;
 import com.desktop.ui.views.LoginView;
 import com.desktop.ui.views.ShellView;
 import com.desktop.update.UpdateGate;
@@ -59,7 +62,25 @@ public class App extends Application {
         setCompact(true);
         stage.show();
 
-        show(new UpdateGate(this::showLogin));
+        show(new UpdateGate(this::startSession));
+    }
+
+    /**
+     * "Beni hatırla" kaydı varsa parola sorulmadan ana ekrana geçilir; kayıt geçersizse giriş ekranı açık kalır.
+     * Sunucuya ulaşılamazsa kayıt silinmez, kullanıcıya bildirilir.
+     */
+    private void startSession() {
+        showLogin();
+        if (!auth.hasRemembered()) {
+            return;
+        }
+        Async.run(auth::resume,
+                resumed -> resumed.ifPresent(this::onLoggedIn),
+                failure -> {
+                    if (failure instanceof ApiException api && api.status() == 0) {
+                        Toasts.error(failure);
+                    }
+                });
     }
 
     /**
@@ -79,7 +100,8 @@ public class App extends Application {
 
     @Override
     public void stop() {
-        if (session != null) {
+        // Hatırlanan oturum açık kalır; bir sonraki açılışta kayıttaki refresh token'la devam edilir.
+        if (session != null && !session.remembered()) {
             auth.logout(session);
         }
     }

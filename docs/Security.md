@@ -92,6 +92,15 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
 - **Durum (kontrol edildi):** Özel anahtarlar ve erişim jetonu sadece bellekte. Refresh cookie bellekteki
   `CookieManager`'da. Diske (`Preferences`) sadece tema ve zorunlu güncelleme bilgisi yazılır.
 - **Kabul:** Kullanıcının kendisinin kaydettiği dosyalar diskte kalır. Açık oturumdaki bilgisayar (S9) kapsam dışı.
+- **"Beni hatırla" (isteğe bağlı, 2026-11-06; Crypto_Design §7.4):** seçilirse refresh token ve özel anahtarlar
+  `%LOCALAPPDATA%\GuvenliPaylasim\remember.bin` dosyasında, Windows veri korumasıyla (DPAPI, kullanıcı kapsamı)
+  şifreli durur. Garanti daralır: kapalı bilgisayarın diski başka yerde okunursa ya da dosya kopyalanırsa açılmaz
+  (Windows hesabının parolası gerekir); ama **Windows oturumu açık bilgisayara erişen ya da o kullanıcı adına çalışan
+  bir program kutuları açabilir.** Bu kabul edilmiştir; seçenek varsayılan kapalıdır ve ekranda "ortak kullanılan
+  bilgisayarda seçmeyin" uyarısı vardır. Sınırlar: kayıt 30 gün geçerlidir (uzatılmaz), bu süre boyunca iki adımlı
+  doğrulama kodu da sorulmaz; çıkışta, parola başka cihazda değişince ya da sıfırlanınca (sunucu oturumları kapatır)
+  geçersizleşir ve silinir. Kontrol: `RememberedLoginTest` (dosyada token ve telefon düz metin olarak geçmez, başka
+  entropiyle açılmaz) ve yerel sunucuya karşı uçtan uca 15 kontrol.
 
 ### S7. Güncelleme kanalını ele geçiren
 - **Garanti:** İmzasız ya da daha eski bir sürüm kurulmaz.

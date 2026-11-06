@@ -288,6 +288,10 @@
     -fx-border-width: 0;
 }
 
+.auth-check {
+    -fx-text-fill: -color-fg-default;
+}
+
 .auth-progress {
     -fx-text-fill: -color-fg-muted;
 }

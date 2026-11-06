@@ -1,6 +1,7 @@
 package com.server.modules.user;
 
 import com.server.common.exception.BusinessException;
+import com.server.common.message.GlobalMessages;
 import com.server.modules.auth.dto.RegisterRequest;
 import com.server.modules.key.KeyService;
 import com.server.modules.verification.VerificationPurpose;
@@ -34,5 +35,13 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(request.password()));
         userRepository.saveAndFlush(user);
         keyService.create(user.getId(), request.keys());
+    }
+
+    @Override
+    @Transactional
+    public void updateName(Long userId, String fullName) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(GlobalMessages.RECORD_NOT_FOUND));
+        user.setFullName(fullName.trim());
     }
 }
