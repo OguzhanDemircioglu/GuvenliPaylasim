@@ -25,6 +25,13 @@
   `package.cmd` artık ZIP'i de üretir. Kalıcı çözüm kod imzalama (ör. Azure Trusted Signing, aylık ücretli); demo
   için ertelendi. Açık: Akıllı Uygulama Denetimi açık bilgisayarda **zorunlu** bir güncelleme MSI'ı kuramayacağı için
   uygulamayı açtırmaz; bir sonraki sürüm zorunlu yapılmamalı ya da güncelleme ZIP'i de desteklemeli.
+- **Ücretsiz kod imzalama: SignPath Foundation (ertelendi, 2026-11-06).** Demo şimdilik ZIP ile sürüyor. Başvurudan
+  önce gerekenler: lisans (**karar: MIT**, `LICENSE` henüz eklenmedi), MSI/ZIP'i GitHub Actions'ta kaynaktan üretmek
+  (doğrulanabilir derleme), README'de "Code signing policy" bölümü (roller; "Free code signing provided by
+  SignPath.io, certificate by SignPath Foundation"), gizlilik politikası, GitHub hesabında MFA, depo açıklamasını v2'ye
+  göre düzeltmek. Riskler: "doğrulanabilir itibar" isteniyor (depo yeni, yıldızsız); yayıncı "SignPath Foundation"
+  görünür; Akıllı Uygulama Denetimi'nin bu imzayı kabul ettiği sayfalarda yazmıyor. Her sürüm SignPath'te elle
+  onaylanır; `release.json` imzası imzalı MSI'a göre sonradan atılır. Şartlar: https://signpath.org/terms
 - **Kalan:** yeni özel anahtar (`release-keys/update-private-key.txt`) bu bilgisayardan başka, çevrimdışı bir yere
   yedeklenmeli; Acer'daki 1.0.5 anahtarı artık kullanılmaz.
 
