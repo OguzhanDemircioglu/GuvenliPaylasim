@@ -169,7 +169,7 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
 ### 7.4 Giriş
 
 - Telefon + parola. Sunucuya `authSecret` gider (§2), parola bilgisayardan çıkmaz.
-- **TOTP** (Authenticator uygulaması) ikinci adım olarak eklenecek; v2'nin ilk parçasında yok. SMS ile giriş kodu
+- **TOTP** (Authenticator uygulaması) ikinci adım olarak tasarlandı ama **ertelendi** (2026-11-06); şimdilik yok. SMS ile giriş kodu
   kullanılmaz (ücretli ve SIM kopyalamaya açık).
 
 ### 7.5 Parola sıfırlama
@@ -309,7 +309,7 @@ ve özel anahtar paketleri yeni türetmeyle açılmaz. Henüz prod verisi olmad�
 
 ### 7.12 Kapsam dışı (sonraki parçalar)
 
-- TOTP (§7.4), büyük dosyalar için parçalı yükleme.
+- TOTP (§7.4, ertelendi), büyük dosyalar için parçalı yükleme.
 - Gizli gönderen ve teslim jetonu (§8.6).
 - Karşılıklı teslim (kasa): **yapılmaz.** İçerik doğrulanamaz, sunucuya saldırıya açık durumlu bir karar mantığı
   ekler ve kapsam dışı bırakılan takas sistemine dönüşür (gerekçe: Devam_Rehberi §3).
