@@ -1,5 +1,5 @@
 package com.server.modules.document.dto;
 
-/** {@code smsNotified}: telefonu kayıtlı olup SMS bildirimi gönderilen alıcı sayısı. */
-public record DocumentSentResponse(Long id, int recipientCount, int smsNotified) {
+/** v2'de kişilere SMS/WhatsApp bildirimi gitmez (Crypto_Design §7.7); bildirim uygulama içindedir. */
+public record DocumentSentResponse(Long id, int recipientCount) {
 }

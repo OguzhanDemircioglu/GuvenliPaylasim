@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import java.time.Instant;
 
 /**
- * Yanlış login denemeleri. Anahtar: IP_email. Teknik tablo: BaseEntity'den türemez.
+ * Yanlış login denemeleri. Anahtar: IP_telefon. Teknik tablo: BaseEntity'den türemez.
  * Kayıtlar atomik bir upsert ile yazılır (LoginAttemptRepository.recordFailure).
  */
 @Getter

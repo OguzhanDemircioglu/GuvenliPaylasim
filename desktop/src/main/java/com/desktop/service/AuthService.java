@@ -7,18 +7,20 @@ import com.desktop.crypto.PasswordKeys;
 import com.desktop.crypto.UserKeys;
 import tools.jackson.core.type.TypeReference;
 
-import java.util.List;
-
 /**
- * Giriş ve parola akışları (docs/Crypto_Design.md §2–3).
+ * Giriş, kayıt ve parola akışları (docs/Crypto_Design.md §2–3, v2: §7.2–7.5).
  * <ol>
- *   <li>Paroladan authSecret ve kek türetilir; sunucuya sadece authSecret gider.</li>
- *   <li>Kullanıcının anahtarları varsa sunucudaki şifreli paket kek ile bu bilgisayarda açılır.</li>
- *   <li>Yoksa (ilk giriş) anahtarlar bu bilgisayarda üretilir. İlk parola değiştirilecekse anahtarlar parola
- *       değişikliğiyle birlikte kaydedilir, değilse hemen kaydedilir.</li>
+ *   <li>Paroladan, telefon tuzuyla authSecret ve kek türetilir; sunucuya sadece authSecret gider.</li>
+ *   <li>Kayıtta ve parola sıfırlamada anahtarlar bu bilgisayarda üretilir ve kek ile şifrelenip hesapla birlikte
+ *       gönderilir.</li>
+ *   <li>Girişte sunucudaki şifreli paket kek ile bu bilgisayarda açılır.</li>
  * </ol>
+ * Telefon parametreleri kullanıcının yazdığı haliyle gelir ve {@link Phones#normalize} ile denetlenir.
  */
 public final class AuthService {
+
+    private static final TypeReference<Object> ANY = new TypeReference<>() {
+    };
 
     private final String serverUrl;
 
@@ -26,80 +28,116 @@ public final class AuthService {
         this.serverUrl = serverUrl;
     }
 
-    public Session login(String email, char[] password) {
-        return login(email, PasswordKeys.derive(email, password));
+    public Session login(String phone, char[] password) {
+        String normalized = requirePhone(phone);
+        return login(normalized, PasswordKeys.derive(Phones.toE164(normalized), password));
     }
 
-    /** Hesap açılır, ardından normal giriş yapılır; anahtarlar ilk girişte bu bilgisayarda üretilir. */
-    public Session register(String fullName, String email, Long unitId, char[] password) {
-        PasswordKeys.Derived derived = PasswordKeys.derive(email, password);
-        new ApiClient(serverUrl).post("/api/auth/register",
-                new Dto.RegisterRequest(fullName.trim(), email.trim(), derived.authSecret(), unitId, null),
-                new TypeReference<Object>() {
-                });
-        return login(email, derived);
+    /** Telefona WhatsApp ile kayıt kodu gönderilir. Numara kayıtlıysa kod gitmez ama cevap aynıdır. */
+    public void startRegistration(String phone) {
+        new ApiClient(serverUrl).post("/api/auth/register/start", new Dto.PhoneRequest(requirePhone(phone)), ANY);
     }
 
-    /** Kayıt formundaki birim listesi; oturum gerektirmez. */
-    public List<Dto.Unit> units() {
-        return new ApiClient(serverUrl).get("/api/auth/units", new TypeReference<>() {
-        });
+    /** Anahtarlar burada üretilir ve hesapla aynı istekte kaydedilir; ardından normal giriş yapılır. */
+    public Session completeRegistration(String phone, String code, String fullName, char[] password) {
+        String normalized = requirePhone(phone);
+        String e164 = Phones.toE164(normalized);
+        PasswordKeys.Derived derived = PasswordKeys.derive(e164, password);
+        UserKeys keys = UserKeys.generate();
+        new ApiClient(serverUrl).post("/api/auth/register/complete",
+                new Dto.RegisterRequest(normalized, code.trim(), fullName.trim(), derived.authSecret(),
+                        bundle(keys, derived.kek(), e164)), ANY);
+        return login(normalized, derived);
     }
 
-    private Session login(String email, PasswordKeys.Derived derived) {
+    /** Kayıtlı telefona WhatsApp ile sıfırlama kodu gönderilir. Numara kayıtlı değilse kod gitmez ama cevap aynıdır. */
+    public void startPasswordReset(String phone) {
+        new ApiClient(serverUrl).post("/api/auth/password-reset/start", new Dto.PhoneRequest(requirePhone(phone)), ANY);
+    }
+
+    /**
+     * Yeni parola ve yeni anahtar çifti (Crypto_Design §7.5). Eski özel anahtarlar eski parolayla kilitli olduğu için
+     * kullanıcıya gelmiş kutular sunucuda silinir; ardından yeni parolayla giriş yapılır.
+     */
+    public Session completePasswordReset(String phone, String code, char[] newPassword) {
+        String normalized = requirePhone(phone);
+        String e164 = Phones.toE164(normalized);
+        PasswordKeys.Derived derived = PasswordKeys.derive(e164, newPassword);
+        UserKeys keys = UserKeys.generate();
+        new ApiClient(serverUrl).post("/api/auth/password-reset/complete",
+                new Dto.PasswordResetRequest(normalized, code.trim(), derived.authSecret(),
+                        bundle(keys, derived.kek(), e164)), ANY);
+        return login(normalized, derived);
+    }
+
+    private Session login(String normalizedPhone, PasswordKeys.Derived derived) {
         ApiClient api = new ApiClient(serverUrl);
-        Dto.SessionUser user = api.login(email.trim(), derived.authSecret()).user();
+        Dto.SessionUser user = api.login(normalizedPhone, derived.authSecret()).user();
 
-        UserKeys keys = loadKeys(api, user.email(), derived.kek());
-        if (keys == null && !user.mustChangePassword()) {
+        UserKeys keys = loadKeys(api, user.phone(), derived.kek());
+        if (keys == null) {
+            // v2'de anahtarlar kayıtta üretilir; anahtarsız hesap sadece sunucunun dev demo kullanıcılarıdır.
             keys = UserKeys.generate();
-            api.post("/api/keys/me", bundle(keys, derived.kek(), user.email()), new TypeReference<Object>() {
-            });
+            api.post("/api/keys/me", bundle(keys, derived.kek(), user.phone()), ANY);
         }
         return new Session(api, user, keys);
     }
 
     /**
      * Özel anahtarlar yeni parolayla yeniden şifrelenir ve parola ile aynı istekte gönderilir; ikisi birlikte
-     * kaydedilir. Anahtar yoksa (ilk giriş ya da yönetici parolayı sıfırladıysa) burada üretilir.
+     * kaydedilir. Açık anahtarlar değişmez, eski belgeler açılmaya devam eder.
      */
     public void changePassword(Session session, char[] currentPassword, char[] newPassword) {
-        String email = session.user().email();
-        PasswordKeys.Derived current = PasswordKeys.derive(email, currentPassword);
-        PasswordKeys.Derived next = PasswordKeys.derive(email, newPassword);
-        UserKeys keys = session.hasKeys() ? session.keys() : UserKeys.generate();
-
+        String e164 = session.user().phone();
+        PasswordKeys.Derived current = PasswordKeys.derive(e164, currentPassword);
+        PasswordKeys.Derived next = PasswordKeys.derive(e164, newPassword);
         session.api().put("/api/auth/password",
-                new Dto.ChangePasswordRequest(current.authSecret(), next.authSecret(), bundle(keys, next.kek(), email)),
-                new TypeReference<Object>() {
-                });
-        session.keys(keys);
+                new Dto.ChangePasswordRequest(current.authSecret(), next.authSecret(),
+                        bundle(session.keys(), next.kek(), e164)), ANY);
     }
 
     public void logout(Session session) {
         session.api().logout();
     }
 
-    /** Parola kuralları istemcide uygulanır; sunucu parolanın kendisini hiç görmez. */
+    /**
+     * Parola kuralları istemcide uygulanır; sunucu parolanın kendisini hiç görmez (Security.md S2: en az 12 karakter).
+     * Yaygın parola listesi kontrolü henüz yok.
+     */
     public static String validateNewPassword(char[] password, char[] repeat) {
         String value = new String(password);
-        if (value.length() < 10) {
-            return "Yeni parola en az 10 karakter olmalıdır.";
+        if (value.length() < 12) {
+            return "Parola en az 12 karakter olmalıdır.";
         }
         if (!value.chars().anyMatch(Character::isDigit) || !value.chars().anyMatch(Character::isLetter)) {
-            return "Yeni parola hem harf hem rakam içermelidir.";
+            return "Parola hem harf hem rakam içermelidir.";
         }
         if (!value.equals(new String(repeat))) {
-            return "Yeni parolalar birbiriyle aynı değil.";
+            return "Parolalar birbiriyle aynı değil.";
         }
         return null;
     }
 
-    private static UserKeys loadKeys(ApiClient api, String email, byte[] kek) {
+    /** Ekranlarda kullanılır: geçersizse kullanıcıya gösterilecek mesaj, geçerliyse null. */
+    public static String validatePhone(String phone) {
+        return Phones.normalize(phone) == null
+                ? "Cep telefonunu 10 hane olarak yazın: 5XXXXXXXXX."
+                : null;
+    }
+
+    private static String requirePhone(String phone) {
+        String normalized = Phones.normalize(phone);
+        if (normalized == null) {
+            throw new IllegalArgumentException(validatePhone(phone));
+        }
+        return normalized;
+    }
+
+    private static UserKeys loadKeys(ApiClient api, String phoneE164, byte[] kek) {
         try {
             Dto.KeyBundle bundle = api.get("/api/keys/me", new TypeReference<>() {
             });
-            return UserKeys.open(bundle.privateKeyBundle(), kek, email, bundle.encryptionPublicKey(),
+            return UserKeys.open(bundle.privateKeyBundle(), kek, phoneE164, bundle.encryptionPublicKey(),
                     bundle.signingPublicKey());
         } catch (ApiException e) {
             if (e.status() == 404) {
@@ -109,7 +147,7 @@ public final class AuthService {
         }
     }
 
-    private static Dto.KeyBundle bundle(UserKeys keys, byte[] kek, String email) {
-        return new Dto.KeyBundle(keys.encryptionPublicKey(), keys.signingPublicKey(), keys.seal(kek, email));
+    private static Dto.KeyBundle bundle(UserKeys keys, byte[] kek, String phoneE164) {
+        return new Dto.KeyBundle(keys.encryptionPublicKey(), keys.signingPublicKey(), keys.seal(kek, phoneE164));
     }
 }

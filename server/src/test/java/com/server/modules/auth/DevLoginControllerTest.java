@@ -1,7 +1,7 @@
 package com.server.modules.auth;
 
 import com.server.common.exception.NotFoundException;
-import com.server.migration.AdminProperties;
+import com.server.migration.versions.V001_DemoData;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -21,16 +21,13 @@ import static org.mockito.Mockito.when;
  */
 class DevLoginControllerTest {
 
-    private static final AdminProperties ADMIN = new AdminProperties("admin@test.local", "secret");
-
     private final AuthService authService = mock(AuthService.class);
     private final RefreshCookies refreshCookies = mock(RefreshCookies.class);
-    private final DevLoginController controller = new DevLoginController(authService, ADMIN, refreshCookies);
+    private final DevLoginController controller = new DevLoginController(authService, refreshCookies);
 
     private final ApplicationContextRunner contextRunner = new ApplicationContextRunner()
             .withBean(AuthService.class, () -> authService)
             .withBean(RefreshCookies.class, () -> refreshCookies)
-            .withBean(AdminProperties.class, () -> ADMIN)
             .withUserConfiguration(DevLoginController.class);
 
     @Test
@@ -53,14 +50,14 @@ class DevLoginControllerTest {
     }
 
     @Test
-    void loopbackRequestLogsInAsConfiguredAdmin() {
+    void loopbackRequestLogsInAsFirstDemoUser() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRemoteAddr("0:0:0:0:0:0:0:1");
-        when(authService.devLogin(eq(ADMIN.email()), any())).thenReturn(new AuthResult(null, "token"));
+        when(authService.devLogin(eq(V001_DemoData.DEV_LOGIN_PHONE), any())).thenReturn(new AuthResult(null, "token"));
         when(refreshCookies.create("token")).thenReturn(org.springframework.http.ResponseCookie.from("c", "v").build());
 
         controller.login(request, new MockHttpServletResponse());
 
-        verify(authService).devLogin(eq(ADMIN.email()), any());
+        verify(authService).devLogin(eq(V001_DemoData.DEV_LOGIN_PHONE), any());
     }
 }

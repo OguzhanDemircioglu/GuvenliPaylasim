@@ -5,13 +5,13 @@ import com.server.common.exception.NotFoundException;
 import com.server.modules.document.dto.DocumentContentResponse;
 import com.server.modules.document.dto.DocumentSendRequest;
 import com.server.modules.document.dto.DocumentSentResponse;
+import com.server.modules.contact.ContactMessages;
+import com.server.modules.contact.ContactService;
 import com.server.modules.document.dto.RecipientKeyRequest;
 import com.server.modules.key.UserKey;
 import com.server.modules.key.UserKeyRepository;
-import com.server.modules.notification.SmsGateway;
 import com.server.modules.user.User;
 import com.server.modules.user.UserRepository;
-import com.server.security.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,19 +59,20 @@ class DocumentServiceImplTest {
     @Mock
     private UserKeyRepository keyRepository;
     @Mock
-    private SmsGateway smsGateway;
+    private ContactService contactService;
 
     private DocumentServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new DocumentServiceImpl(documentRepository, recipientRepository, userRepository, keyRepository, smsGateway);
+        service = new DocumentServiceImpl(documentRepository, recipientRepository, userRepository, keyRepository,
+                contactService);
     }
 
     @Test
-    void sendStoresCiphertextAndOneWrappedKeyPerRecipientAndNotifiesBySms() {
+    void sendStoresCiphertextAndOneWrappedKeyPerRecipient() {
         when(keyRepository.existsById(SENDER)).thenReturn(true);
-        stubRecipients(user(AYSE, true, "5551112233"), user(ZEYNEP, true, null));
+        stubRecipients(user(AYSE), user(ZEYNEP));
         when(documentRepository.save(any(Document.class))).thenAnswer(invocation -> {
             Document document = invocation.getArgument(0);
             document.setId(DOCUMENT_ID);
@@ -81,7 +82,7 @@ class DocumentServiceImplTest {
         DocumentSentResponse response = service.send(SENDER, request(
                 new RecipientKeyRequest(AYSE, "wrapped-for-ayse"), new RecipientKeyRequest(ZEYNEP, "wrapped-for-zeynep")));
 
-        assertThat(response).isEqualTo(new DocumentSentResponse(DOCUMENT_ID, 2, 1));
+        assertThat(response).isEqualTo(new DocumentSentResponse(DOCUMENT_ID, 2));
 
         ArgumentCaptor<Document> document = ArgumentCaptor.forClass(Document.class);
         verify(documentRepository).save(document.capture());
@@ -97,10 +98,6 @@ class DocumentServiceImplTest {
                 .containsExactlyInAnyOrder(
                         org.assertj.core.groups.Tuple.tuple(DOCUMENT_ID, AYSE, "wrapped-for-ayse"),
                         org.assertj.core.groups.Tuple.tuple(DOCUMENT_ID, ZEYNEP, "wrapped-for-zeynep"));
-
-        // SMS'te anahtar ya da parola yoktur; sadece telefonu olan alıcıya "yeni belge" bildirimi gider.
-        verify(smsGateway).send(eq("5551112233"), contains(String.valueOf(DOCUMENT_ID)));
-        verify(smsGateway, times(1)).send(anyString(), anyString());
     }
 
     @Test
@@ -127,7 +124,7 @@ class DocumentServiceImplTest {
     @Test
     void senderCannotSendToSelf() {
         when(keyRepository.existsById(SENDER)).thenReturn(true);
-        stubRecipients(user(SENDER, true, null));
+        stubRecipients(user(SENDER));
 
         assertRecipientInvalid(new RecipientKeyRequest(SENDER, "wrapped"));
     }
@@ -135,18 +132,15 @@ class DocumentServiceImplTest {
     @Test
     void recipientWithoutKeysIsRejected() {
         when(keyRepository.existsById(SENDER)).thenReturn(true);
-        when(userRepository.findAllById(Set.of(AYSE))).thenReturn(List.of(user(AYSE, true, null)));
+        when(userRepository.findAllById(Set.of(AYSE))).thenReturn(List.of(user(AYSE)));
         when(keyRepository.findAllById(Set.of(AYSE))).thenReturn(List.of());
 
         assertRecipientInvalid(new RecipientKeyRequest(AYSE, "wrapped"));
     }
 
     @Test
-    void inactiveOrUnknownRecipientIsRejected() {
+    void unknownRecipientIsRejected() {
         when(keyRepository.existsById(SENDER)).thenReturn(true);
-        stubRecipients(user(AYSE, false, null));
-        assertRecipientInvalid(new RecipientKeyRequest(AYSE, "wrapped"));
-
         when(userRepository.findAllById(Set.of(99L))).thenReturn(List.of());
         when(keyRepository.findAllById(Set.of(99L))).thenReturn(List.of());
         assertRecipientInvalid(new RecipientKeyRequest(99L, "wrapped"));
@@ -155,7 +149,7 @@ class DocumentServiceImplTest {
     @Test
     void payloadMustBeBase64() {
         when(keyRepository.existsById(SENDER)).thenReturn(true);
-        stubRecipients(user(AYSE, true, null));
+        stubRecipients(user(AYSE));
 
         DocumentSendRequest request = new DocumentSendRequest(DocumentKind.TEXT, "not base64!", "signature",
                 List.of(new RecipientKeyRequest(AYSE, "wrapped")));
@@ -170,7 +164,7 @@ class DocumentServiceImplTest {
     void openReturnsCiphertextWithOwnWrappedKeyAndSenderSigningKeyAndMarksRead() {
         DocumentRecipient recipient = recipient(AYSE, "wrapped-for-ayse");
         Document document = document();
-        User sender = user(SENDER, true, null);
+        User sender = user(SENDER);
         UserKey senderKey = new UserKey();
         senderKey.setUserId(SENDER);
         senderKey.setSigningPublicKey("sender-signing-key");
@@ -236,6 +230,58 @@ class DocumentServiceImplTest {
         assertThat(document.getSenderId()).isEqualTo(SENDER);
     }
 
+    @Test
+    void passwordResetDeletesEveryReceivedBoxAndPurgesWhereLastRecipient() {
+        DocumentRecipient onlyRecipient = recipient(AYSE, "wrapped-1");
+        DocumentRecipient sharedRecipient = recipient(AYSE, "wrapped-2");
+        sharedRecipient.setDocumentId(DOCUMENT_ID + 1);
+        Document purged = document();
+        when(recipientRepository.findByRecipientIdAndDeletedAtIsNull(AYSE))
+                .thenReturn(List.of(onlyRecipient, sharedRecipient));
+        when(recipientRepository.existsByDocumentIdAndDeletedAtIsNull(DOCUMENT_ID)).thenReturn(false);
+        when(recipientRepository.existsByDocumentIdAndDeletedAtIsNull(DOCUMENT_ID + 1)).thenReturn(true);
+        when(documentRepository.findById(DOCUMENT_ID)).thenReturn(Optional.of(purged));
+
+        service.deleteAllReceived(AYSE);
+
+        assertThat(onlyRecipient.getWrappedKey()).isNull();
+        assertThat(sharedRecipient.getWrappedKey()).isNull();
+        assertThat(onlyRecipient.getDeletedAt()).isNotNull();
+        assertThat(sharedRecipient.getDeletedAt()).isNotNull();
+        assertThat(purged.getPayload()).isNull();
+        verify(documentRepository, never()).findById(DOCUMENT_ID + 1);
+    }
+
+    @Test
+    void recipientMustBeAVerifiedContactWithUnchangedKey() {
+        when(keyRepository.existsById(SENDER)).thenReturn(true);
+        stubRecipients(user(AYSE));
+        org.mockito.Mockito.doThrow(new BusinessException(ContactMessages.NOT_VERIFIED))
+                .when(contactService).requireVerifiedRecipients(SENDER, List.of(AYSE));
+
+        assertThatThrownBy(() -> service.send(SENDER, request(new RecipientKeyRequest(AYSE, "wrapped"))))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ContactMessages.NOT_VERIFIED);
+        verify(documentRepository, never()).save(any());
+    }
+
+    @Test
+    void acceptedInviteBecomesANormalDocumentForTheRecipient() {
+        when(documentRepository.save(any(Document.class))).thenAnswer(invocation -> {
+            Document document = invocation.getArgument(0);
+            document.setId(DOCUMENT_ID);
+            return document;
+        });
+
+        Long id = service.createFromInvite(SENDER, AYSE, DocumentKind.TEXT, CIPHERTEXT, "signature", "wrapped-for-ayse");
+
+        assertThat(id).isEqualTo(DOCUMENT_ID);
+        ArgumentCaptor<DocumentRecipient> recipient = ArgumentCaptor.forClass(DocumentRecipient.class);
+        verify(recipientRepository).save(recipient.capture());
+        assertThat(recipient.getValue().getRecipientId()).isEqualTo(AYSE);
+        assertThat(recipient.getValue().getWrappedKey()).isEqualTo("wrapped-for-ayse");
+    }
+
     private void assertRecipientInvalid(RecipientKeyRequest key) {
         assertThatThrownBy(() -> service.send(SENDER, request(key)))
                 .isInstanceOf(BusinessException.class)
@@ -257,15 +303,11 @@ class DocumentServiceImplTest {
         return new DocumentSendRequest(DocumentKind.FILE, PAYLOAD, "signature", List.of(recipients));
     }
 
-    private static User user(Long id, boolean active, String phone) {
+    private static User user(Long id) {
         User user = new User();
         user.setId(id);
-        user.setEmail("user" + id + "@gps.local");
+        user.setPhone("+90555000000" + id);
         user.setFullName("User " + id);
-        user.setRole(Role.USER);
-        user.setActive(active);
-        user.setPhone(phone);
-        user.setUnitId(10L);
         return user;
     }
 

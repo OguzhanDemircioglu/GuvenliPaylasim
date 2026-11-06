@@ -8,11 +8,11 @@ spring:
     # PostgreSQL bağlantısı (DB_URL, DB_USERNAME, DB_PASSWORD) application.yml'den gelir ve zorunludur;
     # dev'de .env'e yazılır. Şemanın dev'de varsayılanı vardır.
     hikari:
-      schema: ${DB_SCHEMA:guvenlipaylasim}
+      schema: ${DB_SCHEMA:gps_v2}
   jpa:
     show-sql: true
     properties:
-      hibernate.default_schema: ${DB_SCHEMA:guvenlipaylasim}
+      hibernate.default_schema: ${DB_SCHEMA:gps_v2}
 
 logging:
   pattern:
@@ -37,6 +37,3 @@ app:
     cookie-secure: ${COOKIE_SECURE:false}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
-  admin:
-    email: ${ADMIN_EMAIL:admin@gps.local}
-    password: ${ADMIN_PASSWORD:Admin12345}

@@ -4,7 +4,6 @@ import com.server.common.exception.BusinessException;
 import com.server.common.exception.NotFoundException;
 import com.server.modules.key.dto.KeyBundleRequest;
 import com.server.modules.key.dto.KeyBundleResponse;
-import com.server.modules.key.dto.RecipientResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +13,6 @@ import java.security.KeyFactory;
 import java.security.spec.X509EncodedKeySpec;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.Collection;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -56,11 +53,12 @@ public class KeyServiceImpl implements KeyService {
     }
 
     @Override
-    public List<RecipientResponse> findRecipients(Collection<Long> unitIds, Long excludedUserId) {
-        if (unitIds == null || unitIds.isEmpty()) {
-            throw new BusinessException(KeyMessages.UNITS_REQUIRED);
-        }
-        return repository.findRecipients(unitIds, excludedUserId);
+    @Transactional
+    public void replaceOnReset(Long userId, KeyBundleRequest request) {
+        UserKey replacement = newKey(userId, request);
+        repository.deleteById(userId);
+        repository.flush();
+        repository.save(replacement);
     }
 
     private static UserKey newKey(Long userId, KeyBundleRequest request) {

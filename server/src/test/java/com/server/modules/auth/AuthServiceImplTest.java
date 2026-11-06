@@ -5,12 +5,15 @@ import com.server.common.exception.LoginBlockedException;
 import com.server.common.exception.UnauthorizedException;
 import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
+import com.server.modules.auth.dto.PasswordResetRequest;
+import com.server.modules.document.DocumentService;
 import com.server.modules.key.KeyService;
 import com.server.modules.key.dto.KeyBundleRequest;
-import com.server.modules.menu.MenuService;
 import com.server.modules.user.User;
 import com.server.modules.user.UserRepository;
-import com.server.security.Role;
+import com.server.modules.verification.VerificationMessages;
+import com.server.modules.verification.VerificationPurpose;
+import com.server.modules.verification.VerificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,7 +25,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -41,9 +43,11 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
 
-    private static final String EMAIL = "ayse.yilmaz@gps.local";
+    /** İstekte gelen biçim ve veritabanındaki E.164 karşılığı. */
+    private static final String PHONE_INPUT = "5551234567";
+    private static final String PHONE = "+905551234567";
     private static final ClientInfo CLIENT = new ClientInfo("10.0.0.1", "test-agent");
-    private static final String ATTEMPT_KEY = "10.0.0.1_" + EMAIL;
+    private static final String ATTEMPT_KEY = "10.0.0.1_" + PHONE;
     private static final Long USER_ID = 7L;
     private static final Long SESSION_ID = 42L;
 
@@ -54,32 +58,35 @@ class AuthServiceImplTest {
     @Mock
     private LoginAttemptService loginAttemptService;
     @Mock
-    private MenuService menuService;
-    @Mock
     private AccessTokenIssuer accessTokenIssuer;
     @Mock
     private PasswordEncoder passwordEncoder;
     @Mock
     private KeyService keyService;
+    @Mock
+    private VerificationService verificationService;
+    @Mock
+    private DocumentService documentService;
 
     private AuthServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new AuthServiceImpl(userRepository, sessionRepository, loginAttemptService, menuService,
+        service = new AuthServiceImpl(userRepository, sessionRepository, loginAttemptService,
                 accessTokenIssuer, passwordEncoder,
-                new SessionProperties(Duration.ofDays(90), Duration.ofSeconds(30), false), keyService);
+                new SessionProperties(Duration.ofDays(90), Duration.ofSeconds(30), false), keyService,
+                verificationService, documentService);
     }
 
     @Test
     void loginOpensSessionStoresOnlyTokenHashAndClearsFailures() {
-        User user = user(true);
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user));
+        User user = user();
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("secret", "hash")).thenReturn(true);
         when(sessionRepository.save(any(UserSession.class))).thenAnswer(invocation -> withId(invocation.getArgument(0)));
         stubSessionInfo(user);
 
-        AuthResult result = service.login(new LoginRequest(EMAIL, "secret"), CLIENT);
+        AuthResult result = service.login(new LoginRequest(PHONE_INPUT, "secret"), CLIENT);
 
         assertThat(result.refreshToken()).isNotBlank();
         assertThat(result.sessionInfo().accessToken()).isEqualTo("access-token");
@@ -95,10 +102,10 @@ class AuthServiceImplTest {
 
     @Test
     void wrongPasswordIsCountedAndRejected() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user(true)));
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user()));
         when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
 
-        assertThatThrownBy(() -> service.login(new LoginRequest(EMAIL, "wrong"), CLIENT))
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "wrong"), CLIENT))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage(AuthMessages.INVALID_CREDENTIALS);
         verify(loginAttemptService).recordFailure(ATTEMPT_KEY);
@@ -106,13 +113,13 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void unknownEmailIsCountedAndGetsTheSameAnswer() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.empty());
+    void unknownPhoneIsCountedAndGetsTheSameAnswer() {
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.login(new LoginRequest(EMAIL, "secret"), CLIENT))
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret"), CLIENT))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage(AuthMessages.INVALID_CREDENTIALS);
-        // Kayıtlı olmayan e-postada da şifre kontrolü yapılır (zamanlama farkı olmasın).
+        // Kayıtlı olmayan numarada da şifre kontrolü yapılır (zamanlama farkı olmasın).
         verify(passwordEncoder).matches(eq("secret"), any());
         verify(loginAttemptService).recordFailure(ATTEMPT_KEY);
     }
@@ -121,21 +128,10 @@ class AuthServiceImplTest {
     void blockedLoginIsRejectedEvenWithCorrectPassword() {
         doThrow(new LoginBlockedException(AuthMessages.LOGIN_BLOCKED)).when(loginAttemptService).ensureNotBlocked(ATTEMPT_KEY);
 
-        assertThatThrownBy(() -> service.login(new LoginRequest(EMAIL, "secret"), CLIENT))
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret"), CLIENT))
                 .isInstanceOf(LoginBlockedException.class)
                 .hasMessage(AuthMessages.LOGIN_BLOCKED);
-        verify(userRepository, never()).findByEmail(anyString());
-        verify(sessionRepository, never()).save(any());
-    }
-
-    @Test
-    void inactiveUserCannotLogin() {
-        when(userRepository.findByEmail(EMAIL)).thenReturn(Optional.of(user(false)));
-        when(passwordEncoder.matches("secret", "hash")).thenReturn(true);
-
-        assertThatThrownBy(() -> service.login(new LoginRequest(EMAIL, "secret"), CLIENT))
-                .isInstanceOf(UnauthorizedException.class)
-                .hasMessage(AuthMessages.USER_INACTIVE);
+        verify(userRepository, never()).findByPhone(anyString());
         verify(sessionRepository, never()).save(any());
     }
 
@@ -143,7 +139,7 @@ class AuthServiceImplTest {
     void refreshRotatesTokenAndReturnsNewOne() {
         String token = RefreshTokens.generate();
         String hash = RefreshTokens.hash(token);
-        User user = user(true);
+        User user = user();
         when(sessionRepository.findByCurrentTokenHashOrPreviousTokenHash(hash, hash))
                 .thenReturn(Optional.of(session(hash, null, null, null)));
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
@@ -161,7 +157,7 @@ class AuthServiceImplTest {
     void previousTokenWithinGracePeriodGetsAccessTokenButKeepsCookie() {
         String oldToken = RefreshTokens.generate();
         String oldHash = RefreshTokens.hash(oldToken);
-        User user = user(true);
+        User user = user();
         when(sessionRepository.findByCurrentTokenHashOrPreviousTokenHash(oldHash, oldHash)).thenReturn(Optional.of(
                 session("current-hash", oldHash, Instant.now().minusSeconds(5), null)));
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
@@ -180,7 +176,7 @@ class AuthServiceImplTest {
         String oldHash = RefreshTokens.hash(oldToken);
         when(sessionRepository.findByCurrentTokenHashOrPreviousTokenHash(oldHash, oldHash)).thenReturn(Optional.of(
                 session("current-hash", oldHash, Instant.now().minusSeconds(60), null)));
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user(true)));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user()));
 
         assertThatThrownBy(() -> service.refresh(oldToken))
                 .isInstanceOf(UnauthorizedException.class)
@@ -192,7 +188,7 @@ class AuthServiceImplTest {
     void concurrentRotationFallsBackToGracePeriod() {
         String token = RefreshTokens.generate();
         String hash = RefreshTokens.hash(token);
-        User user = user(true);
+        User user = user();
         when(sessionRepository.findByCurrentTokenHashOrPreviousTokenHash(hash, hash))
                 .thenReturn(Optional.of(session(hash, null, null, null)));
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
@@ -231,16 +227,16 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void deactivatedUserLosesSessionOnRefresh() {
+    void deletedUserLosesSessionOnRefresh() {
         String token = RefreshTokens.generate();
         String hash = RefreshTokens.hash(token);
         when(sessionRepository.findByCurrentTokenHashOrPreviousTokenHash(hash, hash))
                 .thenReturn(Optional.of(session(hash, null, null, null)));
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user(false)));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.refresh(token))
                 .isInstanceOf(UnauthorizedException.class)
-                .hasMessage(AuthMessages.USER_INACTIVE);
+                .hasMessage(AuthMessages.SESSION_EXPIRED);
         verify(sessionRepository).revoke(eq(SESSION_ID), any());
     }
 
@@ -258,8 +254,7 @@ class AuthServiceImplTest {
 
     @Test
     void changePasswordStoresNewKeysAndClosesOtherSessions() {
-        User user = user(true);
-        user.setMustChangePassword(true);
+        User user = user();
         KeyBundleRequest keys = new KeyBundleRequest("enc", "sig", "bundle");
         when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user));
         when(passwordEncoder.matches("old-secret", "hash")).thenReturn(true);
@@ -268,14 +263,13 @@ class AuthServiceImplTest {
         service.changePassword(USER_ID, SESSION_ID, new ChangePasswordRequest("old-secret", "new-secret", keys));
 
         assertThat(user.getPassword()).isEqualTo("new-hash");
-        assertThat(user.isMustChangePassword()).isFalse();
         verify(keyService).saveOnPasswordChange(USER_ID, keys);
         verify(sessionRepository).revokeAllByUserIdExcept(eq(USER_ID), eq(SESSION_ID), any());
     }
 
     @Test
     void changePasswordRejectsWrongCurrentPassword() {
-        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user(true)));
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(user()));
         when(passwordEncoder.matches("wrong", "hash")).thenReturn(false);
 
         assertThatThrownBy(() -> service.changePassword(USER_ID, SESSION_ID,
@@ -286,20 +280,54 @@ class AuthServiceImplTest {
         verify(sessionRepository, never()).revokeAllByUserIdExcept(any(), any(), any());
     }
 
+    @Test
+    void passwordResetReplacesSecretAndKeysDeletesReceivedBoxesAndClosesAllSessions() {
+        User user = user();
+        KeyBundleRequest keys = new KeyBundleRequest("new-enc", "new-sig", "new-bundle");
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
+        when(passwordEncoder.encode("new-secret")).thenReturn("new-hash");
+
+        service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret", keys));
+
+        verify(verificationService).verify(PHONE, VerificationPurpose.PASSWORD_RESET, "123456");
+        assertThat(user.getPassword()).isEqualTo("new-hash");
+        verify(keyService).replaceOnReset(USER_ID, keys);
+        verify(documentService).deleteAllReceived(USER_ID);
+        verify(sessionRepository).revokeAllByUserId(eq(USER_ID), any());
+    }
+
+    @Test
+    void passwordResetWithWrongCodeChangesNothing() {
+        doThrow(new BusinessException(VerificationMessages.CODE_INVALID))
+                .when(verificationService).verify(PHONE, VerificationPurpose.PASSWORD_RESET, "123456");
+
+        assertThatThrownBy(() -> service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret",
+                new KeyBundleRequest("e", "s", "b")))).hasMessage(VerificationMessages.CODE_INVALID);
+        verify(keyService, never()).replaceOnReset(any(), any());
+        verify(documentService, never()).deleteAllReceived(any());
+        verify(sessionRepository, never()).revokeAllByUserId(any(), any());
+    }
+
+    @Test
+    void passwordResetForUnknownPhoneGetsTheSameAnswerAsWrongCode() {
+        when(userRepository.findByPhone(PHONE)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.resetPassword(new PasswordResetRequest(PHONE_INPUT, "123456", "new-secret",
+                new KeyBundleRequest("e", "s", "b")))).hasMessage(VerificationMessages.CODE_INVALID);
+        verify(keyService, never()).replaceOnReset(any(), any());
+    }
+
     private void stubSessionInfo(User user) {
         when(accessTokenIssuer.issue(eq(user), any())).thenReturn("access-token");
         when(accessTokenIssuer.expiresInSeconds()).thenReturn(900L);
-        when(menuService.getMenuTree(user.getRole())).thenReturn(List.of());
     }
 
-    private static User user(boolean active) {
+    private static User user() {
         User user = new User();
         user.setId(USER_ID);
-        user.setEmail(EMAIL);
+        user.setPhone(PHONE);
         user.setFullName("Ayşe Yılmaz");
         user.setPassword("hash");
-        user.setRole(Role.USER);
-        user.setActive(active);
         return user;
     }
 

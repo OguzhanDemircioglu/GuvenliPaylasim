@@ -11,7 +11,15 @@ import java.util.List;
 /** Sunucu belgelerin içeriğini hiçbir zaman çözemez; burada yalnızca şifreli veri ve erişim kuralları vardır. */
 public interface DocumentService {
 
+    /** Kodsuz gönderim: bütün alıcılar gönderenin doğrulanmış kişileri olmalıdır (Crypto_Design §7.7). */
     DocumentSentResponse send(Long senderId, DocumentSendRequest request);
+
+    /**
+     * Davet kabul edilince (Crypto_Design §7.6) kodla kilitli kutu, alıcının kendi anahtarına sarmalanmış normal bir
+     * belgeye dönüşür. Yetki kontrolü davet akışında yapılmıştır.
+     */
+    Long createFromInvite(Long senderId, Long recipientId, DocumentKind kind, byte[] payload, String signature,
+                          String wrappedKey);
 
     List<InboxItemResponse> inbox(Long recipientId);
 
@@ -20,6 +28,9 @@ public interface DocumentService {
 
     /** "Okudum ve sil". Son alıcı da sildiğinde şifreli içerik veritabanından kalıcı olarak silinir. */
     void delete(Long documentId, Long recipientId);
+
+    /** Parola sıfırlamada (Crypto_Design §7.5): kullanıcıya gelmiş bütün kutular, tek tek silinmiş gibi silinir. */
+    void deleteAllReceived(Long recipientId);
 
     List<SentItemResponse> sent(Long senderId);
 }

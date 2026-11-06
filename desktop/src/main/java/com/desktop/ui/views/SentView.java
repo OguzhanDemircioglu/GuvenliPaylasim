@@ -91,8 +91,9 @@ final class SentView extends VBox {
             state = "bekliyor";
         }
         Label chip = Ui.chip(recipient.fullName() + " · " + state, tone);
-        chip.setTooltip(new Tooltip(context.unitName(recipient.unitId())
-                + (recipient.readAt() != null ? "\nOkundu: " + Formats.fullDate(recipient.readAt()) : "")));
+        if (recipient.readAt() != null) {
+            chip.setTooltip(new Tooltip("Okundu: " + Formats.fullDate(recipient.readAt())));
+        }
         return chip;
     }
 }

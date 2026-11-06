@@ -109,21 +109,52 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 
 - `main`'e her push otomatik deploy eder.
 - Masaüstünden bağlanmak için: `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`.
-- Vonage değerleri (API key, secret, application ID, private key) Railway panelinde servisin Variables kısmına
-  girilir; repoya ve sohbete yazılmaz. Değişken adları WhatsApp gateway kodlanınca belirlenir.
+- Doğrulama mesajı için Railway panelinde servisin Variables kısmına girilecekler (repoya ve sohbete yazılmaz):
+  `MESSAGING_PROVIDER=vonage`, `VONAGE_API_KEY`, `VONAGE_API_SECRET`, `VONAGE_CHANNEL` (`sms` | `whatsapp`),
+  `VONAGE_FROM` (SMS'te gönderen adı, WhatsApp'ta gönderen numara), `VONAGE_MESSAGES_URL` (varsayılan
+  `https://api.nexmo.com/v1/messages`; WhatsApp sandbox için `https://messages-sandbox.nexmo.com/v1/messages`).
+  Basic auth kullanıldığı için application ID ve private key gerekmez. `MESSAGING_PROVIDER` verilmezse kod sadece
+  sunucu log'una yazılır. İsteğe bağlı: `VERIFICATION_DAILY_LIMIT` (varsayılan 200).
+- **SMS denemesi (2026-11-06):** Vonage Messages API'ye gönderilen kayıt SMS'i Vodafone Türkiye tarafından reddedildi
+  (Reports API: `rejected`, hata `1330`). Vonage'ın Türkiye kuralları: harfli gönderen adı (ör. `GuvenliPay`) önceden
+  kayıt ister, numaralı gönderen desteklenmez, `INFO`/`SMS` gibi genel adlar yasak. Kayıt Vonage panelindeki Global
+  Sender ID Portal'dan yapılır. Kayıt olmadan Türkiye'ye SMS gitmez.
+- **WhatsApp sandbox denemesi (2026-11-06): çalıştı.** Kayıt kodu WhatsApp'a geldi; kodla kayıt tamamlandı ve giriş
+  yapıldı. Demo ayarları: `VONAGE_CHANNEL=whatsapp`, `VONAGE_FROM=14157386102`,
+  `VONAGE_MESSAGES_URL=https://messages-sandbox.nexmo.com/v1/messages`. Sınır: sadece sandbox'a katılmış numaralara
+  gider (Vonage paneli → Messages Sandbox → WhatsApp; telefondan katılma mesajı). Gerçek kullanım için kayıtlı SMS
+  gönderen adı ya da Meta onaylı WhatsApp Business hesabı gerekir.
 - Railway proje token'ı sohbette paylaşıldı; kurulum işleri bitince panelden yenilenmeli.
 
-## Konuşmalar bitince: kodlama sırası (taslak)
+## Kodlama sırası
+
+> v2 kodu `v2` dalında yazılır. Railway sadece `main`'i deploy eder; sunucu tarafı kullanılabilir olunca (en az 1–3.
+> adımlar) `v2` `main`'e birleştirilir. Birleştirmeden önce Railway'de `DB_SCHEMA=gps_v2` yapılır ve `ADMIN_EMAIL` /
+> `ADMIN_PASSWORD` değişkenleri silinir (v1 tabloları eski şemada kalır, Crypto_Design §7.11).
 
 Kararlar netleşince güncellenir.
 
-1. Sunucu: rolleri, birimleri ve yönetim API'lerini kaldırmak; `User` modelini ad soyad + telefon olarak yeniden
-   kurmak; şemayı sıfırlamak; demo verisini yeniden yazmak.
-2. Sunucu: SMS doğrulamalı kayıt ve parola sıfırlama; Vonage `SmsGateway`; SMS sınırları.
-3. Kripto (istemci ve sunucu): telefon tuzlu türetme; anahtarların kayıtta üretilmesi; test vektörlerinin
-   güncellenmesi.
-4. Davet kodu ve kişiler: sunucu tabloları ve API'leri, istemcide "Kod ile al" ve kişi listesi ekranları.
-5. Anahtar değişikliği: doğrulanmamış kişi ve yeni kod (§7.8). Sertifika sabitleme, sunucuda ikinci kilit.
+1. ✅ (2026-11-06, `v2` dalı) Sunucu: rolleri, birimleri ve yönetim API'lerini kaldırmak; `User` modelini ad soyad +
+   telefon olarak yeniden kurmak; şemayı sıfırlamak (yeni şema `gps_v2`); demo verisini yeniden yazmak.
+   Geçici: kayıt henüz telefon doğrulamasız (2. adım); `AuthSecrets` v2 tuzuna geçti, masaüstü istemci 3. adımda.
+2. ✅ (2026-11-06, `v2` dalı) Sunucu: WhatsApp kodlu kayıt ve parola sıfırlama (`register/start|complete`,
+   `password-reset/start|complete`); `VonageWhatsAppGateway`; numara/IP/günlük sınırlar; kuyruktan gönderim.
+   Kayıtta anahtarlar da gelir. Sıfırlamada gelen kutular silinir, oturumlar kapanır. Yerelde uçtan uca denendi;
+   start yanıt süresi kayıtlı ve kayıtsız numarada aynı (medyan farkı 3–10 ms / ~690 ms).
+3. ✅ (2026-11-06, `v2` dalı) Kripto ve masaüstü girişi: telefon tuzlu türetme (istemci ve sunucu aynı test
+   vektörü), anahtar paketi telefona bağlı (`gps-private-keys/v2|`), anahtarlar kayıtta üretilir. Masaüstünde telefonla
+   giriş, WhatsApp kodlu kayıt, "Parolamı unuttum" (yeni anahtar çifti); yönetim ekranları, birimler ve ilk parola
+   ekranı kaldırıldı; parola en az 12 karakter. Yeni Gönderi'de alıcı seçimi 4. adıma kadar kapalı. Masaüstü →
+   sunucu uçtan uca denendi (kayıt, giriş, parola değiştirme aynı anahtarları korur, sıfırlama yeni anahtar üretir).
+   Açık: yaygın parola listesi kontrolü (Security.md S2).
+4. ✅ (2026-11-06, `v2` dalı) Davet kodu ve kişiler: `invites` ve `contacts` tabloları ve API'leri; iki yönlü
+   doğrulama (kabul mührü), imzalı kişi kaydı; masaüstünde Yeni Gönderi'de "Kişilerim / Davet kodu ile", tek seferlik
+   kod ekranı, Gelen Kutusu'nda "Kod ile al", yeni "Kişiler" ekranı (durum, parmak izi, silme, bekleyen davetler).
+   Kodsuz gönderim sunucuda sadece doğrulanmış ve anahtarı değişmemiş kişiye kabul edilir. İki kullanıcıyla uçtan uca
+   denendi (21 kontrol): yanlış ve başkasının kodu reddedilir, kod bir kez kullanılır, iki taraf doğrulanır, anahtarı
+   değişen kişiye gönderim reddedilir, yeni kodla yeniden doğrulanır, silme iki yönlüdür.
+5. Anahtar değişikliği: doğrulanmamış kişi ve yeni kod (§7.8) **4. adımda yapıldı** (istemci "anahtarı değişti"
+   gösterir, sunucu kodsuz gönderimi reddeder). Kalanlar: sertifika sabitleme, sunucuda ikinci kilit.
 6. Gizlilik (§8): süreli kutu, açılınca sil, kayıt silme işi. Konuşmalarda kabul edilen 4. kısım maddeleri.
 7. TOTP.
 8. Her adımda unit testler ve ilgili saldırı testleri (Security.md); sonunda yeni sürüm (MSI) ve README güncellemesi.

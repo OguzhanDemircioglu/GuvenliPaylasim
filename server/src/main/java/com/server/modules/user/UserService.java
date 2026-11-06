@@ -1,16 +1,12 @@
 package com.server.modules.user;
 
-import com.server.common.service.BaseService;
-import com.server.modules.user.dto.UserCreateRequest;
-import com.server.modules.user.dto.UserPasswordResetRequest;
-import com.server.modules.user.dto.UserResponse;
-import com.server.modules.user.dto.UserUpdateRequest;
+import com.server.modules.auth.dto.RegisterRequest;
 
-public interface UserService extends BaseService<UserCreateRequest, UserUpdateRequest, UserResponse> {
+public interface UserService {
 
-    /** Admin'in bir kullanıcının şifresini sıfırlaması; kullanıcının bütün oturumları kapanır. */
-    void resetPassword(Long id, UserPasswordResetRequest request);
-
-    /** Herkese açık kayıt: kayıt olan herkes USER olur ve seçtiği birime bağlanır. */
-    void register(String email, String fullName, String password, Long unitId, String phone);
+    /**
+     * Kaydı tamamlar (Crypto_Design §7.2): WhatsApp kodu doğrulanır, hesap ve istemcide üretilmiş anahtarlar aynı
+     * transaction'da kaydedilir. Böylece "anahtarı olmayan kullanıcı" durumu oluşmaz.
+     */
+    void register(RegisterRequest request);
 }

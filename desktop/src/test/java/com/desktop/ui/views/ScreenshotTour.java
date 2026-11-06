@@ -7,7 +7,9 @@ import com.desktop.App;
 import com.desktop.api.Dto;
 import com.desktop.crypto.DocumentContent;
 import com.desktop.service.AuthService;
+import com.desktop.service.ContactService;
 import com.desktop.service.DocumentService;
+import com.desktop.service.InviteService;
 import com.desktop.service.Session;
 import com.desktop.ui.Overlays;
 import javafx.application.Application;
@@ -32,13 +34,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /**
- * Geliştirme aracı: çalışan dev sunucusuna demo hesaplarıyla bağlanır, gerçek bir belge gönderip açar ve her
- * ekranın görüntüsünü PNG olarak kaydeder. Tasarımı pencere açmadan gözden geçirmek için.
+ * Geliştirme aracı: çalışan dev sunucusuna demo hesaplarıyla bağlanır ve her ekranın görüntüsünü PNG olarak
+ * kaydeder. Tasarımı pencere açmadan gözden geçirmek için.
  * <pre>java -cp ... com.desktop.ui.views.ScreenshotTour &lt;çıktı klasörü&gt; [dark]</pre>
  */
 public final class ScreenshotTour {
 
-    private static final String PASSWORD = "Demo12345!";
+    /** Sunucudaki V001_DemoData ile aynı. */
+    private static final String PASSWORD = "DemoParola2026!";
     private static Path out;
     private static boolean dark;
 
@@ -48,24 +51,29 @@ public final class ScreenshotTour {
         Files.createDirectories(out);
 
         AuthService auth = new AuthService("http://localhost:8080");
-        Session ayse = auth.login("ayse.yilmaz@gps.local", PASSWORD.toCharArray());
-        Session mehmet = auth.login("mehmet.kaya@gps.local", PASSWORD.toCharArray());
-        auth.login("zeynep.demir@gps.local", PASSWORD.toCharArray());
-        Session admin = auth.login("admin@gps.local", "Admin12345".toCharArray());
+        Session ayse = auth.login("5550000001", PASSWORD.toCharArray());
+        Session mehmet = auth.login("5550000002", PASSWORD.toCharArray());
 
+        // Mehmet ile Ayşe kişi değilse önce davet koduyla tanıştırılır (Crypto_Design §7.6), sonra kodsuz gönderilir.
+        ContactService mehmetContacts = new ContactService(mehmet);
+        if (mehmetContacts.list().stream().noneMatch(c -> c.canReceive() && c.userId().equals(ayse.user().id()))) {
+            InviteService.SentCode code = new InviteService(ayse).send(
+                    DocumentContent.ofText("Merhaba Mehmet Bey, bundan sonra belgeleri buradan paylaşalım."), "5550000002", 24);
+            new InviteService(mehmet).redeem(code.code());
+            new InviteService(ayse).processVerifications();
+        }
+        List<Dto.Recipient> toAyse = mehmetContacts.list().stream()
+                .filter(c -> c.canReceive() && c.userId().equals(ayse.user().id()))
+                .map(ContactService.Contact::recipient).toList();
         DocumentService fromMehmet = new DocumentService(mehmet);
-        List<Dto.Unit> units = fromMehmet.units();
-        Long ankara = units.stream().filter(u -> u.name().equals("Ankara Valiliği")).findFirst().orElseThrow().id();
         fromMehmet.send(DocumentContent.ofText("""
                 Sayın Ayşe Hanım,
 
-                14 Kasım tarihli koordinasyon toplantısının gündemi ve katılımcı listesi ektedir. Toplantı Bakanlık \
-                merkez binası 3. kat toplantı salonunda saat 14:00'te yapılacaktır.
+                14 Kasım tarihli koordinasyon toplantısının gündemi ve katılımcı listesi ektedir. Toplantı saat                 14:00'te yapılacaktır.
 
                 Bilgilerinize rica ederim.
-                Mehmet Kaya"""), fromMehmet.recipients(List.of(ankara)));
-        fromMehmet.send(DocumentContent.ofFile("Denetim Raporu 2026.pdf", "application/pdf", new byte[180_000]),
-                fromMehmet.recipients(List.of(ankara)));
+                Mehmet Kaya"""), toAyse);
+        fromMehmet.send(DocumentContent.ofFile("Denetim Raporu 2026.pdf", "application/pdf", new byte[180_000]), toAyse);
 
         Platform.startup(() -> {
         });
@@ -87,22 +95,48 @@ public final class ScreenshotTour {
             return s;
         });
 
-        show(content, () -> new LoginView(auth, s -> {
+        LoginView login = onFx(() -> new LoginView(auth, s -> {
         }));
+        show(content, () -> login);
         snap(stage, "01-giris" + suffix);
+        onFx(() -> {
+            login.lookupAll(".hyperlink").stream()
+                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Kayıt ol".equals(h.getText()))
+                    .findFirst().ifPresent(n -> ((javafx.scene.control.Hyperlink) n).fire());
+            return null;
+        });
+        pause(3200);
+        snap(stage, "01b-kayit" + suffix);
+        onFx(() -> {
+            login.lookupAll(".hyperlink").stream()
+                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Giriş yap".equals(h.getText()))
+                    .findFirst().ifPresent(n -> ((javafx.scene.control.Hyperlink) n).fire());
+            return null;
+        });
+        pause(3200);
+        onFx(() -> {
+            login.lookupAll(".hyperlink").stream()
+                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Parolamı unuttum".equals(h.getText()))
+                    .findFirst().ifPresent(n -> ((javafx.scene.control.Hyperlink) n).fire());
+            return null;
+        });
+        pause(800);
+        snap(stage, "01c-parola-sifirlama" + suffix);
+        onFx(() -> {
+            com.desktop.ui.Dialogs.close();
+            return null;
+        });
 
         ShellView shell = onFx(() -> new ShellView(new App(), auth, ayse));
         show(content, () -> shell);
         pause(1500);
         snap(stage, "02-gelen-kutusu" + suffix);
-
         onFx(() -> {
             ListView<?> list = (ListView<?>) shell.lookup(".inbox-list");
-            list.getSelectionModel().select(1);
+            list.getSelectionModel().select(0);
             return null;
         });
         pause(500);
-        snap(stage, "03-belge-secili" + suffix);
         onFx(() -> {
             shell.lookupAll(".button").stream().filter(n -> n instanceof Button b && "Belgeyi aç".equals(b.getText()))
                     .findFirst().ifPresent(n -> ((Button) n).fire());
@@ -110,40 +144,38 @@ public final class ScreenshotTour {
         });
         pause(2500);
         snap(stage, "04-belge-acik" + suffix);
-
-        nav(shell, 1);
-        pause(1200);
-        snap(stage, "05-yeni-gonderi" + suffix);
         onFx(() -> {
-            ((javafx.scene.control.TextArea) shell.lookup(".text-area")).setText(
-                    "Yarınki denetim için hazırlanan rapor taslağı ektedir. Görüşlerinizi bekliyorum.");
-            shell.lookupAll(".check-box").stream()
-                    .filter(n -> n instanceof javafx.scene.control.CheckBox c && "Tüm birimlere gönder".equals(c.getText()))
-                    .findFirst().ifPresent(n -> ((javafx.scene.control.CheckBox) n).fire());
-            return null;
-        });
-        pause(1500);
-        snap(stage, "05b-alicilar-secili" + suffix);
-        onFx(() -> {
-            shell.lookupAll(".button").stream()
-                    .filter(n -> n instanceof Button b && "Şifrele ve gönder".equals(b.getText()))
+            shell.lookupAll(".button").stream().filter(n -> n instanceof Button b && "Kod ile al".equals(b.getText()))
                     .findFirst().ifPresent(n -> ((Button) n).fire());
             return null;
         });
-        pause(700);
-        snap(stage, "05c-sifreleniyor" + suffix);
-        pause(2500);
-        snap(stage, "05d-gonderildi" + suffix);
+        pause(800);
+        snap(stage, "04b-kod-ile-al" + suffix);
         onFx(() -> {
             com.desktop.ui.Dialogs.close();
             return null;
         });
+
+        nav(shell, 1);
+        pause(1500);
+        snap(stage, "05-yeni-gonderi" + suffix);
+        onFx(() -> {
+            shell.lookupAll(".toggle-button").stream()
+                    .filter(n -> n instanceof ToggleButton t && "Davet kodu ile".equals(t.getText()))
+                    .findFirst().ifPresent(n -> ((ToggleButton) n).fire());
+            return null;
+        });
+        pause(600);
+        snap(stage, "05b-davet-kodu" + suffix);
         nav(shell, 3);
-        pause(800);
-        snap(stage, "06-anahtarim" + suffix);
+        pause(1200);
+        snap(stage, "06-kisiler" + suffix);
         nav(shell, 4);
         pause(800);
-        snap(stage, "07-neden-guvenli" + suffix);
+        snap(stage, "07-anahtarim" + suffix);
+        nav(shell, 5);
+        pause(800);
+        snap(stage, "07b-neden-guvenli" + suffix);
 
         ShellView mehmetShell = onFx(() -> new ShellView(new App(), auth, mehmet));
         show(content, () -> mehmetShell);
@@ -151,13 +183,6 @@ public final class ScreenshotTour {
         nav(mehmetShell, 2);
         pause(1200);
         snap(stage, "08-gonderilenler" + suffix);
-
-        ShellView adminShell = onFx(() -> new ShellView(new App(), auth, admin));
-        show(content, () -> adminShell);
-        pause(1200);
-        nav(adminShell, 6);
-        pause(1500);
-        snap(stage, "09-kullanicilar" + suffix);
 
         Platform.exit();
         System.exit(0);

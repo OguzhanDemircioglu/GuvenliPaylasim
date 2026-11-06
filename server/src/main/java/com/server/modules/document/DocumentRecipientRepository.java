@@ -14,7 +14,7 @@ public interface DocumentRecipientRepository extends JpaRepository<DocumentRecip
     /** Alıcının silmediği belgeler, yeniden eskiye. */
     @Query("""
             SELECT new com.server.modules.document.dto.InboxItemResponse(
-                       d.id, d.kind, d.sizeBytes, s.id, s.fullName, s.unitId, d.createdAt, r.readAt)
+                       d.id, d.kind, d.sizeBytes, s.id, s.fullName, d.createdAt, r.readAt)
               FROM DocumentRecipient r
               JOIN Document d ON d.id = r.documentId
               JOIN User s ON s.id = d.senderId
@@ -24,11 +24,13 @@ public interface DocumentRecipientRepository extends JpaRepository<DocumentRecip
 
     Optional<DocumentRecipient> findByDocumentIdAndRecipientIdAndDeletedAtIsNull(Long documentId, Long recipientId);
 
+    List<DocumentRecipient> findByRecipientIdAndDeletedAtIsNull(Long recipientId);
+
     boolean existsByDocumentIdAndDeletedAtIsNull(Long documentId);
 
     @Query("""
             SELECT new com.server.modules.document.dto.SentRecipientResponse(
-                       r.documentId, u.id, u.fullName, u.unitId, r.readAt, r.deletedAt)
+                       r.documentId, u.id, u.fullName, r.readAt, r.deletedAt)
               FROM DocumentRecipient r
               JOIN User u ON u.id = r.recipientId
              WHERE r.documentId IN :documentIds

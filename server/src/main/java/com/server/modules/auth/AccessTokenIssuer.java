@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 import java.time.Instant;
 
 /**
- * RS256 access token üretir. Token'a sadece kimlik bilgileri konur (sub, email, role, sid).
+ * RS256 access token üretir. Token'a sadece kimlik bilgileri konur (sub, sid).
  */
 @Component
 @RequiredArgsConstructor
@@ -28,8 +28,6 @@ public class AccessTokenIssuer {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(properties.issuer())
                 .subject(user.getId().toString())
-                .claim(JwtClaims.EMAIL, user.getEmail())
-                .claim(JwtClaims.ROLE, user.getRole().name())
                 .claim(JwtClaims.SESSION_ID, sessionId)
                 .issuedAt(now)
                 .expiresAt(now.plus(properties.accessTokenTtl()))

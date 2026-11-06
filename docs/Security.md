@@ -42,7 +42,8 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   - **Sunucuda ikinci kilit.** Özel anahtar paketi ve `authSecret` özeti, veritabanına yazılmadan önce veritabanı
     dışında tutulan bir sunucu anahtarıyla (ortam değişkeni ya da anahtar kasası) AES-256-GCM ile bir kez daha
     şifrelenir. Sadece DB dökümü ele geçerse deneme yapılamaz.
-  - **Güçlü parola şartı.** En az 12 karakter; yaygın parola ve sözlük listesiyle (Türkçe dahil) kontrol. Kontrol
+  - **Güçlü parola şartı.** En az 12 karakter (uygulandı, 3. adım); yaygın parola ve sözlük listesiyle (Türkçe dahil)
+    kontrol (henüz yok). Kontrol
     istemcide yapılır, çünkü parola sunucuya gitmez.
 - **Kabul:** DB ile birlikte sunucu anahtarı da ele geçerse (S3) koruma PBKDF2 (600.000 tur) ve parola gücüne kalır.
   Argon2id dış kripto kütüphanesi gerektirdiği için şimdilik kullanılmaz.
@@ -114,10 +115,10 @@ test" listesi bu belgenin ekine yazılır.
 | Alan | Test |
 |---|---|
 | Kripto | Test vektörleri (istemci ve sunucu aynı sonucu verir); davet kodu, kutu ve anahtar paketi formatları için fuzz; yanlış imza, yanlış AAD, kesilmiş veri, sürüm baytı değişikliği reddedilir |
-| İki yönlü kod (S3) | Sunucu sahte alıcı ya da gönderen anahtarı verirse kişi eklenmez ve kutu açılmaz |
-| Anahtar değişikliği (S5) | Anahtarı değişen kişiye kodsuz gönderim istemcide ve sunucuda reddedilir |
-| Yetki (S4) | Her uç nokta için başka kullanıcının kimliğiyle erişim denemesi (IDOR); oturumsuz erişim |
-| Numara tarama (S4) | Kayıtlı ve kayıtsız numara için yanıt gövdesi aynı; yanıt süresi farkı istatistiksel olarak ayırt edilemez |
+| İki yönlü kod (S3) | Sunucu sahte alıcı ya da gönderen anahtarı verirse kişi eklenmez ve kutu açılmaz. **Var:** masaüstü `InviteCryptoTest` (sahte gönderen anahtarı, sahte alıcı anahtarı, sahte mühür, değiştirilmiş kişi kaydı ve içerik) |
+| Anahtar değişikliği (S5) | Anahtarı değişen kişiye kodsuz gönderim istemcide ve sunucuda reddedilir. **Var:** sunucu `ContactServiceImplTest`, uçtan uca deneme (parola sıfırlama → `KEY_CHANGED` → sunucu reddi → yeni kodla yeniden doğrulama) |
+| Yetki (S4) | Her uç nokta için başka kullanıcının kimliğiyle erişim denemesi (IDOR); oturumsuz erişim. **Kısmen var:** davetlerde başka kullanıcının kodu ve kabul/doğrulama/geri alma denemesi (`InviteServiceImplTest`); diğer uç noktalar için sistematik test henüz yok |
+| Numara tarama (S4) | Kayıtlı ve kayıtsız numara için yanıt gövdesi aynı; yanıt süresi farkı istatistiksel olarak ayırt edilemez. İlk ölçüm (2026-11-06, yerel sunucu, uzak DB, 20'şer istek): `register/start` medyan farkı 2,6 ms, `password-reset/start` 10,2 ms (~690 ms yanıtta) |
 | Hız sınırları (S4, S8) | Her sınır aşılınca reddedilir; IP değiştirerek ya da paralel isteklerle atlatılamaz |
 | Silme (Crypto_Design §8) | Süresi dolan, açılınca silinen ve alıcının sildiği kutunun DB'de hiçbir satırı kalmaz |
 | DB dökümü (S2) | DB'deki anahtar paketi ve `authSecret` özeti, sunucu anahtarı olmadan çözülemez |

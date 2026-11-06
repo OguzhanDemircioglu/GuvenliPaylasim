@@ -7,12 +7,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AuthSecretsTest {
 
     /**
-     * Masaüstü istemcideki PasswordKeys ile aynı değer (desktop: CryptoTest). Biri değişirse ilk admin ve demo
-     * kullanıcıları giriş yapamaz; bu test iki tarafın uyumunu korur.
+     * v2 türetmesi (tuz = "guvenli-paylasim/v2|" + E.164 telefon, Crypto_Design §7.3). Beklenen değer bağımsız bir
+     * PBKDF2/HMAC uygulamasıyla (Python hashlib) hesaplandı. Masaüstü istemcideki PasswordKeys de aynı değeri
+     * üretmelidir (desktop: CryptoTest); biri değişirse demo kullanıcıları giriş yapamaz.
      */
     @Test
-    void matchesDesktopDerivation() {
-        assertThat(AuthSecrets.derive("  Admin@Test.LOCAL ", "Admin12345"))
-                .isEqualTo("n3yyVX4DZreKguvSq6klsfXDt_VTmuONob1pTJijKSM");
+    void matchesV2Derivation() {
+        assertThat(AuthSecrets.derive("+905551234567", "DemoParola2026!"))
+                .isEqualTo("MW9rjw23gWedr5y5msOuC7DRjgHO7PHtMjTskHEwKus");
     }
 }

@@ -2,10 +2,10 @@ package com.desktop.ui.views;
 
 import atlantafx.base.controls.CustomTextField;
 import atlantafx.base.controls.PasswordTextField;
-import com.desktop.api.Dto;
 import com.desktop.service.AuthService;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
+import com.desktop.ui.Dialogs;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import javafx.animation.Interpolator;
@@ -28,6 +28,7 @@ import javafx.scene.control.Control;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.GaussianBlur;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -68,14 +69,15 @@ public final class LoginView extends VBox {
     private final AuthService auth;
     private final Consumer<Session> onLoggedIn;
 
-    private final TextField loginEmail = new CustomTextField();
+    private final TextField loginPhone = new CustomTextField();
     private final PasswordTextField loginPassword = new PasswordTextField();
     private final Button loginSubmit = submitButton("Giriş yap");
     private final Label loginStatus = statusLabel();
 
     private final TextField registerName = new CustomTextField();
-    private final TextField registerEmail = new CustomTextField();
-    private final ComboBox<Dto.Unit> registerUnit = new ComboBox<>();
+    private final TextField registerPhone = new CustomTextField();
+    private final CustomTextField registerCode = new CustomTextField();
+    private final Hyperlink sendCode = new Hyperlink("Kod gönder");
     private final PasswordTextField registerPassword = new PasswordTextField();
     private final PasswordTextField registerRepeat = new PasswordTextField();
     private final Button registerSubmit = submitButton("Kayıt ol");
@@ -98,7 +100,6 @@ public final class LoginView extends VBox {
         setAlignment(Pos.CENTER);
 
         apply(false);
-        loadUnits();
     }
 
     // ---------- Kart ve paneller ----------
@@ -118,8 +119,8 @@ public final class LoginView extends VBox {
                 "Belgeleriniz bu bilgisayardan çıkmadan şifrelenir ve imzalanır. Sunucu dahil hiç kimse içeriği "
                         + "göremez.", 0, 20);
         VBox registerInfo = info(false, "ARAMIZA KATILIN!",
-                "Anahtarlarınız bu bilgisayarda üretilir ve parolanızla korunur. Parolanızı unutursanız eski "
-                        + "belgeleriniz açılamaz.", 17, 0);
+                "Telefonunuz WhatsApp koduyla doğrulanır. Anahtarlarınız bu bilgisayarda üretilir; parolanızı "
+                        + "unutursanız size gelmiş belgeler açılamaz.", 17, 0);
 
         place(loginBox, 0, new Insets(0, 72, 0, 48));
         place(registerBox, WIDTH / 2, new Insets(0, 48, 0, 72));
@@ -211,35 +212,43 @@ public final class LoginView extends VBox {
         loginSubmit.setDefaultButton(true);
 
         Node title = title("Giriş yap");
-        Node email = floating("E-posta", loginEmail, Material2OutlinedMZ.MAIL_OUTLINE);
+        Node phone = floating("Cep telefonu (5XXXXXXXXX)", loginPhone, Material2OutlinedMZ.PHONE_ANDROID);
         Node password = floating("Parola", loginPassword, null);
-        VBox action = new VBox(10, loginStatus, loginSubmit);
+        Hyperlink forgot = new Hyperlink("Parolamı unuttum");
+        forgot.getStyleClass().add("auth-link");
+        forgot.setOnAction(e -> openPasswordReset());
+        HBox forgotRow = new HBox(forgot);
+        forgotRow.setAlignment(Pos.CENTER_RIGHT);
+        VBox action = new VBox(10, loginStatus, loginSubmit, forgotRow);
         Node link = switchLink("Hesabınız yok mu?", "Kayıt ol", true);
 
         animate(title, false, 0, 21, -1.2, 0);
-        animate(email, false, 1, 22, -1.2, 0);
+        animate(phone, false, 1, 22, -1.2, 0);
         animate(password, false, 2, 23, -1.2, 0);
         animate(action, false, 3, 24, -1.2, 0);
         animate(link, false, 5, 25, -1.2, 0);
-        return new VBox(18, title, email, password, action, link);
+        return new VBox(18, title, phone, password, action, link);
     }
 
     private VBox registerForm() {
         registerPassword.setRight(revealIcon(registerPassword));
         registerRepeat.setRight(revealIcon(registerRepeat));
-        registerUnit.setMaxWidth(Double.MAX_VALUE);
         registerSubmit.setOnAction(e -> register());
+        sendCode.getStyleClass().add("auth-link");
+        sendCode.setTooltip(new Tooltip("Telefonunuza WhatsApp ile 6 haneli kod gönderilir"));
+        sendCode.setOnAction(e -> sendRegistrationCode());
 
         Node title = title("Kayıt ol");
         Node name = floating("Ad soyad", registerName, Material2OutlinedMZ.PERSON_OUTLINE);
-        Node email = floating("E-posta", registerEmail, Material2OutlinedMZ.MAIL_OUTLINE);
-        Node unit = floating("Birim", registerUnit, null);
-        Node password = floating("Parola (en az 10 karakter, harf ve rakam)", registerPassword, null);
+        Node phone = floating("Cep telefonu (5XXXXXXXXX)", registerPhone, Material2OutlinedMZ.PHONE_ANDROID);
+        Node password = floating("Parola (en az 12 karakter, harf ve rakam)", registerPassword, null);
         Node repeat = floating("Parola (tekrar)", registerRepeat, null);
+        Node code = floating("WhatsApp kodu", registerCode, null);
+        registerCode.setRight(sendCode);
         VBox action = new VBox(10, registerStatus, registerSubmit);
         Node link = switchLink("Hesabınız var mı?", "Giriş yap", false);
 
-        Node[] nodes = {title, name, email, unit, password, repeat, action, link};
+        Node[] nodes = {title, name, phone, password, repeat, code, action, link};
         for (int k = 0; k < nodes.length; k++) {
             animate(nodes[k], true, 17 + k, k, 1.2, 0);
         }
@@ -417,11 +426,11 @@ public final class LoginView extends VBox {
     }
 
     private void clearForms() {
-        loginEmail.clear();
+        loginPhone.clear();
         loginPassword.clear();
         registerName.clear();
-        registerEmail.clear();
-        registerUnit.setValue(null);
+        registerPhone.clear();
+        registerCode.clear();
         registerPassword.clear();
         registerRepeat.clear();
         showStatus(loginStatus, null, false);
@@ -430,18 +439,14 @@ public final class LoginView extends VBox {
 
     // ---------- İşlemler ----------
 
-    private void loadUnits() {
-        Async.run(auth::units, units -> registerUnit.getItems().setAll(units),
-                failure -> showStatus(registerStatus, "Birimler alınamadı: " + Toasts.describe(failure), true));
-    }
-
     private void login() {
-        if (loginEmail.getText().isBlank() || loginPassword.getPassword().isEmpty()) {
-            showStatus(loginStatus, "E-posta ve parola zorunludur.", true);
+        String phoneError = AuthService.validatePhone(loginPhone.getText());
+        if (phoneError != null || loginPassword.getPassword().isEmpty()) {
+            showStatus(loginStatus, phoneError != null ? phoneError : "Parola zorunludur.", true);
             return;
         }
         busy(loginSubmit, loginStatus, "Parolanızdan anahtar türetiliyor ve anahtarlarınız açılıyor…");
-        Async.run(() -> auth.login(loginEmail.getText(), loginPassword.getPassword().toCharArray()),
+        Async.run(() -> auth.login(loginPhone.getText(), loginPassword.getPassword().toCharArray()),
                 session -> {
                     loginPassword.clear();
                     onLoggedIn.accept(session);
@@ -456,8 +461,8 @@ public final class LoginView extends VBox {
             return;
         }
         busy(registerSubmit, registerStatus, "Hesabınız açılıyor ve anahtarlarınız bu bilgisayarda üretiliyor…");
-        Async.run(() -> auth.register(registerName.getText(), registerEmail.getText(), registerUnit.getValue().id(),
-                        registerPassword.getPassword().toCharArray()),
+        Async.run(() -> auth.completeRegistration(registerPhone.getText(), registerCode.getText(),
+                        registerName.getText(), registerPassword.getPassword().toCharArray()),
                 session -> {
                     registerPassword.clear();
                     registerRepeat.clear();
@@ -470,14 +475,133 @@ public final class LoginView extends VBox {
         if (registerName.getText().isBlank()) {
             return "Ad soyad zorunludur.";
         }
-        if (registerEmail.getText().isBlank()) {
-            return "E-posta zorunludur.";
+        String phoneError = AuthService.validatePhone(registerPhone.getText());
+        if (phoneError != null) {
+            return phoneError;
         }
-        if (registerUnit.getValue() == null) {
-            return "Birim seçilmelidir.";
-        }
-        return AuthService.validateNewPassword(registerPassword.getPassword().toCharArray(),
+        String passwordError = AuthService.validateNewPassword(registerPassword.getPassword().toCharArray(),
                 registerRepeat.getPassword().toCharArray());
+        if (passwordError != null) {
+            return passwordError;
+        }
+        return validCode(registerCode.getText()) ? null
+                : "WhatsApp'a gelen 6 haneli kodu yazın. Kod gelmediyse \"Kod gönder\"e basın.";
+    }
+
+    /** Kayıt kodu: numara kayıtlı olsa da olmasa da aynı cevap gelir (Crypto_Design §7.2). */
+    private void sendRegistrationCode() {
+        String phoneError = AuthService.validatePhone(registerPhone.getText());
+        if (phoneError != null) {
+            showStatus(registerStatus, phoneError, true);
+            return;
+        }
+        sendCode.setDisable(true);
+        showStatus(registerStatus, "Kod gönderiliyor…", false);
+        Async.run(() -> {
+                    auth.startRegistration(registerPhone.getText());
+                    return null;
+                },
+                ignored -> {
+                    sendCode.setDisable(false);
+                    sendCode.setText("Tekrar gönder");
+                    showStatus(registerStatus, "Kod WhatsApp'a gönderildi; 5 dakika geçerlidir. Numara zaten kayıtlıysa "
+                            + "kod gelmez, giriş yapın ya da parolanızı sıfırlayın.", false);
+                    registerCode.requestFocus();
+                },
+                failure -> {
+                    sendCode.setDisable(false);
+                    showStatus(registerStatus, Toasts.describe(failure), true);
+                });
+    }
+
+    private static boolean validCode(String code) {
+        return code != null && code.trim().matches("\\d{6}");
+    }
+
+    // ---------- Parola sıfırlama ----------
+
+    /**
+     * Parolasını unutan kullanıcı (Crypto_Design §7.5): WhatsApp koduyla yeni parola belirlenir, yeni anahtar çifti
+     * üretilir. Eski özel anahtarlar açılamadığı için kullanıcıya gelmiş belgeler silinir; bu önceden açıkça söylenir.
+     */
+    private void openPasswordReset() {
+        TextField phone = new TextField(loginPhone.getText());
+        phone.setPromptText("Cep telefonu (5XXXXXXXXX)");
+        TextField code = new TextField();
+        code.setPromptText("WhatsApp kodu");
+        PasswordTextField password = new PasswordTextField();
+        password.setPromptText("Yeni parola (en az 12 karakter, harf ve rakam)");
+        PasswordTextField repeat = new PasswordTextField();
+        repeat.setPromptText("Yeni parola (tekrar)");
+        Label warning = Ui.muted("Parola sıfırlanınca size gelmiş bütün belgeler silinir; eski parolanızla "
+                + "kilitliydiler ve yeni parolayla açılamazlar. Kişilerinize anahtarınızın değiştiği bildirilir.");
+        warning.setWrapText(true);
+        warning.setMaxWidth(420);
+        Label status = statusLabel();
+        status.setMaxWidth(420);
+
+        Button codeButton = Ui.button("Kod gönder", Material2OutlinedMZ.SMS);
+        Button cancel = Ui.button("Vazgeç", null);
+        Button submit = Ui.primary("Parolayı sıfırla", Material2OutlinedAL.LOCK);
+        cancel.setCancelButton(true);
+        cancel.setOnAction(e -> Dialogs.close());
+
+        codeButton.setOnAction(e -> {
+            String error = AuthService.validatePhone(phone.getText());
+            if (error != null) {
+                showStatus(status, error, true);
+                return;
+            }
+            codeButton.setDisable(true);
+            Async.run(() -> {
+                        auth.startPasswordReset(phone.getText());
+                        return null;
+                    },
+                    ignored -> {
+                        codeButton.setDisable(false);
+                        codeButton.setText("Tekrar gönder");
+                        showStatus(status, "Kod WhatsApp'a gönderildi; 5 dakika geçerlidir. Numara kayıtlı değilse kod "
+                                + "gelmez.", false);
+                        code.requestFocus();
+                    },
+                    failure -> {
+                        codeButton.setDisable(false);
+                        showStatus(status, Toasts.describe(failure), true);
+                    });
+        });
+
+        submit.setOnAction(e -> {
+            String error = AuthService.validatePhone(phone.getText());
+            if (error == null) {
+                error = AuthService.validateNewPassword(password.getPassword().toCharArray(),
+                        repeat.getPassword().toCharArray());
+            }
+            if (error == null && !validCode(code.getText())) {
+                error = "WhatsApp'a gelen 6 haneli kodu yazın.";
+            }
+            if (error != null) {
+                showStatus(status, error, true);
+                return;
+            }
+            submit.setDisable(true);
+            showStatus(status, "Yeni anahtarlarınız üretiliyor ve parolanız değiştiriliyor…", false);
+            Async.run(() -> auth.completePasswordReset(phone.getText(), code.getText(),
+                            password.getPassword().toCharArray()),
+                    session -> {
+                        Dialogs.close();
+                        Toasts.success("Parolanız değiştirildi.");
+                        onLoggedIn.accept(session);
+                    },
+                    failure -> {
+                        submit.setDisable(false);
+                        showStatus(status, Toasts.describe(failure), true);
+                    });
+        });
+
+        HBox phoneRow = new HBox(10, phone, codeButton);
+        HBox.setHgrow(phone, javafx.scene.layout.Priority.ALWAYS);
+        VBox body = new VBox(12, warning, phoneRow, code, password, repeat, status);
+        Dialogs.show("Parolamı unuttum", body, cancel, submit);
     }
 
     private static void busy(Button submit, Label status, String message) {

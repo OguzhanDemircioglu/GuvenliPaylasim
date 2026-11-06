@@ -6,12 +6,17 @@ import com.server.common.exception.UnauthorizedException;
 import com.server.common.message.GlobalMessages;
 import com.server.modules.auth.dto.ChangePasswordRequest;
 import com.server.modules.auth.dto.LoginRequest;
+import com.server.modules.auth.dto.PasswordResetRequest;
 import com.server.modules.auth.dto.SessionInfo;
 import com.server.modules.auth.dto.SessionUser;
+import com.server.modules.document.DocumentService;
 import com.server.modules.key.KeyService;
-import com.server.modules.menu.MenuService;
+import com.server.modules.user.Phones;
 import com.server.modules.user.User;
 import com.server.modules.user.UserRepository;
+import com.server.modules.verification.VerificationMessages;
+import com.server.modules.verification.VerificationPurpose;
+import com.server.modules.verification.VerificationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -31,50 +36,51 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final UserSessionRepository sessionRepository;
     private final LoginAttemptService loginAttemptService;
-    private final MenuService menuService;
     private final AccessTokenIssuer accessTokenIssuer;
     private final PasswordEncoder passwordEncoder;
     private final SessionProperties properties;
     private final KeyService keyService;
-    /** Kayıtlı olmayan e-postalarda da şifre kontrolü yapılır; cevap süresinden kullanıcının varlığı anlaşılmasın. */
+    private final VerificationService verificationService;
+    private final DocumentService documentService;
+    /** Kayıtlı olmayan numaralarda da şifre kontrolü yapılır; cevap süresinden kullanıcının varlığı anlaşılmasın. */
     private final String dummyPasswordHash;
 
     public AuthServiceImpl(UserRepository userRepository, UserSessionRepository sessionRepository,
-                           LoginAttemptService loginAttemptService, MenuService menuService,
+                           LoginAttemptService loginAttemptService,
                            AccessTokenIssuer accessTokenIssuer, PasswordEncoder passwordEncoder,
-                           SessionProperties properties, KeyService keyService) {
+                           SessionProperties properties, KeyService keyService,
+                           VerificationService verificationService, DocumentService documentService) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.loginAttemptService = loginAttemptService;
-        this.menuService = menuService;
         this.accessTokenIssuer = accessTokenIssuer;
         this.passwordEncoder = passwordEncoder;
         this.properties = properties;
         this.keyService = keyService;
+        this.verificationService = verificationService;
+        this.documentService = documentService;
         this.dummyPasswordHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
     @Override
     public AuthResult login(LoginRequest request, ClientInfo client) {
-        String attemptKey = client.ip() + "_" + request.email();
+        String phone = Phones.toE164(request.phone());
+        String attemptKey = client.ip() + "_" + phone;
         loginAttemptService.ensureNotBlocked(attemptKey);
 
-        Optional<User> user = userRepository.findByEmail(request.email());
+        Optional<User> user = userRepository.findByPhone(phone);
         String passwordHash = user.map(User::getPassword).orElse(dummyPasswordHash);
         if (!passwordEncoder.matches(request.password(), passwordHash) || user.isEmpty()) {
             loginAttemptService.recordFailure(attemptKey);
             throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
-        }
-        if (!user.get().isActive()) {
-            throw new UnauthorizedException(AuthMessages.USER_INACTIVE);
         }
         loginAttemptService.clear(attemptKey);
         return openSession(user.get(), client);
     }
 
     @Override
-    public AuthResult devLogin(String email, ClientInfo client) {
-        User user = userRepository.findByEmail(email).filter(User::isActive)
+    public AuthResult devLogin(String phone, ClientInfo client) {
+        User user = userRepository.findByPhone(phone)
                 .orElseThrow(() -> new NotFoundException(GlobalMessages.RECORD_NOT_FOUND));
         return openSession(user, client);
     }
@@ -100,9 +106,9 @@ public class AuthServiceImpl implements AuthService {
         }
 
         User user = userRepository.findById(session.getUserId()).orElse(null);
-        if (user == null || !user.isActive()) {
+        if (user == null) {
             sessionRepository.revoke(session.getId(), now);
-            throw new UnauthorizedException(user == null ? AuthMessages.SESSION_EXPIRED : AuthMessages.USER_INACTIVE);
+            throw sessionExpired();
         }
 
         if (hash.equals(session.getCurrentTokenHash())) {
@@ -136,9 +142,22 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         }
         user.setPassword(passwordEncoder.encode(request.newPassword()));
-        user.setMustChangePassword(false);
         keyService.saveOnPasswordChange(userId, request.keys());
         sessionRepository.revokeAllByUserIdExcept(userId, currentSessionId, Instant.now());
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(PasswordResetRequest request) {
+        String phone = Phones.toE164(request.phone());
+        verificationService.verify(phone, VerificationPurpose.PASSWORD_RESET, request.code());
+        User user = userRepository.findByPhone(phone)
+                .orElseThrow(() -> new BusinessException(VerificationMessages.CODE_INVALID));
+        user.setPassword(passwordEncoder.encode(request.password()));
+        keyService.replaceOnReset(user.getId(), request.keys());
+        // Eski özel anahtar olmadan bu kutular hiçbir zaman açılamaz (Crypto_Design §7.5).
+        documentService.deleteAllReceived(user.getId());
+        sessionRepository.revokeAllByUserId(user.getId(), Instant.now());
     }
 
     /**
@@ -163,8 +182,7 @@ public class AuthServiceImpl implements AuthService {
         return new SessionInfo(
                 accessTokenIssuer.issue(user, sessionId),
                 accessTokenIssuer.expiresInSeconds(),
-                SessionUser.from(user),
-                menuService.getMenuTree(user.getRole()));
+                SessionUser.from(user));
     }
 
     private Optional<UserSession> findSession(String tokenHash) {

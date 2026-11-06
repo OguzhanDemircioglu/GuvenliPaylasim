@@ -8,7 +8,6 @@ public final class KeyMessages {
     public static final String BUNDLE_TOO_LONG = "key_bundle_too_long";
     public static final String ALREADY_EXISTS = "key_already_exists";
     public static final String NOT_FOUND = "key_not_found";
-    public static final String UNITS_REQUIRED = "key_units_required";
 
     private KeyMessages() {
     }

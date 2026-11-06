@@ -1,7 +1,5 @@
 package com.server.security;
 
-import com.server.modules.user.Emails;
-
 import javax.crypto.Mac;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -20,21 +18,23 @@ import java.util.Base64;
  * </ul>
  * Sunucu authSecret'tan kek'i hesaplayamaz (iki değer ana anahtardan farklı etiketlerle HMAC ile ayrılır).
  * <p>
- * Bu sınıf istemcideki {@code PasswordKeys} ile birebir aynı hesabı yapar. Sunucu tarafında yalnızca ilk admin ve
- * demo kullanıcıları oluşturulurken kullanılır; istemciden gelen değerler olduğu gibi bcrypt'e verilir.
+ * Bu sınıf istemcideki {@code PasswordKeys} ile birebir aynı hesabı yapar (v2: tuz telefon, Crypto_Design §7.3).
+ * Sunucu tarafında yalnızca demo kullanıcıları oluşturulurken kullanılır; istemciden gelen değerler olduğu gibi
+ * bcrypt'e verilir.
  */
 public final class AuthSecrets {
 
     public static final int ITERATIONS = 600_000;
-    private static final String SALT_PREFIX = "guvenli-paylasim/v1|";
+    private static final String SALT_PREFIX = "guvenli-paylasim/v2|";
     private static final String AUTH_LABEL = "auth";
 
     private AuthSecrets() {
     }
 
-    public static String derive(String email, String password) {
+    /** {@code phoneE164}: {@code +905XXXXXXXXX}. */
+    public static String derive(String phoneE164, String password) {
         try {
-            byte[] salt = (SALT_PREFIX + Emails.normalize(email)).getBytes(StandardCharsets.UTF_8);
+            byte[] salt = (SALT_PREFIX + phoneE164).getBytes(StandardCharsets.UTF_8);
             PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), salt, ITERATIONS, 256);
             byte[] master = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
             spec.clearPassword();

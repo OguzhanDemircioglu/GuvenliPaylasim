@@ -130,12 +130,26 @@ class KeyServiceImplTest {
     }
 
     @Test
-    void recipientSearchNeedsAtLeastOneUnit() {
-        assertThatThrownBy(() -> service.findRecipients(List.of(), USER_ID))
+    void resetReplacesBothPublicKeysAndTheBundle() throws Exception {
+        String newEncryptionKey = publicKey("X25519");
+        String newSigningKey = publicKey("Ed25519");
+
+        service.replaceOnReset(USER_ID, new KeyBundleRequest(newEncryptionKey, newSigningKey, "new-bundle"));
+
+        verify(repository).deleteById(USER_ID);
+        ArgumentCaptor<UserKey> saved = ArgumentCaptor.forClass(UserKey.class);
+        verify(repository).save(saved.capture());
+        assertThat(saved.getValue().getEncryptionPublicKey()).isEqualTo(newEncryptionKey);
+        assertThat(saved.getValue().getSigningPublicKey()).isEqualTo(newSigningKey);
+        assertThat(saved.getValue().getPrivateKeyBundle()).isEqualTo("new-bundle");
+    }
+
+    @Test
+    void resetWithBrokenPublicKeyKeepsOldKeys() {
+        assertThatThrownBy(() -> service.replaceOnReset(USER_ID, new KeyBundleRequest("bozuk", signingKey, "b")))
                 .isInstanceOf(BusinessException.class)
-                .hasMessage(KeyMessages.UNITS_REQUIRED);
-        assertThatThrownBy(() -> service.findRecipients(null, USER_ID))
-                .hasMessage(KeyMessages.UNITS_REQUIRED);
+                .hasMessage(KeyMessages.PUBLIC_KEY_INVALID);
+        verify(repository, never()).deleteById(any());
     }
 
     private UserKey key(String bundle) {

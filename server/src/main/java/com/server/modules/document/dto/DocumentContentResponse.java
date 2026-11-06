@@ -9,6 +9,6 @@ import java.time.Instant;
  * sıfırlanmıştır ve imza doğrulanamaz; istemci bunu açıkça gösterir.
  */
 public record DocumentContentResponse(Long id, DocumentKind kind, String payload, String signature, String wrappedKey,
-                                      Long senderId, String senderName, Long senderUnitId,
+                                      Long senderId, String senderName,
                                       String senderSigningPublicKey, Instant createdAt) {
 }

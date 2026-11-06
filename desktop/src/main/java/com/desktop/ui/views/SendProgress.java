@@ -100,21 +100,12 @@ final class SendProgress {
         close.setDefaultButton(true);
         close.setOnAction(e -> Dialogs.close());
 
-        VBox sms = new VBox();
-        if (result.smsNotified() > 0) {
-            Label smsText = new Label(result.smsNotified() + " alıcıya \"yeni belgeniz var\" SMS bildirimi gönderildi "
-                    + "(simülasyon). SMS'te parola ya da anahtar yoktur.", Ui.icon(Material2OutlinedMZ.SMS, 18));
-            smsText.setWrapText(true);
-            smsText.setGraphicTextGap(10);
-            sms.getChildren().add(smsText);
-            sms.getStyleClass().add("recipient-summary");
-        }
         HBox footer = Ui.row(10, Ui.grow(), close);
         dialog.getChildren().setAll(
                 Ui.row(14, Ui.iconBadge(Material2OutlinedAL.CHECK_CIRCLE, "success", 48),
                         Ui.column(2, Ui.label("Gönderildi", Styles.TITLE_3),
                                 Ui.muted("Belge No " + result.id() + " · " + result.recipientCount() + " alıcı"))),
-                steps, sms, footer);
+                steps, footer);
         Toasts.success("Belge " + result.recipientCount() + " alıcıya şifreli olarak gönderildi.");
         onSent.run();
     }

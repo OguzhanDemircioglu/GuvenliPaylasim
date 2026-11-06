@@ -8,20 +8,20 @@ import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.Locale;
 
 /**
- * Paroladan iki bağımsız değer türetilir (docs/Crypto_Design.md §2):
+ * Paroladan iki bağımsız değer türetilir (docs/Crypto_Design.md §2, v2: §7.3):
  * <ul>
  *   <li>{@code authSecret}: sunucuya "parola" yerine gönderilir. Sunucu gerçek parolayı hiç görmez.</li>
  *   <li>{@code kek}: özel anahtarları şifreleyen anahtar. Bu bilgisayardan hiç çıkmaz.</li>
  * </ul>
- * Sunucu tarafındaki {@code AuthSecrets} ile birebir aynı hesabı yapar; biri değişirse diğeri de değişmelidir.
+ * Tuz telefon numarasıdır (E.164, {@code +905XXXXXXXXX}). Sunucu tarafındaki {@code AuthSecrets} ile birebir aynı
+ * hesabı yapar; biri değişirse diğeri de değişmelidir.
  */
 public final class PasswordKeys {
 
     static final int ITERATIONS = 600_000;
-    private static final String SALT_PREFIX = "guvenli-paylasim/v1|";
+    private static final String SALT_PREFIX = "guvenli-paylasim/v2|";
 
     private PasswordKeys() {
     }
@@ -29,10 +29,11 @@ public final class PasswordKeys {
     public record Derived(String authSecret, byte[] kek) {
     }
 
-    public static Derived derive(String email, char[] password) {
+    /** {@code phoneE164}: {@code +905XXXXXXXXX}. */
+    public static Derived derive(String phoneE164, char[] password) {
         byte[] master = null;
         try {
-            byte[] salt = (SALT_PREFIX + normalize(email)).getBytes(StandardCharsets.UTF_8);
+            byte[] salt = (SALT_PREFIX + phoneE164).getBytes(StandardCharsets.UTF_8);
             PBEKeySpec spec = new PBEKeySpec(password, salt, ITERATIONS, 256);
             master = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256").generateSecret(spec).getEncoded();
             spec.clearPassword();
@@ -45,11 +46,6 @@ public final class PasswordKeys {
                 Arrays.fill(master, (byte) 0);
             }
         }
-    }
-
-    /** Sunucudaki {@code Emails.normalize} ile aynı: küçük harf (Locale.ROOT), boşluksuz, "İ" → "i". */
-    static String normalize(String email) {
-        return email.trim().replace('İ', 'i').toLowerCase(Locale.ROOT);
     }
 
     private static byte[] hmac(byte[] key, String label) throws GeneralSecurityException {

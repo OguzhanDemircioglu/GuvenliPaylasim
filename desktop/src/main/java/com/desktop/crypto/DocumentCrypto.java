@@ -52,25 +52,40 @@ public final class DocumentCrypto {
         }
         byte[] documentKey = Aead.randomKey();
         try {
-            byte[] sealed = Aead.encrypt(documentKey, content.serialize(), PAYLOAD_AAD);
-            byte[] payload = new byte[1 + sealed.length];
-            payload[0] = PAYLOAD_VERSION;
-            System.arraycopy(sealed, 0, payload, 1, sealed.length);
-
-            String signature = Base64.getEncoder().encodeToString(
-                    Signatures.sign(sender.signing().getPrivate(), signedBytes(payload)));
-
-            byte[] binding = sha256(payload);
+            Signed signed = sealPayload(content, sender, documentKey);
             Map<Long, String> wrapped = new LinkedHashMap<>();
             for (Recipient recipient : recipients) {
-                byte[] key = KeyWrap.wrap(documentKey,
-                        UserKeys.publicKey("X25519", recipient.encryptionPublicKey()), binding);
-                wrapped.put(recipient.userId(), Base64.getEncoder().encodeToString(key));
+                wrapped.put(recipient.userId(), wrapFor(documentKey, recipient.encryptionPublicKey(), signed.payload()));
             }
-            return new Sealed(payload, signature, wrapped);
+            return new Sealed(signed.payload(), signed.signature(), wrapped);
         } finally {
             Arrays.fill(documentKey, (byte) 0);
         }
+    }
+
+    /** Şifreli ve imzalı içerik; belge anahtarı ayrıca sarmalanır (alıcıya ya da davet koduna). */
+    record Signed(byte[] payload, String signature) {
+    }
+
+    static Signed sealPayload(DocumentContent content, UserKeys sender, byte[] documentKey) {
+        byte[] sealed = Aead.encrypt(documentKey, content.serialize(), PAYLOAD_AAD);
+        byte[] payload = new byte[1 + sealed.length];
+        payload[0] = PAYLOAD_VERSION;
+        System.arraycopy(sealed, 0, payload, 1, sealed.length);
+        String signature = Base64.getEncoder().encodeToString(
+                Signatures.sign(sender.signing().getPrivate(), signedBytes(payload)));
+        return new Signed(payload, signature);
+    }
+
+    /** Belge anahtarını bir alıcının açık anahtarına sarmalar; sarmalama bu belgeye bağlıdır (AAD = SHA-256(payload)). */
+    static String wrapFor(byte[] documentKey, String encryptionPublicKey, byte[] payload) {
+        return Base64.getEncoder().encodeToString(
+                KeyWrap.wrap(documentKey, UserKeys.publicKey("X25519", encryptionPublicKey), sha256(payload)));
+    }
+
+    static boolean signatureValid(byte[] payload, String signature, String senderSigningPublicKey) {
+        return Signatures.verify(UserKeys.publicKey("Ed25519", senderSigningPublicKey), signedBytes(payload),
+                Base64.getDecoder().decode(signature));
     }
 
     /**
@@ -113,7 +128,7 @@ public final class DocumentCrypto {
         return data;
     }
 
-    private static byte[] sha256(byte[] data) {
+    static byte[] sha256(byte[] data) {
         try {
             return MessageDigest.getInstance("SHA-256").digest(data);
         } catch (GeneralSecurityException e) {

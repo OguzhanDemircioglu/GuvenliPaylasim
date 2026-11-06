@@ -8,7 +8,6 @@ import com.desktop.service.AuthService;
 import com.desktop.service.Session;
 import com.desktop.ui.Overlays;
 import com.desktop.ui.views.LoginView;
-import com.desktop.ui.views.PasswordSetupView;
 import com.desktop.ui.views.ShellView;
 import com.desktop.update.UpdateGate;
 import javafx.application.Application;
@@ -94,11 +93,7 @@ public class App extends Application {
     private void onLoggedIn(Session newSession) {
         session = newSession;
         setCompact(false);
-        if (newSession.user().mustChangePassword()) {
-            show(new PasswordSetupView(auth, newSession, () -> showShell(newSession), this::logout));
-        } else {
-            showShell(newSession);
-        }
+        showShell(newSession);
     }
 
     private void showShell(Session active) {
