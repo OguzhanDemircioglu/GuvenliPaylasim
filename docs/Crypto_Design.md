@@ -136,8 +136,10 @@ Kimsenin açamayacağı bir kutuya dosya ya da mesaj konur; kutu sadece alıcın
   - `POST /api/auth/register/start {phone}` → 6 haneli SMS kodu (5 dk geçerli, en fazla 3 deneme).
   - `POST /api/auth/register/complete {phone, smsCode, fullName, authSecret, keyBundle}` → hesap açılır.
 - Anahtarlar **kayıtta** üretilir (v1'de ilk girişteydi). Böylece "anahtarı olmayan kullanıcı" durumu kalkar.
-- SMS için Vonage kullanılır (`SmsGateway` arayüzünün yeni uygulaması). Erişim bilgileri sadece ortam
-  değişkeninden okunur, repoya girmez. Dev'de `SimulatedSmsGateway` kalır.
+- Doğrulama kodu **WhatsApp** ile gider: Vonage Messages API (`SmsGateway` arayüzünün yeni uygulaması). Bu belgede
+  "SMS kodu" bu doğrulama mesajı anlamındadır. Demo'da Vonage sandbox kullanılır (alıcı numara önce sandbox'a
+  katılır); gerçek kullanımda WhatsApp Business hesabı ve Meta onaylı doğrulama şablonu gerekir. Erişim bilgileri
+  sadece ortam değişkeninden okunur, repoya girmez. Dev'de `SimulatedSmsGateway` kalır.
 - `register/start` numaranın zaten kayıtlı olup olmadığını **söylemez**; kayıtlı numaraya SMS gitmez ama yanıt aynıdır.
 
 ### 7.3 Parola türetme (§2 değişikliği)

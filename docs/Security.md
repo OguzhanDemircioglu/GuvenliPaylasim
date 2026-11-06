@@ -31,6 +31,8 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
 - **Önlem:** Sadece HTTPS, TLS 1.3. Masaüstü uygulaması sunucunun açık anahtarını sabitler (**pinning**) ve bir yedek
   anahtar da taşır. Sertifika değişimi önce yedek anahtara geçilerek yapılır.
 - **Kabul:** IP adresi ve trafik zamanı görünür.
+- **Demo sınırı (Railway):** Sertifikayı Railway yönetir ve anahtarı yenilemede değişebilir. Demo'da sabitleme kendi
+  anahtarımıza değil Let's Encrypt kök sertifikalarına yapılır. Kendi alan adı ve anahtarına geçince düzeltilir.
 
 ### S2. Veritabanını çalan
 - **Garanti:** İçeriği, davet kodlarını ve özel anahtarları göremez; parolaları kendi bilgisayarında deneyemez.
@@ -88,8 +90,9 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   - Güncelleme bildirimi bir son geçerlilik tarihi taşımalı; eski bir bildirim tekrar sunularak güncellemenin
     gizlenmesi (dondurma saldırısı) engellenir.
 
-### S8. SMS'i kötüye kullanan
-- **Garanti:** SMS servisi fatura saldırısına ve taciz amaçlı kullanıma kapalıdır.
+### S8. Doğrulama mesajını (WhatsApp / SMS) kötüye kullanan
+- **Garanti:** Mesaj servisi fatura saldırısına ve taciz amaçlı kullanıma kapalıdır. Kanal WhatsApp'tır
+  (Crypto_Design §7.2); sınırlar aynıdır.
 - **Önlemler:** SMS sadece `^5\d{9}$` (TR mobil) numaralara gider. Numara başına saatte 3, IP başına saatte 10,
   **sistem geneli günlük tavan** (aşılınca SMS durur, alarm verilir). SMS kuyruktan gönderilir.
 

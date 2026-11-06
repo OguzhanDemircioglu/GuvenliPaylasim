@@ -72,6 +72,7 @@ ekranında da gösterilir.
 
 > Uygulama varsayılan olarak `http://localhost:8080` adresindeki sunucuya bağlanır. Başka bir sunucu için
 > `GPS_SERVER_URL` ortam değişkeni verilir (ör. `GPS_SERVER_URL=https://paylasim.kurum.local`).
+> Demo sunucusu: `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`
 
 ---
 

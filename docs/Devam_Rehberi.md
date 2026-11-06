@@ -25,7 +25,7 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 | 2. Gizlilik | **Konuşuldu**, kararlar Crypto_Design §8'de. Kodlanmadı |
 | 3. Karşılıklı teslim (kasa) | **Konuşuldu: yapılmayacak** (gerekçe aşağıda) |
 | Güvenlik: tehdit modeli ve test planı | **Konuşuldu**, [Security.md](Security.md)'de. §7 buna göre güncellendi |
-| 4. İnternete açılma | **Konuşulacak** |
+| 4. İnternete açılma | **Kısmen karar verildi** (10 MB, WhatsApp, Railway); kota, QR, yedekleme onay bekliyor |
 | TOTP ile giriş | Konuşuldu: istenir; ilk parçadan sonra eklenecek (§7.4) |
 
 ## 1. Temel dönüşüm: alınan kararlar (özet)
@@ -78,19 +78,40 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 - Alınan kararlar: sunucuda ikinci kilit ve 12+ karakter parola (S2), iki yönlü davet kodu (S3), anahtar değişince
   yeni kod (S5), sertifika sabitleme (S1), SMS sistem geneli tavanı (S8).
 
-## 4. İnternete açılma: konuşulacaklar
+## 4. İnternete açılma: kararlar
 
-- **Parmak izi doğrulama.** Kişi eklerken parmak izini QR kodla ya da telefonda okuyarak karşılaştırma. Sunucunun
-  araya sahte anahtar koymadığı böyle doğrulanır.
-  - Soru: Davet kodu zaten parmak izini taşıyor (§7.6). Ek doğrulama sadece isteğe bağlı mı olsun?
-- **Kötüye kullanım sınırları.** Kayıt ve gönderim için hız sınırı (taslak §7.9'da); kullanıcı başına depolama ve
-  dosya boyutu kotası.
-  - Soru: Kota ne kadar olsun?
-- **Büyük dosyalar.** Bugün sınır yaklaşık 10 MB ve dosya tek parça gönderiliyor. Parçalı şifreleme ve parçalı
-  yüklemeyle yüzlerce MB'lık dosyalar gönderilebilir.
-  - Soru: Hedef en büyük dosya boyutu ne?
-- **Prod kurulumu.** HTTPS, sunucunun internete kurulması, yedekleme.
-  - Sorular: Sunucu nerede çalışacak? Alan adı ne olacak? Yedekler nerede tutulacak?
+**Alınan kararlar**
+- **En büyük dosya 10 MB.** Parçalı şifreleme ve parçalı yükleme gerekmez; dosya tek parça, veritabanında kalır.
+- **Doğrulama mesajı WhatsApp ile** (Vonage Messages API). Demo'da Vonage sandbox (Crypto_Design §7.2).
+- **Demo sunucusu Railway'de** (aşağıda). Adres `https://guvenlipaylasim.up.railway.app`. DuckDNS kullanılamadı:
+  Railway özel adres için CNAME ister, DuckDNS CNAME desteklemez. Kendi alan adı alınınca CNAME ile bağlanır.
+
+**Önerildi, onay bekliyor**
+- Parmak izi için QR ekranı yapılmaz; iki yönlü davet kodu (§7.6) bu işi görür. Parmak izi kişi detayında görünür.
+- Kota: kullanıcı başına aynı anda yaşayan gönderilmiş kutular toplamı 500 MB; kişilere günde 200 kutu.
+- Yedekleme: kutular yedeklenmez (süreli silme sözü yedekte bozulmasın); kullanıcılar, anahtar paketleri ve kişiler
+  şifreli yedeklenir, 7 gün tutulur. Sunucudaki ikinci kilidin anahtarı DB yedeğinin yanında tutulmaz.
+- Gerçek kullanıcı verisinden önce KVKK: sunucunun yeri (Railway Türkiye dışında) ve aydınlatma metni.
+
+## Demo kurulumu (Railway)
+
+> 2026-11-06'da kuruldu. Bugün çalışan kod **v1**'dir.
+
+| Konu | Değer |
+|---|---|
+| Proje | `faithful-enthusiasm`, ortam `production` |
+| Servisler | `GuvenliPaylasim` (GitHub `main`, kök klasör `/server`, Railpack, JDK 25), `Postgres` (Railway şablonu, volume'lu) |
+| Adres | `https://guvenlipaylasim.up.railway.app` (HTTP → HTTPS yönlendirilir), sağlık: `/actuator/health` |
+| Profil | `prod`: Swagger ve dev-login kapalı, demo kullanıcıları (V007) yüklenmez |
+| JWT anahtarları | `JWT_PRIVATE_KEY_PEM` / `JWT_PUBLIC_KEY_PEM` değişkenlerinde; başlangıç komutu bunları `/tmp/keys`'e yazar |
+| İlk admin | `ADMIN_EMAIL` / `ADMIN_PASSWORD` değişkenlerinde (Railway panelinde görülür) |
+| Veritabanı | `DB_URL` vb. `${{Postgres.*}}` referanslarıyla, özel ağdan (`postgres.railway.internal`) |
+
+- `main`'e her push otomatik deploy eder.
+- Masaüstünden bağlanmak için: `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`.
+- Vonage değerleri (API key, secret, application ID, private key) Railway panelinde servisin Variables kısmına
+  girilir; repoya ve sohbete yazılmaz. Değişken adları WhatsApp gateway kodlanınca belirlenir.
+- Railway proje token'ı sohbette paylaşıldı; kurulum işleri bitince panelden yenilenmeli.
 
 ## Konuşmalar bitince: kodlama sırası (taslak)
 
