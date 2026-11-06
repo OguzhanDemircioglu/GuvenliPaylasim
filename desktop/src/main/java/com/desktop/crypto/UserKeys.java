@@ -102,19 +102,24 @@ public record UserKeys(KeyPair encryption, KeyPair signing) {
      * sahte bir anahtar koymadığını doğrulayabilir.
      */
     public static String fingerprint(String encryptionPublicKey, String signingPublicKey) {
+        String hex = HexFormat.of().withUpperCase().formatHex(fingerprintBytes(encryptionPublicKey, signingPublicKey));
+        StringBuilder grouped = new StringBuilder();
+        for (int i = 0; i < hex.length(); i += 4) {
+            if (i > 0) {
+                grouped.append(' ');
+            }
+            grouped.append(hex, i, i + 4);
+        }
+        return grouped.toString();
+    }
+
+    /** Parmak izinin ham hali (16 bayt): davet kutusuna ve kabul mührüne bu girer (Crypto_Design §7.6). */
+    static byte[] fingerprintBytes(String encryptionPublicKey, String signingPublicKey) {
         try {
             MessageDigest sha = MessageDigest.getInstance("SHA-256");
             sha.update(Base64.getDecoder().decode(encryptionPublicKey));
             sha.update(Base64.getDecoder().decode(signingPublicKey));
-            String hex = HexFormat.of().withUpperCase().formatHex(sha.digest(), 0, 16);
-            StringBuilder grouped = new StringBuilder();
-            for (int i = 0; i < hex.length(); i += 4) {
-                if (i > 0) {
-                    grouped.append(' ');
-                }
-                grouped.append(hex, i, i + 4);
-            }
-            return grouped.toString();
+            return Arrays.copyOf(sha.digest(), 16);
         } catch (GeneralSecurityException e) {
             throw new CryptoException("Parmak izi hesaplanamadı", e);
         }

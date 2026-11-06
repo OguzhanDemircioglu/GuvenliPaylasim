@@ -229,6 +229,21 @@ Birbirini kişi olarak eklememiş iki kişi arasında ilk kutu **davet kodu** il
 
 Böylece sunucu iki yönde de araya sahte anahtar koyamaz (Security S3).
 
+**Uygulama ayrıntıları (2026-11-06, kodlama sırasının 4. adımı):**
+- Kod: 16 karakter Crockford Base32 (`0-9A-Z`, I/L/O/U yok), ekranda `XXXX-XXXX-XXXX-XXXX`. Girişte boşluk ve
+  tireler atılır, küçük harf büyütülür, O→0, I/L→1 çevrilir. HKDF girdisi bu 16 ASCII karakterdir; tuz verilmez.
+- `sarmalı` içindeki parmak izi ham 16 bayttır (ekrandaki hex'in ikili hali). `doğrulayıcı` sunucuya Base64 gider;
+  sunucu SHA-256'sını hex olarak arar.
+- `kendiSarmalı`: mühürKey, §4.2'deki sarmalama ile gönderenin kendi X25519 anahtarına, bağlam
+  `"gps-invite-self/v1|" + SHA-256(doğrulayıcı) hex` ile sarmalanır.
+- Kabul edilen kutu normal bir belgeye dönüşür (alıcının anahtarına sarmalı `K`); davetteki şifreli içerik ve
+  `sarmalı` silinir. Tamamlanan davetin meta verisi 1 gün, kabul edilip gönderenin hiç doğrulamadığı davet 7 gün sonra
+  silinir. Kabul edilmeyen davet süresi dolunca içeriğiyle silinir (10 dakikada bir çalışan iş).
+- API: `POST /api/invites` (oluştur), `POST /api/invites/redeem` (kod girme), `POST /api/invites/{id}/accept`,
+  `GET /api/invites/verifications`, `POST /api/invites/{id}/verify|reject` (gönderen), `GET /api/invites/sent`,
+  `DELETE /api/invites/{id}` (geri alma), `GET /api/contacts`, `DELETE /api/contacts/{userId}`.
+- Gönderenin istemcisi bekleyen kabulleri gelen kutusu yoklamasıyla birlikte arka planda doğrular.
+
 **Kurallar:**
 - Kod girilene kadar alıcı **hiçbir şey görmez**: sunucu "bekleyen kutunuz var" bilgisini vermez, bildirim göndermez.
 - Gönderen, numaranın kayıtlı olup olmadığını öğrenmez; davet oluşturma her iki durumda aynı yanıtı verir.

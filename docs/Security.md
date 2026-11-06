@@ -115,9 +115,9 @@ test" listesi bu belgenin ekine yazılır.
 | Alan | Test |
 |---|---|
 | Kripto | Test vektörleri (istemci ve sunucu aynı sonucu verir); davet kodu, kutu ve anahtar paketi formatları için fuzz; yanlış imza, yanlış AAD, kesilmiş veri, sürüm baytı değişikliği reddedilir |
-| İki yönlü kod (S3) | Sunucu sahte alıcı ya da gönderen anahtarı verirse kişi eklenmez ve kutu açılmaz |
-| Anahtar değişikliği (S5) | Anahtarı değişen kişiye kodsuz gönderim istemcide ve sunucuda reddedilir |
-| Yetki (S4) | Her uç nokta için başka kullanıcının kimliğiyle erişim denemesi (IDOR); oturumsuz erişim |
+| İki yönlü kod (S3) | Sunucu sahte alıcı ya da gönderen anahtarı verirse kişi eklenmez ve kutu açılmaz. **Var:** masaüstü `InviteCryptoTest` (sahte gönderen anahtarı, sahte alıcı anahtarı, sahte mühür, değiştirilmiş kişi kaydı ve içerik) |
+| Anahtar değişikliği (S5) | Anahtarı değişen kişiye kodsuz gönderim istemcide ve sunucuda reddedilir. **Var:** sunucu `ContactServiceImplTest`, uçtan uca deneme (parola sıfırlama → `KEY_CHANGED` → sunucu reddi → yeni kodla yeniden doğrulama) |
+| Yetki (S4) | Her uç nokta için başka kullanıcının kimliğiyle erişim denemesi (IDOR); oturumsuz erişim. **Kısmen var:** davetlerde başka kullanıcının kodu ve kabul/doğrulama/geri alma denemesi (`InviteServiceImplTest`); diğer uç noktalar için sistematik test henüz yok |
 | Numara tarama (S4) | Kayıtlı ve kayıtsız numara için yanıt gövdesi aynı; yanıt süresi farkı istatistiksel olarak ayırt edilemez. İlk ölçüm (2026-11-06, yerel sunucu, uzak DB, 20'şer istek): `register/start` medyan farkı 2,6 ms, `password-reset/start` 10,2 ms (~690 ms yanıtta) |
 | Hız sınırları (S4, S8) | Her sınır aşılınca reddedilir; IP değiştirerek ya da paralel isteklerle atlatılamaz |
 | Silme (Crypto_Design §8) | Süresi dolan, açılınca silinen ve alıcının sildiği kutunun DB'de hiçbir satırı kalmaz |

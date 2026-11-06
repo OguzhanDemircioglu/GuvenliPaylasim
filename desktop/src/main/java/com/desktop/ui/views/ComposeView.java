@@ -3,17 +3,30 @@ package com.desktop.ui.views;
 import atlantafx.base.theme.Styles;
 import com.desktop.api.Dto;
 import com.desktop.crypto.DocumentContent;
+import com.desktop.service.AuthService;
+import com.desktop.service.ContactService;
 import com.desktop.service.DocumentService;
+import com.desktop.service.InviteService;
 import com.desktop.ui.Async;
+import com.desktop.ui.Dialogs;
 import com.desktop.ui.Formats;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableSet;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
@@ -33,8 +46,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Yeni gönderi: düz yazı ya da dosya. İçerik bu bilgisayarda şifrelenir; her alıcı kişi için belge anahtarı ayrı
- * ayrı sarmalanır.
+ * Yeni gönderi: düz yazı ya da dosya; alıcı doğrulanmış kişiler ya da davet koduyla yeni bir numara. İçerik bu
+ * bilgisayarda şifrelenir; her alıcı kişi için belge anahtarı ayrı ayrı sarmalanır.
  */
 final class ComposeView extends VBox {
 
@@ -55,8 +68,13 @@ final class ComposeView extends VBox {
     private final Label summary = new Label();
     private final Button send = Ui.button("Şifrele ve gönder", Material2OutlinedAL.ENHANCED_ENCRYPTION,
             Styles.ACCENT, "send-button");
-    /** 4. adımda kişi listesinden ya da davet kodundan dolar. */
-    private final List<Dto.Recipient> recipients = List.of();
+    private final ToggleButton contactsMode = new ToggleButton("Kişilerim", Ui.icon(Material2OutlinedMZ.PEOPLE, 16));
+    private final ToggleButton inviteMode = new ToggleButton("Davet kodu ile", Ui.icon(Material2OutlinedMZ.VPN_KEY, 16));
+    private final StackPane recipientEditor = new StackPane();
+    private final ListView<ContactService.Contact> contactList = new ListView<>();
+    private final ObservableSet<Long> selected = FXCollections.observableSet();
+    private final TextField invitePhone = new TextField();
+    private final ComboBox<Ttl> ttl = new ComboBox<>();
     private File file;
 
     ComposeView(Context context) {
@@ -191,11 +209,50 @@ final class ComposeView extends VBox {
 
     // ---------- Alıcılar ----------
 
+    /** Davet kodunun geçerlilik süresi (Crypto_Design §7.6, en fazla 7 gün). */
+    private record Ttl(String label, int hours) {
+        @Override
+        public String toString() {
+            return label;
+        }
+    }
+
     /**
-     * v2'de alıcı birim değil kişidir: kişi listesi ve ilk temas için davet kodu kodlama sırasının 4. adımında
-     * gelir (Crypto_Design §7.6–7.7). O zamana kadar alıcı seçilemez ve gönderim kapalıdır.
+     * İki yol (Crypto_Design §7.6–7.7): doğrulanmış kişilere kodsuz gönderim ya da yeni birine davet koduyla ilk kutu.
+     * Anahtarı değişen kişi listede seçilemez; ona da davet koduyla gönderilir.
      */
     private VBox recipientsPanel() {
+        ToggleGroup modes = new ToggleGroup();
+        contactsMode.setToggleGroup(modes);
+        inviteMode.setToggleGroup(modes);
+        contactsMode.getStyleClass().add(Styles.LEFT_PILL);
+        inviteMode.getStyleClass().add(Styles.RIGHT_PILL);
+        contactsMode.setSelected(true);
+        modes.selectedToggleProperty().addListener((obs, old, selected) -> {
+            if (selected == null) {
+                old.setSelected(true);
+                return;
+            }
+            recipientEditor.getChildren().setAll(selected == contactsMode ? contactList : inviteForm());
+            updateSummary();
+        });
+
+        contactList.getStyleClass().add("unit-list");
+        contactList.setCellFactory(v -> new ContactCell());
+        contactList.setPlaceholder(Ui.muted("Henüz kişiniz yok. \"Davet kodu ile\" seçip ilk kutuyu gönderin."));
+        Async.run(context.contacts::list, loaded -> {
+            contactList.getItems().setAll(loaded);
+            updateSummary();
+        });
+        recipientEditor.getChildren().setAll(contactList);
+        VBox.setVgrow(recipientEditor, Priority.ALWAYS);
+
+        ttl.getItems().setAll(new Ttl("1 saat", 1), new Ttl("1 gün", 24), new Ttl("3 gün", 72), new Ttl("7 gün", 168));
+        ttl.getSelectionModel().select(1);
+        ttl.setMaxWidth(Double.MAX_VALUE);
+        invitePhone.setPromptText("Alıcının cep telefonu (5XXXXXXXXX)");
+        invitePhone.textProperty().addListener((obs, old, value) -> updateSummary());
+
         summary.setWrapText(true);
         summary.setMinHeight(Region.USE_PREF_SIZE);
         summary.setMaxWidth(Double.MAX_VALUE);
@@ -208,46 +265,157 @@ final class ComposeView extends VBox {
         send.setMaxWidth(Double.MAX_VALUE);
         send.setOnAction(e -> send());
 
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-        return Ui.surface(Ui.label("Alıcı", "section-title"),
-                Ui.muted("Belge, telefon numarasıyla eklediğiniz kişilere gider. İlk gönderim davet koduyla yapılır."),
-                spacer, summaryBox, send);
+        return Ui.surface(Ui.row(10, Ui.label("Alıcı", "section-title"), Ui.grow(), new HBox(contactsMode, inviteMode)),
+                recipientEditor, summaryBox, send);
+    }
+
+    private VBox inviteForm() {
+        Label help = Ui.muted("İlk kutu bir kodla kilitlenir. Kodu alıcıya siz iletirsiniz (yüz yüze, telefonla). "
+                + "Alıcı kayıtlı değilse bu sürede kayıt olabilir. Kodu girene kadar kutuyu göremez.");
+        help.setWrapText(true);
+        VBox form = new VBox(10, help, Ui.label("Cep telefonu", Styles.TEXT_BOLD), invitePhone,
+                Ui.label("Kod geçerlilik süresi", Styles.TEXT_BOLD), ttl);
+        return form;
+    }
+
+    private List<Dto.Recipient> selectedRecipients() {
+        return contactList.getItems().stream()
+                .filter(c -> c.canReceive() && selected.contains(c.userId()))
+                .map(ContactService.Contact::recipient)
+                .toList();
     }
 
     private void updateSummary() {
-        summary.setText(recipients.isEmpty()
-                ? "Kişi listesi ve davet kodu henüz hazır değil; bu sürümde alıcı seçilemez."
-                : recipients.size() + " kişi. Belge anahtarı her kişi için ayrı ayrı sarmalanacak.");
+        if (inviteMode.isSelected()) {
+            String error = AuthService.validatePhone(invitePhone.getText());
+            summary.setText(error == null
+                    ? "Kod ekranda gösterilecek; sunucuya gönderilmez. Kutu kod girilene kadar kimseye görünmez."
+                    : "Alıcının telefonunu yazın.");
+        } else {
+            int count = selectedRecipients().size();
+            summary.setText(count == 0
+                    ? "Doğrulanmış kişilerinizden seçin."
+                    : count + " kişi. Belge anahtarı her kişi için ayrı ayrı sarmalanacak.");
+        }
         updateSendState();
     }
 
     private void updateSendState() {
         boolean hasContent = textMode.isSelected() ? !text.getText().isBlank() : file != null;
-        send.setDisable(!hasContent || recipients.isEmpty());
+        boolean hasRecipient = inviteMode.isSelected()
+                ? AuthService.validatePhone(invitePhone.getText()) == null
+                : !selectedRecipients().isEmpty();
+        send.setDisable(!hasContent || !hasRecipient);
     }
 
     // ---------- Gönderim ----------
 
     private void send() {
-        List<Dto.Recipient> to = List.copyOf(recipients);
         boolean isText = textMode.isSelected();
         String plain = text.getText();
         File chosen = file;
+        if (inviteMode.isSelected()) {
+            sendInvite(isText, plain, chosen);
+            return;
+        }
+        List<Dto.Recipient> to = selectedRecipients();
         long size = isText ? plain.getBytes(StandardCharsets.UTF_8).length : chosen.length();
 
-        SendProgress progress = new SendProgress(to, size, () -> {
-            text.clear();
-            file = null;
-            showFilePicker();
-        });
+        SendProgress progress = new SendProgress(to, size, this::clearAll);
         progress.show();
-        Async.run(() -> {
-                    DocumentContent content = isText ? DocumentContent.ofText(plain)
-                            : DocumentContent.ofFile(chosen.getName(), mimeType(chosen), Files.readAllBytes(chosen.toPath()));
-                    return context.documents.send(content, to);
-                },
+        Async.run(() -> context.documents.send(content(isText, plain, chosen), to),
                 progress::completed,
                 progress::failed);
+    }
+
+    private void sendInvite(boolean isText, String plain, File chosen) {
+        String phone = invitePhone.getText();
+        int hours = ttl.getValue().hours();
+        send.setDisable(true);
+        Async.run(() -> context.invites.send(content(isText, plain, chosen), phone, hours),
+                sent -> {
+                    clearAll();
+                    invitePhone.clear();
+                    showCode(sent);
+                },
+                failure -> {
+                    updateSendState();
+                    Toasts.error(failure);
+                });
+    }
+
+    /** Kod sadece burada, bir kez gösterilir; hiçbir yere kaydedilmez. */
+    private void showCode(InviteService.SentCode sent) {
+        Label code = Ui.label(sent.code(), "invite-code");
+        Button copy = Ui.button("Kopyala", Material2OutlinedAL.CONTENT_COPY, Styles.BUTTON_OUTLINED);
+        copy.setOnAction(e -> {
+            ClipboardContent clip = new ClipboardContent();
+            clip.putString(sent.code());
+            Clipboard.getSystemClipboard().setContent(clip);
+            Toasts.info("Kod panoya kopyalandı.");
+        });
+        Label text = Ui.muted("Bu kodu " + Formats.phone(sent.recipientPhone()) + " numaralı kişiye kendi kanalınızla "
+                + "(yüz yüze, telefonla, başka bir uygulamayla) iletin. Kod sunucuya gönderilmedi ve bir daha "
+                + "gösterilemez. Son geçerlilik: " + Formats.fullDate(sent.expiresAt()) + ".");
+        text.setWrapText(true);
+        text.setMaxWidth(440);
+        Button done = Ui.primary("Tamam", Material2OutlinedAL.DONE);
+        done.setDefaultButton(true);
+        done.setOnAction(e -> Dialogs.close());
+        Dialogs.show("Davet kodu", new VBox(14, Ui.row(12, code, copy), text), done);
+    }
+
+    private static DocumentContent content(boolean isText, String plain, File chosen) throws java.io.IOException {
+        return isText ? DocumentContent.ofText(plain)
+                : DocumentContent.ofFile(chosen.getName(), mimeType(chosen), Files.readAllBytes(chosen.toPath()));
+    }
+
+    private void clearAll() {
+        text.clear();
+        file = null;
+        showFilePicker();
+        selected.clear();
+        contactList.refresh();
+        updateSummary();
+    }
+
+    private final class ContactCell extends ListCell<ContactService.Contact> {
+
+        private final CheckBox box = new CheckBox();
+
+        ContactCell() {
+            box.setOnAction(e -> {
+                ContactService.Contact contact = getItem();
+                if (contact == null) {
+                    return;
+                }
+                if (box.isSelected()) {
+                    selected.add(contact.userId());
+                } else {
+                    selected.remove(contact.userId());
+                }
+                updateSummary();
+            });
+        }
+
+        @Override
+        protected void updateItem(ContactService.Contact contact, boolean empty) {
+            super.updateItem(contact, empty);
+            setText(null);
+            if (empty || contact == null) {
+                setGraphic(null);
+                return;
+            }
+            box.setText(contact.fullName());
+            box.setDisable(!contact.canReceive());
+            box.setSelected(contact.canReceive() && selected.contains(contact.userId()));
+            Label state = switch (contact.state()) {
+                case VERIFIED -> Ui.muted(Formats.phone(contact.phone()));
+                case PENDING -> Ui.chip("doğrulama bekleniyor", "accent");
+                case KEY_CHANGED -> Ui.chip("anahtarı değişti · davet kodu gerekir", "warning");
+                case UNTRUSTED -> Ui.chip("kayıt doğrulanamadı", "danger");
+            };
+            setGraphic(Ui.row(10, box, Ui.grow(), state));
+        }
     }
 }

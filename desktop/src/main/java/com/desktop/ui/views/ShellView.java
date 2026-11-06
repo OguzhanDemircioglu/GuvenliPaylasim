@@ -86,6 +86,7 @@ public final class ShellView extends BorderPane {
                 navButton("Gelen Kutusu", Material2OutlinedAL.INBOX, () -> new InboxView(context), inboxBadge),
                 navButton("Yeni Gönderi", Material2OutlinedMZ.SEND, () -> new ComposeView(context)),
                 navButton("Gönderilenler", Material2OutlinedAL.HISTORY, () -> new SentView(context)),
+                navButton("Kişiler", Material2OutlinedAL.CONTACTS, () -> new ContactsView(context)),
                 Ui.label("GÜVENLİK", "nav-section"),
                 navButton("Anahtarım", Material2OutlinedAL.FINGERPRINT, () -> new SecurityView(context)),
                 navButton("Neden Güvenli?", Material2OutlinedMZ.VERIFIED_USER, WhyView::new));
@@ -160,10 +161,19 @@ public final class ShellView extends BorderPane {
         fade.play();
     }
 
-    /** Okunmamış sayısını günceller; ilk kontrolden sonra gelen her yeni belge için bildirim gösterir. */
+    /**
+     * Okunmamış sayısını günceller; ilk kontrolden sonra gelen her yeni belge için bildirim gösterir. Gönderilen
+     * davetler kabul edildiyse alıcının kabul mührü de burada doğrulanır (Crypto_Design §7.6).
+     */
     private void pollInbox() {
         Async.run(context.documents::inbox, this::onInbox, e -> {
             // Bağlantı geçici olarak koptuysa bir sonraki kontrolde yeniden denenir.
+        });
+        Async.run(context.invites::processVerifications, result -> {
+            result.verified().forEach(name -> Toasts.success(name + " davet kodunuzu girdi ve kişilerinize eklendi."));
+            result.failed().forEach(name -> Toasts.error(new com.desktop.crypto.CryptoException(name
+                    + " için anahtar doğrulaması başarısız oldu; kişi eklenmedi. Sunucu araya sahte bir anahtar koymuş olabilir.")));
+        }, e -> {
         });
     }
 

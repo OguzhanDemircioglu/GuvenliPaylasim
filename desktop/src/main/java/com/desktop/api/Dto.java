@@ -66,4 +66,47 @@ public final class Dto {
     public record SentItem(Long id, DocumentKind kind, long sizeBytes, Instant createdAt, Instant purgedAt,
                            List<SentRecipient> recipients) {
     }
+
+    // ---------- Kişiler ve davet kodu (Crypto_Design §7.6–7.8) ----------
+
+    public enum ContactStatus { VERIFIED, PENDING }
+
+    /** {@code fingerprint}/{@code signature}: kayıttaki doğrulanmış değer; anahtarlar kişinin güncel anahtarlarıdır. */
+    public record Contact(Long userId, String fullName, String phone, ContactStatus status, String fingerprint,
+                          String signature, String encryptionPublicKey, String signingPublicKey) {
+    }
+
+    public record InviteCreateRequest(String recipientPhone, int ttlHours, DocumentKind kind, String payload,
+                                      String signature, String wrapped, String verifierHash, String selfWrapped) {
+    }
+
+    public record InviteCreated(Long id, Instant expiresAt) {
+    }
+
+    public record InviteRedeemRequest(String verifier) {
+    }
+
+    public record Party(Long userId, String fullName, String phone, String encryptionPublicKey,
+                        String signingPublicKey) {
+    }
+
+    public record InviteRedeem(Long id, DocumentKind kind, String payload, String signature, String wrapped,
+                               Instant createdAt, Party sender) {
+    }
+
+    public record InviteAcceptRequest(String wrappedKey, String seal, String fingerprint, String signature) {
+    }
+
+    public record InviteAccepted(Long documentId) {
+    }
+
+    public record InviteVerification(Long id, String selfWrapped, String verifierHash, String seal, Party recipient) {
+    }
+
+    public record InviteVerifyRequest(String fingerprint, String signature) {
+    }
+
+    public record SentInvite(Long id, String recipientPhone, DocumentKind kind, long sizeBytes, Instant createdAt,
+                             Instant expiresAt) {
+    }
 }

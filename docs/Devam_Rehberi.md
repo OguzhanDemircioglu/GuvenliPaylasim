@@ -147,8 +147,14 @@ Kararlar netleşince güncellenir.
    ekranı kaldırıldı; parola en az 12 karakter. Yeni Gönderi'de alıcı seçimi 4. adıma kadar kapalı. Masaüstü →
    sunucu uçtan uca denendi (kayıt, giriş, parola değiştirme aynı anahtarları korur, sıfırlama yeni anahtar üretir).
    Açık: yaygın parola listesi kontrolü (Security.md S2).
-4. Davet kodu ve kişiler: sunucu tabloları ve API'leri, istemcide "Kod ile al" ve kişi listesi ekranları.
-5. Anahtar değişikliği: doğrulanmamış kişi ve yeni kod (§7.8). Sertifika sabitleme, sunucuda ikinci kilit.
+4. ✅ (2026-11-06, `v2` dalı) Davet kodu ve kişiler: `invites` ve `contacts` tabloları ve API'leri; iki yönlü
+   doğrulama (kabul mührü), imzalı kişi kaydı; masaüstünde Yeni Gönderi'de "Kişilerim / Davet kodu ile", tek seferlik
+   kod ekranı, Gelen Kutusu'nda "Kod ile al", yeni "Kişiler" ekranı (durum, parmak izi, silme, bekleyen davetler).
+   Kodsuz gönderim sunucuda sadece doğrulanmış ve anahtarı değişmemiş kişiye kabul edilir. İki kullanıcıyla uçtan uca
+   denendi (21 kontrol): yanlış ve başkasının kodu reddedilir, kod bir kez kullanılır, iki taraf doğrulanır, anahtarı
+   değişen kişiye gönderim reddedilir, yeni kodla yeniden doğrulanır, silme iki yönlüdür.
+5. Anahtar değişikliği: doğrulanmamış kişi ve yeni kod (§7.8) **4. adımda yapıldı** (istemci "anahtarı değişti"
+   gösterir, sunucu kodsuz gönderimi reddeder). Kalanlar: sertifika sabitleme, sunucuda ikinci kilit.
 6. Gizlilik (§8): süreli kutu, açılınca sil, kayıt silme işi. Konuşmalarda kabul edilen 4. kısım maddeleri.
 7. TOTP.
 8. Her adımda unit testler ve ilgili saldırı testleri (Security.md); sonunda yeni sürüm (MSI) ve README güncellemesi.

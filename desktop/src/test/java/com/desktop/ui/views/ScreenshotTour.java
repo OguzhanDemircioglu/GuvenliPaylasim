@@ -4,13 +4,20 @@ import atlantafx.base.controls.ModalPane;
 import atlantafx.base.theme.PrimerDark;
 import atlantafx.base.theme.PrimerLight;
 import com.desktop.App;
+import com.desktop.api.Dto;
+import com.desktop.crypto.DocumentContent;
 import com.desktop.service.AuthService;
+import com.desktop.service.ContactService;
+import com.desktop.service.DocumentService;
+import com.desktop.service.InviteService;
 import com.desktop.service.Session;
 import com.desktop.ui.Overlays;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.image.WritableImage;
 import javafx.scene.layout.StackPane;
@@ -46,7 +53,27 @@ public final class ScreenshotTour {
         AuthService auth = new AuthService("http://localhost:8080");
         Session ayse = auth.login("5550000001", PASSWORD.toCharArray());
         Session mehmet = auth.login("5550000002", PASSWORD.toCharArray());
-        // Belge gönderimi kişiler ve davet kodu (kodlama sırasının 4. adımı) gelince bu tura geri eklenir.
+
+        // Mehmet ile Ayşe kişi değilse önce davet koduyla tanıştırılır (Crypto_Design §7.6), sonra kodsuz gönderilir.
+        ContactService mehmetContacts = new ContactService(mehmet);
+        if (mehmetContacts.list().stream().noneMatch(c -> c.canReceive() && c.userId().equals(ayse.user().id()))) {
+            InviteService.SentCode code = new InviteService(ayse).send(
+                    DocumentContent.ofText("Merhaba Mehmet Bey, bundan sonra belgeleri buradan paylaşalım."), "5550000002", 24);
+            new InviteService(mehmet).redeem(code.code());
+            new InviteService(ayse).processVerifications();
+        }
+        List<Dto.Recipient> toAyse = mehmetContacts.list().stream()
+                .filter(c -> c.canReceive() && c.userId().equals(ayse.user().id()))
+                .map(ContactService.Contact::recipient).toList();
+        DocumentService fromMehmet = new DocumentService(mehmet);
+        fromMehmet.send(DocumentContent.ofText("""
+                Sayın Ayşe Hanım,
+
+                14 Kasım tarihli koordinasyon toplantısının gündemi ve katılımcı listesi ektedir. Toplantı saat                 14:00'te yapılacaktır.
+
+                Bilgilerinize rica ederim.
+                Mehmet Kaya"""), toAyse);
+        fromMehmet.send(DocumentContent.ofFile("Denetim Raporu 2026.pdf", "application/pdf", new byte[180_000]), toAyse);
 
         Platform.startup(() -> {
         });
@@ -104,16 +131,51 @@ public final class ScreenshotTour {
         show(content, () -> shell);
         pause(1500);
         snap(stage, "02-gelen-kutusu" + suffix);
+        onFx(() -> {
+            ListView<?> list = (ListView<?>) shell.lookup(".inbox-list");
+            list.getSelectionModel().select(0);
+            return null;
+        });
+        pause(500);
+        onFx(() -> {
+            shell.lookupAll(".button").stream().filter(n -> n instanceof Button b && "Belgeyi aç".equals(b.getText()))
+                    .findFirst().ifPresent(n -> ((Button) n).fire());
+            return null;
+        });
+        pause(2500);
+        snap(stage, "04-belge-acik" + suffix);
+        onFx(() -> {
+            shell.lookupAll(".button").stream().filter(n -> n instanceof Button b && "Kod ile al".equals(b.getText()))
+                    .findFirst().ifPresent(n -> ((Button) n).fire());
+            return null;
+        });
+        pause(800);
+        snap(stage, "04b-kod-ile-al" + suffix);
+        onFx(() -> {
+            com.desktop.ui.Dialogs.close();
+            return null;
+        });
 
         nav(shell, 1);
-        pause(1200);
+        pause(1500);
         snap(stage, "05-yeni-gonderi" + suffix);
+        onFx(() -> {
+            shell.lookupAll(".toggle-button").stream()
+                    .filter(n -> n instanceof ToggleButton t && "Davet kodu ile".equals(t.getText()))
+                    .findFirst().ifPresent(n -> ((ToggleButton) n).fire());
+            return null;
+        });
+        pause(600);
+        snap(stage, "05b-davet-kodu" + suffix);
         nav(shell, 3);
-        pause(800);
-        snap(stage, "06-anahtarim" + suffix);
+        pause(1200);
+        snap(stage, "06-kisiler" + suffix);
         nav(shell, 4);
         pause(800);
-        snap(stage, "07-neden-guvenli" + suffix);
+        snap(stage, "07-anahtarim" + suffix);
+        nav(shell, 5);
+        pause(800);
+        snap(stage, "07b-neden-guvenli" + suffix);
 
         ShellView mehmetShell = onFx(() -> new ShellView(new App(), auth, mehmet));
         show(content, () -> mehmetShell);

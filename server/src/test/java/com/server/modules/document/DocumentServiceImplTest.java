@@ -5,6 +5,8 @@ import com.server.common.exception.NotFoundException;
 import com.server.modules.document.dto.DocumentContentResponse;
 import com.server.modules.document.dto.DocumentSendRequest;
 import com.server.modules.document.dto.DocumentSentResponse;
+import com.server.modules.contact.ContactMessages;
+import com.server.modules.contact.ContactService;
 import com.server.modules.document.dto.RecipientKeyRequest;
 import com.server.modules.key.UserKey;
 import com.server.modules.key.UserKeyRepository;
@@ -56,12 +58,15 @@ class DocumentServiceImplTest {
     private UserRepository userRepository;
     @Mock
     private UserKeyRepository keyRepository;
+    @Mock
+    private ContactService contactService;
 
     private DocumentServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        service = new DocumentServiceImpl(documentRepository, recipientRepository, userRepository, keyRepository);
+        service = new DocumentServiceImpl(documentRepository, recipientRepository, userRepository, keyRepository,
+                contactService);
     }
 
     @Test
@@ -245,6 +250,36 @@ class DocumentServiceImplTest {
         assertThat(sharedRecipient.getDeletedAt()).isNotNull();
         assertThat(purged.getPayload()).isNull();
         verify(documentRepository, never()).findById(DOCUMENT_ID + 1);
+    }
+
+    @Test
+    void recipientMustBeAVerifiedContactWithUnchangedKey() {
+        when(keyRepository.existsById(SENDER)).thenReturn(true);
+        stubRecipients(user(AYSE));
+        org.mockito.Mockito.doThrow(new BusinessException(ContactMessages.NOT_VERIFIED))
+                .when(contactService).requireVerifiedRecipients(SENDER, List.of(AYSE));
+
+        assertThatThrownBy(() -> service.send(SENDER, request(new RecipientKeyRequest(AYSE, "wrapped"))))
+                .isInstanceOf(BusinessException.class)
+                .hasMessage(ContactMessages.NOT_VERIFIED);
+        verify(documentRepository, never()).save(any());
+    }
+
+    @Test
+    void acceptedInviteBecomesANormalDocumentForTheRecipient() {
+        when(documentRepository.save(any(Document.class))).thenAnswer(invocation -> {
+            Document document = invocation.getArgument(0);
+            document.setId(DOCUMENT_ID);
+            return document;
+        });
+
+        Long id = service.createFromInvite(SENDER, AYSE, DocumentKind.TEXT, CIPHERTEXT, "signature", "wrapped-for-ayse");
+
+        assertThat(id).isEqualTo(DOCUMENT_ID);
+        ArgumentCaptor<DocumentRecipient> recipient = ArgumentCaptor.forClass(DocumentRecipient.class);
+        verify(recipientRepository).save(recipient.capture());
+        assertThat(recipient.getValue().getRecipientId()).isEqualTo(AYSE);
+        assertThat(recipient.getValue().getWrappedKey()).isEqualTo("wrapped-for-ayse");
     }
 
     private void assertRecipientInvalid(RecipientKeyRequest key) {

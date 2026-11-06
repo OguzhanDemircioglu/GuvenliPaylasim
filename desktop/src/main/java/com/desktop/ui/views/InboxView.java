@@ -62,7 +62,9 @@ final class InboxView extends VBox {
 
         Button refresh = Ui.button("Yenile", Material2OutlinedMZ.REFRESH, Styles.FLAT);
         refresh.setOnAction(e -> load());
-        VBox left = new VBox(10, Ui.row(8, count, Ui.grow(), refresh), list);
+        Button redeem = Ui.button("Kod ile al", Material2OutlinedMZ.VPN_KEY, Styles.BUTTON_OUTLINED);
+        redeem.setOnAction(e -> openRedeem());
+        VBox left = new VBox(10, Ui.row(8, count, Ui.grow(), redeem, refresh), list);
         left.setMinWidth(360);
         left.setPrefWidth(400);
         left.setMaxWidth(440);
@@ -75,6 +77,53 @@ final class InboxView extends VBox {
         VBox.setVgrow(body, Priority.ALWAYS);
         getChildren().addAll(Ui.header("Gelen Kutusu", "Size gönderilen şifreli yazılar ve belgeler"), body);
         load();
+    }
+
+    /**
+     * İlk kutu davet koduyla gelir (Crypto_Design §7.6): kod girilene kadar kutu burada görünmez. Kod bu bilgisayarda
+     * kutuyu açar; gönderenin anahtarı doğrulanır ve iki taraf birbirinin kişisi olur.
+     */
+    private void openRedeem() {
+        javafx.scene.control.TextField code = new javafx.scene.control.TextField();
+        code.setPromptText("XXXX-XXXX-XXXX-XXXX");
+        code.getStyleClass().add("code-input");
+        Label help = Ui.muted("Size kutu gönderen kişinin ilettiği 16 karakterlik kodu yazın. Kod yanlışsa kutu "
+                + "açılmaz; 5 hatalı denemeden sonra 1 saat beklemeniz gerekir.");
+        help.setWrapText(true);
+        help.setMaxWidth(420);
+        Label status = new Label();
+        status.setWrapText(true);
+        status.setMaxWidth(420);
+        status.getStyleClass().add("form-error");
+        status.setVisible(false);
+        status.setManaged(false);
+
+        Button cancel = Ui.button("Vazgeç", null);
+        cancel.setCancelButton(true);
+        cancel.setOnAction(e -> Dialogs.close());
+        Button submit = Ui.primary("Kutuyu al", Material2OutlinedAL.LOCK_OPEN);
+        submit.setDefaultButton(true);
+        submit.setOnAction(e -> {
+            submit.setDisable(true);
+            status.setVisible(false);
+            status.setManaged(false);
+            Async.run(() -> context.invites.redeem(code.getText()),
+                    redeemed -> {
+                        Dialogs.close();
+                        Toasts.success(redeemed.senderName() + " gönderdiği kutu gelen kutunuza eklendi; "
+                                + redeemed.senderName() + " artık kişileriniz arasında.");
+                        load();
+                        context.onInboxChanged.run();
+                    },
+                    failure -> {
+                        submit.setDisable(false);
+                        status.setText(Toasts.describe(failure));
+                        status.setVisible(true);
+                        status.setManaged(true);
+                    });
+        });
+        Dialogs.show("Kod ile al", new VBox(12, help, code, status), cancel, submit);
+        code.requestFocus();
     }
 
     private void load() {

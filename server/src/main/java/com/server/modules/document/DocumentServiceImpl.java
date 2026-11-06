@@ -3,6 +3,7 @@ package com.server.modules.document;
 import com.server.common.exception.BusinessException;
 import com.server.common.exception.NotFoundException;
 import com.server.common.message.GlobalMessages;
+import com.server.modules.contact.ContactService;
 import com.server.modules.document.dto.DocumentContentResponse;
 import com.server.modules.document.dto.DocumentSendRequest;
 import com.server.modules.document.dto.DocumentSentResponse;
@@ -35,6 +36,7 @@ public class DocumentServiceImpl implements DocumentService {
     private final DocumentRecipientRepository recipientRepository;
     private final UserRepository userRepository;
     private final UserKeyRepository keyRepository;
+    private final ContactService contactService;
 
     @Override
     @Transactional
@@ -43,6 +45,7 @@ public class DocumentServiceImpl implements DocumentService {
             throw new BusinessException(DocumentMessages.SENDER_HAS_NO_KEYS);
         }
         List<User> recipients = validRecipients(senderId, request.recipients());
+        contactService.requireVerifiedRecipients(senderId, recipients.stream().map(User::getId).toList());
 
         Document document = new Document();
         document.setSenderId(senderId);
@@ -61,6 +64,27 @@ public class DocumentServiceImpl implements DocumentService {
             recipientRepository.save(recipient);
         }
         return new DocumentSentResponse(document.getId(), recipients.size());
+    }
+
+    @Override
+    @Transactional
+    public Long createFromInvite(Long senderId, Long recipientId, DocumentKind kind, byte[] payload, String signature,
+                                 String wrappedKey) {
+        Document document = new Document();
+        document.setSenderId(senderId);
+        document.setKind(kind);
+        document.setPayload(payload);
+        document.setSignature(signature);
+        document.setSizeBytes(payload.length);
+        document.setCreatedAt(Instant.now());
+        documentRepository.save(document);
+
+        DocumentRecipient recipient = new DocumentRecipient();
+        recipient.setDocumentId(document.getId());
+        recipient.setRecipientId(recipientId);
+        recipient.setWrappedKey(wrappedKey);
+        recipientRepository.save(recipient);
+        return document.getId();
     }
 
     @Override
