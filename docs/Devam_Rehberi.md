@@ -6,7 +6,7 @@
 ## Nerede kaldık (2026-11-06 gece) — buradan başlayın
 
 **v2 sunucu tarafı ve masaüstü kodu bitti, `main`'de ve Railway'de canlı.** Kodlama sırasının 1–7. adımları tamam
-(aşağıda ✅). Yaygın parola kontrolü de yapıldı. **v2 masaüstü 2.0.0 hazırlandı; GitHub'a yüklenmesi bekliyor.**
+(aşağıda ✅). Yaygın parola kontrolü de yapıldı. **v2 masaüstü 2.0.0 GitHub'da yayında.**
 
 ### 2.0.0 (2026-11-06 gece) — yapılanlar ve kalan
 - Varsayılan sunucu Railway (`server.url=https://guvenlipaylasim.up.railway.app`, sabitleme açık). `desktop\run.cmd`
@@ -17,8 +17,8 @@
   Ayrıntı: [Update_Design.md §2](Update_Design.md).
 - MSI üretildi ve **zorunlu** olarak imzalandı (`desktop/dist/GuvenliPaylasim-2.0.0.msi` + `release.json`, git'te
   yok); imza gömülü açık anahtarla doğrulandı. WiX 3.14.1 `C:\Projeler\.tools\wix3`'e açıldı.
-- **Kalan (elle):** GitHub'da `v2.0.0` etiketiyle release açılır, iki dosya eklenir. README'deki indirme düğmesi
-  zaten 2.0.0'ı gösteriyor; release açılana kadar düğme 404 verir.
+- GitHub release `v2.0.0` açıldı (`gh` CLI, `OguzhanDemircioglu` hesabıyla girişli); GitHub'dan indirilen MSI'ın
+  özeti `release.json` ile aynı. README'deki indirme düğmesi çalışıyor.
 - **Kalan:** yeni özel anahtar (`release-keys/update-private-key.txt`) bu bilgisayardan başka, çevrimdışı bir yere
   yedeklenmeli; Acer'daki 1.0.5 anahtarı artık kullanılmaz.
 
@@ -77,7 +77,7 @@ Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas si
 |---|---|
 | v1 (rollü, birimli prototip) | Masaüstü 1.0.5; sunucu artık v2, 1.0.5 bağlanamaz |
 | v2 sunucu | **Canlı** (Railway, `main`) |
-| v2 masaüstü | **2.0.0 imzalandı**, GitHub release'i açılmayı bekliyor |
+| v2 masaüstü | **2.0.0 yayında** (GitHub release `v2.0.0`) |
 | 1. Temel dönüşüm (herkes kullanıcı, telefon, davet kodu, kişiler) | **Kodlandı**, Crypto_Design §7 |
 | 2. Gizlilik | **Kodlandı**, Crypto_Design §8 |
 | Yaygın parola kontrolü | **Yapıldı** (masaüstünde, `PasswordStrength`) |
