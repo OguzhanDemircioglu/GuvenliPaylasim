@@ -1,7 +1,9 @@
 package com.server.modules.user;
 
 import com.server.common.entity.BaseEntity;
+import com.server.security.SealedColumns;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -21,7 +23,11 @@ public class User extends BaseEntity {
     @Column(name = "phone", nullable = false, unique = true, length = 13, updatable = false)
     private String phone;
 
-    /** İstemcinin paroladan türettiği authSecret'ın bcrypt özeti; gerçek parola sunucuya gelmez. */
+    /**
+     * İstemcinin paroladan türettiği authSecret'ın bcrypt özeti; gerçek parola sunucuya gelmez. Veritabanında ayrıca
+     * sunucu anahtarıyla kilitlidir (ServerSeal, Security.md S2).
+     */
+    @Convert(converter = SealedColumns.PasswordHash.class)
     @Column(name = "password_hash", nullable = false)
     private String password;
 

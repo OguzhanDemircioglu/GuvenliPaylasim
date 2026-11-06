@@ -1,6 +1,8 @@
 package com.server.modules.key;
 
+import com.server.security.SealedColumns;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -33,7 +35,11 @@ public class UserKey {
     @Column(name = "signing_public_key", nullable = false, length = 200)
     private String signingPublicKey;
 
-    /** AES-256-GCM ile şifrelenmiş özel anahtarlar (istemcinin biçimi, sunucu için opak). */
+    /**
+     * AES-256-GCM ile şifrelenmiş özel anahtarlar (istemcinin biçimi, sunucu için opak). Veritabanında ayrıca sunucu
+     * anahtarıyla kilitlidir (ServerSeal, Security.md S2); API her zaman istemcinin biçimini döner.
+     */
+    @Convert(converter = SealedColumns.PrivateKeyBundle.class)
     @Column(name = "private_key_bundle", nullable = false, length = 1000)
     private String privateKeyBundle;
 

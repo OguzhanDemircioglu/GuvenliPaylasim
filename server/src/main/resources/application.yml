@@ -76,3 +76,6 @@ app:
       url: ${VONAGE_MESSAGES_URL:https://api.nexmo.com/v1/messages}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  security:
+    # Sunucuda ikinci kilit (Security.md S2): 32 bayt, Base64. Prod'da zorunlu; veritabanı yedeğinin yanında tutulmaz.
+    seal-key: ${SERVER_SEAL_KEY}

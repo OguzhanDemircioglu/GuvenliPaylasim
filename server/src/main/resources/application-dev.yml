@@ -35,5 +35,8 @@ app:
     public-key-path: ${JWT_PUBLIC_KEY_PATH:keys/public.pem}
   session:
     cookie-secure: ${COOKIE_SECURE:false}
+  security:
+    # Sadece dev: herkesin bildiği sabit anahtar. Prod'da SERVER_SEAL_KEY ortam değişkeni zorunludur.
+    seal-key: ${SERVER_SEAL_KEY:ZGV2LW9ubHktc2VhbC1rZXktMzItYnl0ZXMtbG9uZyE=}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:4200}
