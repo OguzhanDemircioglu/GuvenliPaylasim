@@ -81,7 +81,8 @@ final class SecurityView extends ScrollPane {
         error.setWrapText(true);
         error.setManaged(false);
         Button save = Ui.primary("Adı kaydet", Material2OutlinedMZ.SAVE);
-        save.disableProperty().bind(name.textProperty().map(text -> text.trim().equals(context.session.fullName())));
+        save.disableProperty().bind(name.textProperty()
+                .map(text -> Inputs.normalizeName(text).equals(context.session.fullName())));
         save.setOnAction(e -> {
             String invalid = Inputs.nameError(name.getText());
             error.setText(invalid == null ? "" : invalid);
@@ -92,13 +93,13 @@ final class SecurityView extends ScrollPane {
             save.disableProperty().unbind();
             save.setDisable(true);
             Async.run(() -> {
-                        context.auth.updateName(context.session, name.getText());
+                        context.auth.updateName(context.session, Inputs.normalizeName(name.getText()));
                         return true;
                     },
                     ok -> {
                         name.setText(context.session.fullName());
                         save.disableProperty().bind(name.textProperty()
-                                .map(text -> text.trim().equals(context.session.fullName())));
+                                .map(text -> Inputs.normalizeName(text).equals(context.session.fullName())));
                         context.onProfileChanged.run();
                         Toasts.success("Adınız güncellendi.");
                     },

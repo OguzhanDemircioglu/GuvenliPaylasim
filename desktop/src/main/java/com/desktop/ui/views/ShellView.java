@@ -22,6 +22,8 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
@@ -76,8 +78,9 @@ public final class ShellView extends BorderPane {
     }
 
     private VBox sidebar(App app, Dto.SessionUser user) {
-        StackPane mark = new StackPane(Ui.icon(Material2OutlinedMZ.VERIFIED_USER, 20));
-        mark.getStyleClass().add("brand-mark");
+        // Uygulamanın kendi logosu (pencere ve kurulum simgesiyle aynı kalkan).
+        ImageView mark = new ImageView(new Image(ShellView.class.getResourceAsStream("/com/desktop/icon-128.png"),
+                40, 40, true, true));
         HBox brand = Ui.row(11, mark, Ui.column(0, Ui.label("Güvenli Paylaşım", "brand-title"),
                 Ui.label("Uçtan uca şifreli", "brand-subtitle")));
         brand.setPadding(new Insets(0, 4, 8, 4));

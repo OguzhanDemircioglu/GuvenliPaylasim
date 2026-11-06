@@ -29,6 +29,7 @@ public record RegisterRequest(
         @NotBlank(message = UserMessages.FULL_NAME_REQUIRED)
         @Size(max = FullNames.MAX_LENGTH, message = UserMessages.FULL_NAME_TOO_LONG)
         @Pattern(regexp = FullNames.PATTERN, message = UserMessages.FULL_NAME_INVALID)
+        @Pattern(regexp = FullNames.WORDS_PATTERN, message = UserMessages.FULL_NAME_WORDS)
         String fullName,
 
         @NotBlank(message = UserMessages.PASSWORD_REQUIRED)

@@ -76,19 +76,6 @@
     -fx-font-size: 11px;
 }
 
-.brand-mark {
-    -fx-background-color: linear-gradient(to bottom right, #3b82f6, #22d3ee);
-    -fx-background-radius: 11;
-    -fx-min-width: 38;
-    -fx-min-height: 38;
-    -fx-max-width: 38;
-    -fx-max-height: 38;
-}
-
-.brand-mark .ikonli-font-icon {
-    -fx-icon-color: white;
-}
-
 .nav-section {
     -fx-text-fill: -gps-on-navy-muted;
     -fx-font-size: 10.5px;

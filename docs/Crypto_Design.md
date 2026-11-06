@@ -191,8 +191,14 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
   Hatırlanan oturumda uygulama kapanırken sunucudaki oturum kapatılmaz; "Güvenli çıkış" kaydı siler ve oturumu
   kapatır. "Beni hatırla" seçilmeden yapılan giriş eski kaydı siler. DPAPI Java'nın FFM arayüzüyle çağrılır (`Dpapi`);
   ek kütüphane yok. Risk ve sınırlar: Security.md S6.
-- **Profil:** ad soyad değiştirilebilir (`PUT /api/users/me/name`); kural kayıtla aynı: harfle başlar, harf, boşluk,
-  kesme, nokta ve tire, en fazla 100 karakter (`FullNames`). Telefon değiştirilemez (§7.3). Masaüstünde telefon
+- **Kayıtta "Bu cihaza güven" (2026-11-07):** girişteki seçenekle (artık o da "Bu cihaza güven (30 gün)") aynı kayıt;
+  kayıt tamamlanınca seçiliyse oturum hatırlanır, değilse bu bilgisayardaki eski kayıt silinir.
+- **Kod gönderme:** "Kod gönder"den sonra 300 saniye (kodun geçerlilik süresi, `code-ttl: 5m`) geri sayılır; bu sürede
+  düğme kapalıdır (kayıt ve parola sıfırlama).
+- **Profil:** ad soyad değiştirilebilir (`PUT /api/users/me/name`); kural kayıtla aynı: **2–3 kelime**, her kelime
+  harfle başlar; harf, kesme, nokta ve tire, en fazla 100 karakter (`FullNames`; ihlalde `user_full_name_words` ya da
+  `user_full_name_invalid`). Sunucu boşlukları teke indirir. Masaüstü yazarken kelime ve tire başlarını Türkçe kurala
+  göre büyütür (i → İ, ı → I; diğer harflere dokunmaz). Telefon değiştirilemez (§7.3). Masaüstünde telefon
   `(5xx) xxx xx xx` biçiminde yazılır ve gösterilir; alana harf, ad alanına rakam, WhatsApp ve Authenticator kodu
   alanına rakamdan başka karakter girmez (`Inputs`). Sunucuya giden biçim değişmedi (`5XXXXXXXXX`).
 

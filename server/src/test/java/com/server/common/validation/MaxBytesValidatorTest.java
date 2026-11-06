@@ -34,7 +34,7 @@ class MaxBytesValidatorTest {
         String password = "ğ".repeat(37); // 37 karakter, 74 byte
 
         Set<ConstraintViolation<RegisterRequest>> violations =
-                validator.validate(new RegisterRequest("5551234567", "123456", "Ali", password,
+                validator.validate(new RegisterRequest("5551234567", "123456", "Ali Veli", password,
                         new KeyBundleRequest("enc", "sign", "bundle")));
 
         assertThat(violations).extracting(ConstraintViolation::getMessage).containsExactly(UserMessages.PASSWORD_TOO_LONG);
@@ -44,7 +44,7 @@ class MaxBytesValidatorTest {
     void passwordAtTheLimitIsAccepted() {
         String password = "ğ".repeat(36); // 72 byte
 
-        assertThat(validator.validate(new RegisterRequest("5551234567", "123456", "Ali", password,
+        assertThat(validator.validate(new RegisterRequest("5551234567", "123456", "Ali Veli", password,
                 new KeyBundleRequest("enc", "sign", "bundle")))).isEmpty();
     }
 

@@ -43,6 +43,7 @@ public final class Messages {
             Map.entry("user_full_name_required", "Ad soyad zorunludur."),
             Map.entry("user_full_name_too_long", "Ad soyad en fazla 100 karakter olabilir."),
             Map.entry("user_full_name_invalid", "Ad soyadda sadece harf, boşluk, kesme, nokta ve tire kullanılabilir."),
+            Map.entry("user_full_name_words", "Adınızı ve soyadınızı yazın: en az iki, en fazla üç kelime."),
 
             Map.entry("verification_code_required", "WhatsApp'a gelen kodu yazın."),
             Map.entry("verification_code_invalid", "Kod hatalı ya da süresi dolmuş. Yeni kod isteyin."),

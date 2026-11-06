@@ -7,6 +7,7 @@ import com.desktop.config.AppConfig;
 import com.desktop.service.AuthService;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
+import com.desktop.ui.Cooldown;
 import com.desktop.ui.Dialogs;
 import com.desktop.ui.Inputs;
 import com.desktop.ui.Toasts;
@@ -64,6 +65,8 @@ public final class LoginView extends VBox {
 
     public static final double WIDTH = 900;
     public static final double HEIGHT = 540;
+    /** Bilgi yazılarının ve sürüm etiketinin kartın dış kenarına uzaklığı. */
+    private static final double INFO_EDGE = 48;
     private static final Duration ITEM_DURATION = Duration.seconds(0.7);
     private static final Duration ITEM_STEP = Duration.seconds(0.1);
     private static final Duration PANEL_DURATION = Duration.seconds(1.5);
@@ -76,7 +79,8 @@ public final class LoginView extends VBox {
 
     private final TextField loginPhone = Inputs.phone(new CustomTextField());
     private final PasswordTextField loginPassword = new PasswordTextField();
-    private final CheckBox rememberMe = new CheckBox("Beni hatırla");
+    private final CheckBox rememberMe = new CheckBox("Bu cihaza güven (30 gün)");
+    private final CheckBox trustDevice = new CheckBox("Bu cihaza güven (30 gün)");
     private final Button loginSubmit = submitButton("Giriş yap");
     private final Label loginStatus = statusLabel();
 
@@ -131,16 +135,17 @@ public final class LoginView extends VBox {
 
         place(loginBox, 0, new Insets(0, 72, 0, 48));
         place(registerBox, WIDTH / 2, new Insets(0, 48, 0, 72));
-        place(loginInfo, WIDTH / 2, new Insets(0, 48, 72, 150));
-        place(registerInfo, 0, new Insets(0, 150, 72, 48));
+        place(loginInfo, WIDTH / 2, new Insets(0, INFO_EDGE, 72, 150));
+        place(registerInfo, 0, new Insets(0, 150, 72, INFO_EDGE));
         registerInfo.setMouseTransparent(true);
         loginInfo.setMouseTransparent(true);
 
-        versionRow.getChildren().add(Ui.label("Sürüm " + AppConfig.get().version(), "auth-version"));
+        versionRow.getChildren().add(Ui.label("v" + AppConfig.get().version(), "auth-version"));
         versionRow.setPrefWidth(WIDTH);
-        // Lacivert panel köşelerde en dar yerinde ~150 px; yazı onun içinde kalır.
+        // Kenar boşluğu bilgi yazılarıyla aynı (INFO_EDGE): girişte sağ kenar "HOŞ GELDİNİZ!", kayıtta sol kenar
+        // "ARAMIZA KATILIN!" ile aynı hizada. Lacivert panel köşede ~150 px; yazı onun içinde kalır.
         versionRow.setLayoutY(HEIGHT - 40);
-        versionRow.setPadding(new Insets(0, 24, 0, 24));
+        versionRow.setPadding(new Insets(0, INFO_EDGE, 0, INFO_EDGE));
         versionRow.setMouseTransparent(true);
 
         card.getChildren().addAll(rotatingPanel(), sweepingPanel(), loginBox, loginInfo, registerBox, registerInfo,
@@ -271,7 +276,11 @@ public final class LoginView extends VBox {
         Node repeat = floating("Parola (tekrar)", registerRepeat, null);
         Node code = floating("WhatsApp kodu", registerCode, null);
         registerCode.setRight(sendCode);
-        VBox action = new VBox(10, registerStatus, registerSubmit);
+        trustDevice.getStyleClass().add("auth-check");
+        trustDevice.setTooltip(new Tooltip("Uygulamayı kapatıp açtığınızda 30 gün boyunca parola sorulmaz. "
+                + "Anahtarlarınız Windows hesabınıza bağlı olarak şifreli saklanır; ortak kullanılan bilgisayarda "
+                + "seçmeyin. Güvenli çıkış yaparsanız kayıt silinir."));
+        VBox action = new VBox(10, trustDevice, registerStatus, registerSubmit);
         Node link = switchLink("Hesabınız var mı?", "Giriş yap", false);
 
         Node[] nodes = {title, name, phone, password, repeat, code, action, link};
@@ -489,22 +498,7 @@ public final class LoginView extends VBox {
         String phone = loginPhone.getText();
         char[] password = loginPassword.getPassword().toCharArray();
         boolean remember = rememberMe.isSelected();
-        Async.run(() -> {
-                    Session session = auth.login(phone, password, totpCode);
-                    // Hatırlama başarısız olsa da giriş geçerlidir; sadece bir sonraki açılışta parola sorulur.
-                    try {
-                        if (remember) {
-                            auth.remember(session);
-                        } else {
-                            auth.forget();
-                        }
-                    } catch (RuntimeException e) {
-                        auth.forget();
-                        Platform.runLater(() -> Toasts.info("Oturum bu bilgisayarda hatırlanamadı; bir sonraki "
-                                + "açılışta parola sorulacak."));
-                    }
-                    return session;
-                },
+        Async.run(() -> rememberOrForget(auth.login(phone, password, totpCode), remember),
                 session -> {
                     loginPassword.clear();
                     onLoggedIn.accept(session);
@@ -518,6 +512,25 @@ public final class LoginView extends VBox {
                         failed(loginSubmit, loginStatus, failure);
                     }
                 });
+    }
+
+    /**
+     * "Beni hatırla" (giriş) ve "Bu cihaza güven" (kayıt) aynı kaydı kullanır (RememberedLogin). Hatırlama başarısız
+     * olsa da giriş geçerlidir; sadece bir sonraki açılışta parola sorulur. Arka planda çağrılır.
+     */
+    private Session rememberOrForget(Session session, boolean remember) {
+        try {
+            if (remember) {
+                auth.remember(session);
+            } else {
+                auth.forget();
+            }
+        } catch (RuntimeException e) {
+            auth.forget();
+            Platform.runLater(() -> Toasts.info("Oturum bu bilgisayarda hatırlanamadı; bir sonraki açılışta parola "
+                    + "sorulacak."));
+        }
+        return session;
     }
 
     private static boolean isTotpRequired(Throwable failure) {
@@ -556,8 +569,12 @@ public final class LoginView extends VBox {
             return;
         }
         busy(registerSubmit, registerStatus, "Hesabınız açılıyor ve anahtarlarınız bu bilgisayarda üretiliyor…");
-        Async.run(() -> auth.completeRegistration(registerPhone.getText(), registerCode.getText(),
-                        registerName.getText(), registerPassword.getPassword().toCharArray()),
+        String phone = registerPhone.getText();
+        String code = registerCode.getText();
+        String name = Inputs.normalizeName(registerName.getText());
+        char[] password = registerPassword.getPassword().toCharArray();
+        boolean trust = trustDevice.isSelected();
+        Async.run(() -> rememberOrForget(auth.completeRegistration(phone, code, name, password), trust),
                 session -> {
                     registerPassword.clear();
                     registerRepeat.clear();
@@ -598,8 +615,7 @@ public final class LoginView extends VBox {
                     return null;
                 },
                 ignored -> {
-                    sendCode.setDisable(false);
-                    sendCode.setText("Tekrar gönder");
+                    Cooldown.start(sendCode, Cooldown.CODE_SECONDS, true);
                     showStatus(registerStatus, "Kod WhatsApp'a gönderildi; 5 dakika geçerlidir. Numara zaten kayıtlıysa "
                             + "kod gelmez, giriş yapın ya da parolanızı sıfırlayın.", false);
                     registerCode.requestFocus();
@@ -657,8 +673,7 @@ public final class LoginView extends VBox {
                         return null;
                     },
                     ignored -> {
-                        codeButton.setDisable(false);
-                        codeButton.setText("Tekrar gönder");
+                        Cooldown.start(codeButton, Cooldown.CODE_SECONDS);
                         showStatus(status, "Kod WhatsApp'a gönderildi; 5 dakika geçerlidir. Numara kayıtlı değilse kod "
                                 + "gelmez.", false);
                         code.requestFocus();

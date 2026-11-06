@@ -13,8 +13,12 @@ public final class Inputs {
 
     /** Harf (Türkçe dahil), boşluk, kesme, tire ve nokta. Sunucudaki kuralla aynı (UserMessages.FULL_NAME_INVALID). */
     private static final Pattern NAME = Pattern.compile("[\\p{L} .'\\-]*");
-    /** Kaydedilecek ad soyad: harfle başlar. Sunucudaki {@code FullNames.PATTERN} ile aynı. */
-    private static final Pattern FULL_NAME = Pattern.compile("\\p{L}[\\p{L} .'\\-]*");
+    /** Bir kelime: harfle başlar. */
+    private static final String WORD = "\\p{L}[\\p{L}.'\\-]*";
+    /** Kaydedilecek ad soyad: 2–3 kelime, tek boşlukla. Sunucudaki {@code FullNames.PATTERN} ile aynı. */
+    private static final Pattern FULL_NAME = Pattern.compile(WORD + "( " + WORD + "){1,2}");
+    private static final java.util.Locale TR = java.util.Locale.forLanguageTag("tr");
+    public static final int NAME_MAX_WORDS = 3;
 
     private Inputs() {
     }
@@ -30,25 +34,93 @@ public final class Inputs {
         return field;
     }
 
+    /**
+     * Ad soyad yazılırken: sadece harf, boşluk, kesme, nokta, tire; başta ve art arda boşluk yok; en fazla 3 kelime;
+     * her kelimenin (ve tireden sonraki parçanın) ilk harfi Türkçe kurala göre büyütülür (i → İ, ı → I).
+     */
     public static <T extends TextField> T name(T field) {
-        field.setTextFormatter(new TextFormatter<String>(change ->
-                NAME.matcher(change.getControlNewText()).matches() && change.getControlNewText().length() <= 100
-                        ? change : null));
+        field.setTextFormatter(new TextFormatter<String>(Inputs::nameChange));
         return field;
+    }
+
+    private static TextFormatter.Change nameChange(TextFormatter.Change change) {
+        String text = change.getControlNewText();
+        if (!typableName(text)) {
+            return null;
+        }
+        String capitalized = capitalizeWords(text);
+        if (!capitalized.equals(text)) {
+            int caret = change.getCaretPosition();
+            int anchor = change.getAnchor();
+            change.setRange(0, change.getControlText().length());
+            change.setText(capitalized);
+            change.setCaretPosition(caret);
+            change.setAnchor(anchor);
+        }
+        return change;
+    }
+
+    /** Yazma sırasında kabul edilen ara durumlar (sonda tek boşluk olabilir, tek kelime olabilir). */
+    static boolean typableName(String text) {
+        if (text.length() > 100 || !NAME.matcher(text).matches() || text.startsWith(" ") || text.contains("  ")) {
+            return false;
+        }
+        String[] words = text.split(" ", -1);
+        if (words.length > NAME_MAX_WORDS) {
+            return false;
+        }
+        for (String word : words) {
+            if (!word.isEmpty() && !Character.isLetter(word.codePointAt(0))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Boşluk ve tireden sonraki ilk harf büyük harfe çevrilir; diğer harflere dokunulmaz (McDonald gibi adlar bozulmaz).
+     * Uzunluğu değişen büyütmeler (ör. ß) yapılmaz; böylece imleç yerinde kalır.
+     */
+    static String capitalizeWords(String text) {
+        StringBuilder out = new StringBuilder(text.length());
+        boolean start = true;
+        for (int i = 0; i < text.length(); i++) {
+            char c = text.charAt(i);
+            if (start && Character.isLetter(c)) {
+                String upper = String.valueOf(c).toUpperCase(TR);
+                out.append(upper.length() == 1 ? upper.charAt(0) : c);
+            } else {
+                out.append(c);
+            }
+            start = c == ' ' || c == '-';
+        }
+        return out.toString();
+    }
+
+    /** Kaydedilecek biçim: kenar boşlukları atılır, art arda boşluk teke iner, kelime başları büyür. */
+    public static String normalizeName(String value) {
+        return capitalizeWords(value == null ? "" : value.trim().replaceAll("\\s+", " "));
     }
 
     /** Kaydetmeden önce: geçersizse kullanıcıya gösterilecek mesaj, geçerliyse null. */
     public static String nameError(String value) {
-        String name = value == null ? "" : value.trim();
+        String name = normalizeName(value);
         if (name.isEmpty()) {
             return "Ad soyad zorunludur.";
         }
         if (name.length() > 100) {
             return "Ad soyad en fazla 100 karakter olabilir.";
         }
+        if (!NAME.matcher(name).matches()) {
+            return "Ad soyadda sadece harf, boşluk, kesme, nokta ve tire kullanılabilir.";
+        }
+        int words = name.split(" ").length;
+        if (words < 2 || words > NAME_MAX_WORDS) {
+            return "Adınızı ve soyadınızı yazın: en az iki, en fazla üç kelime.";
+        }
         return FULL_NAME.matcher(name).matches()
                 ? null
-                : "Ad soyadda sadece harf, boşluk, kesme, nokta ve tire kullanılabilir.";
+                : "Her kelime harfle başlamalı; sadece harf, kesme, nokta ve tire kullanılabilir.";
     }
 
     /**

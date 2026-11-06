@@ -27,6 +27,11 @@
   "ZIP'i indir" gösterilir (Update_Design §2b). 2.0.1 ve öncesi bunu bilmez: onlarda "Şimdi güncelle" MSI'ı dener,
   Windows engeller; ZIP elle indirilir. Sürümler zorunlu yapılmamalı. ZIP'in özeti imzalı değil (Security S7).
 - Giriş ekranında sürüm sağ altta, kayıt ekranında sol altta, lacivert zeminde beyaz; geçiş sırasında gizli (2.0.2).
+- **2.0.3 için kodlandı, yayınlanmadı (2026-11-07):** sürüm `v2.0.3` biçiminde, kenarı bilgi yazılarıyla aynı hizada;
+  "Kod gönder" sonrası 300 sn geri sayım; kayıtta ve girişte "Bu cihaza güven (30 gün)"; kenar çubuğunda kendi logomuz;
+  ad soyad 2–3 kelime, kelime başları Türkçe kurala göre büyük (sunucu da 2–3 kelimeyi denetler).
+- **Açık soru: KVKK.** Kayıtta aydınlatma metni ve yurt dışına aktarım için açık rıza gerekip gerekmediği konuşulacak
+  (sunucu Railway, Türkiye dışında).
 - **Ücretsiz kod imzalama: SignPath Foundation (ertelendi, 2026-11-06).** Demo şimdilik ZIP ile sürüyor. Başvurudan
   önce gerekenler: lisans (**karar: MIT**, `LICENSE` henüz eklenmedi), MSI/ZIP'i GitHub Actions'ta kaynaktan üretmek
   (doğrulanabilir derleme), README'de "Code signing policy" bölümü (roller; "Free code signing provided by
