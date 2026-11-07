@@ -1,6 +1,6 @@
 # Güncelleme Tasarımı — Güvenli Paylaşım
 
-> **Durum:** v1 — 2026-11-05 (prototip). Kod: `desktop/src/main/java/com/desktop/update/`.
+> **Durum:** 2026-11-07 (masaüstü 2.0.5). Kod: `desktop/src/main/java/com/desktop/update/`.
 
 ## 1. Akış
 
@@ -64,11 +64,11 @@
 ## 4. Sürüm yayımlama
 
 ```bash
-# 1) Sürümü pom.xml'de artır (desktop/pom.xml → <version>), kurulum dosyasını üret (jpackage, README).
+# 1) Sürümü desktop/pom.xml'de artır; desktop\package.cmd → dist/ altında MSI ve kurulumsuz ZIP.
 # 2) İmzala: release.json kurulum dosyasının yanına yazılır
-java -cp desktop/target/classes com.desktop.update.ReleaseTool sign dist/GuvenliPaylasim-1.1.0.msi 1.1.0 release-keys/update-private-key.txt
-# 3) GitHub'da v1.1.0 etiketiyle release aç; kurulum dosyasını ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
-# 4) README'nin en üstündeki "İndir" düğmesinin bağlantısındaki iki sürüm numarasını (v1.1.0, GuvenliPaylasim-1.1.0.msi) güncelle.
+java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/GuvenliPaylasim-2.0.6.msi 2.0.6 release-keys/update-private-key.txt
+# 3) GitHub'da v2.0.6 etiketiyle release aç; MSI, ZIP ve release.json'u ekle (gh release create ...). Açıklama sürüm notu olarak görünür.
+# 4) README'nin en üstündeki indirme bağlantılarındaki sürüm numaralarını güncelle.
 ```
 
 Adım 4 unutulursa düğme bir önceki sürümü indirir; o da açılışta yeni sürüme güncellenir, yani ilk kurulum bozulmaz.

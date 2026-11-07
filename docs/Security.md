@@ -1,6 +1,6 @@
 # Güvenlik: Tehdit Modeli ve Test Planı
 
-> Konuşuldu (2026-11-06). v2 (Crypto_Design §7, §8) bu belgeye göre kodlanır.
+> Konuşuldu (2026-11-06), son güncelleme 2026-11-07. v2 (Crypto_Design §7, §8) bu belgeye göre kodlandı.
 > Bir kodlama adımı, buradaki ilgili saldırı testleri yazılıp geçmeden "bitti" sayılmaz.
 
 ## 1. İlke

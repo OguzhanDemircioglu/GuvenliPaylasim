@@ -1,8 +1,11 @@
 # Backend Architecture — StarterApp
 
-> **Durum:** v3 — 2026-10-18 (server iskeletiyle senkron)
-> Bu doküman `server/` projesinin bağlayıcı kurallarıdır. Kod bu dokümana uyar; kural değişecekse önce bu doküman güncellenir.
-> Frontend (`client/`) ayrı bir dokümanda anlatılacak.
+> **Durum:** v3 — 2026-10-18 (StarterApp şablonu). Bu doküman şablonun genel kurallarıdır (API sözleşmesi, hata
+> yönetimi, JWT, migration, loglama, konfigürasyon).
+>
+> **Güvenli Paylaşım için okuma notu (2026-11-07):** §1–§19 StarterApp'ten gelir. Şablondaki **roller, yetkiler,
+> menüler, birimler, MapStruct/`BaseService` örnekleri, soft delete ve yönetici hesabı bu projede yoktur** (v2'de
+> kaldırıldı). Bu projeye özgü ve güncel olan **§20**'dir; modül listesi [server/README.md](../server/README.md)'de.
 
 ---
 
@@ -577,7 +580,7 @@ public class CurrentUser {
 
 - Dev ve prod PostgreSQL kullanır; gömülü bir veritabanı yoktur. `DB_URL`, `DB_USERNAME` ve `DB_PASSWORD` her profilde
   zorunludur ve varsayılanları yoktur. Dev'de `server/.env`'den okunur.
-- Yerelde bilgisayara kurulu bir PostgreSQL ya da Aiven gibi bir bulut veritabanı kullanılır (`server/README.md`).
+- Yerelde bilgisayara kurulu bir PostgreSQL, canlıda Railway Postgres kullanılır (`server/README.md`).
   Paylaşılan bir veritabanı da olabilir; uygulama sadece `DB_SCHEMA` şemasına dokunur (§10.2).
 - Testler veritabanı kullanmaz (§17).
 
@@ -832,29 +835,25 @@ Testler veritabanı ya da Docker gerektirmez; `./mvnw test` her makinede aynı s
 
 ## 20. Güvenli Paylaşım'a özgü eklemeler
 
-Bu proje StarterApp şablonundan türetildi. Yukarıdaki kurallar geçerlidir; aşağıdakiler bu projeye özgüdür.
-Şifreleme ayrıntısı: [Crypto_Design.md](Crypto_Design.md).
+Bu proje StarterApp şablonundan türetildi; §5 (API sözleşmesi), §7 (hata yönetimi), §8 (JWT), §11 (migration),
+§14–§16 (loglama, konfigürasyon, deploy) geçerlidir. Aşağıdakiler bu projeye özgüdür (2026-11-07, v2).
+Şifreleme ayrıntısı: [Crypto_Design.md](Crypto_Design.md) §7–§8; tehdit modeli: [Security.md](Security.md).
 
-- **Kaldırılanlar:** `report` modülü. Şablonun referans modülü `category`, `unit` (birimler) olarak yeniden adlandırıldı.
-- **Herkese açık kayıt:** `POST /api/auth/register` (IP başına hız sınırı, `app.register-protection`) kullanıcıyı
-  USER rolüyle seçtiği birime açar; `must_change_password` `false`'tur, istemci ardından normal girişi yapar ve
-  anahtarlar ilk girişte üretilir. Birim seçimi için `GET /api/auth/units` oturumsuz sadece `id` ve `name` döner.
-  Kimlik doğrulaması yoktur: e-posta adresini yazan herkes hesap açabilir.
-- **Parola:** istemci gerçek parolayı göndermez, paroladan türettiği `authSecret`'ı gönderir (`AuthSecrets`).
-  Sunucu bunu diğer parolalar gibi bcrypt'ler. Parola karmaşıklık kuralları istemcidedir. E-posta, türetmenin tuzu
-  olduğu için değiştirilemez (422 `user_email_immutable`).
-- **Kullanıcı:** `unit_id` (USER rolünde zorunlu, 422 `user_unit_required`), `phone`, `must_change_password`
-  (yöneticinin açtığı kullanıcıda `true`; parola değişince `false`). Birimde kullanıcı varsa birim silinemez
-  (422 `unit_in_use`). Birim ekleme/değiştirme/silme `ADMIN`'e özeldir.
-- **`key` modülü** (`user_keys`, teknik tablo): açık anahtarlar ve istemcide şifrelenmiş özel anahtar paketi.
-  `GET/POST /api/keys/me`, `GET /api/keys/recipients?unitIds=`. Parola değişikliği (`PUT /api/auth/password`)
-  yeniden şifrelenmiş paketi de taşır ve ikisi aynı transaction'da kaydedilir. Yönetici parolayı sıfırlarsa
-  kullanıcının anahtarları silinir.
-- **`document` modülü** (`documents`, `document_recipients`, teknik tablolar, soft delete yok): şifreli içerik
-  (`bytea`) ve alıcı başına sarmalanmış anahtar. `POST /api/documents`, `GET /api/documents/inbox`,
-  `GET /api/documents/sent`, `GET /api/documents/{id}` (ilk açılışta okundu), `DELETE /api/documents/{id}`
-  ("okudum ve sil"; son alıcıda içerik kalıcı silinir). Alıcı olmayan biri belgeyi göremez (404).
-- **`notification` modülü:** `SmsGateway`; kurum servisi bağlanana kadar `SimulatedSmsGateway` (sadece log, telefon
-  maskeli). SMS'te anahtar ya da parola yoktur.
-- **Dev verisi:** `V007_DemoData` sadece `dev` profilinde çalışır (birimler ve demo kullanıcıları).
-- `byte[]` içerik için `@Lob` kullanılmaz; kolon `bytea` olarak tanımlanır.
+- **Rol, birim, menü, yönetici yok.** Herkes eşit kullanıcıdır; herkes kendisi kayıt olur. Kimlik telefon
+  numarasıdır (`5XXXXXXXXX`), değiştirilemez (şifre telefonla türetilir).
+- **Kayıt ve sıfırlama:** `register/start|complete`, `password-reset/start|complete`; telefon WhatsApp koduyla
+  doğrulanır (`verification` + `notification`). `start` kayıtlı ve kayıtsız numarada aynı yanıtı aynı sürede verir.
+  `VERIFICATION_TEST_MODE=true` iken sadece kayıtta kod cevapta döner.
+- **Şifre:** istemci gerçek şifreyi göndermez, telefon tuzlu türetilmiş `authSecret` gönderir. Sunucu bunu bcrypt'ler
+  ve `SERVER_SEAL_KEY` ile ikinci kez kilitler (`ServerSeal`, V003). Şifre kuralları istemcidedir.
+- **Modüller:** `auth`, `verification`, `notification`, `totp`, `user`, `key`, `invite`, `contact`, `document`
+  (görevleri ve uç noktaları: [server/README.md](../server/README.md)).
+- **Kutu (`document`):** şifreli içerik `bytea` (en fazla 10 MB, `@Lob` kullanılmaz), alıcı başına sarmalanmış
+  anahtar. Kutu ömrü 1 saat–30 gün (`BoxLifetimes`), açılınca sil (`POST /api/documents/{id}/opened`), kota
+  (`SendQuota`: günde 200 kutu, aynı anda 500 MB). Alıcı olmayan 404 alır. Kodsuz gönderim sadece doğrulanmış ve
+  anahtarı değişmemiş kişiye kabul edilir.
+- **Silme:** soft delete yoktur; silinen satır gerçekten silinir (V002). Ömrü dolan kutu, davet ve oturum kayıtları
+  zamanlanmış işlerle kalıcı silinir. "Hesabımı Sil" kullanıcının bütün verisini tek transaction'da siler
+  (`AccountDeletionService`, Crypto_Design §7.13).
+- **Dev verisi:** `V001_DemoData` sadece `dev` profilinde (4 demo kullanıcısı). `POST /api/auth/dev-login` sadece dev.
+- **Canlı:** Railway; profil `prod`, Swagger ve dev-login kapalı (Devam_Rehberi › Demo kurulumu).

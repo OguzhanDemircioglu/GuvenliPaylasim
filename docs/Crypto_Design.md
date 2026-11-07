@@ -1,8 +1,9 @@
 # Şifreleme Tasarımı — Güvenli Paylaşım
 
-> **Durum:** v1 — 2026-11-05 (prototip). Kod bu dokümana uyar; tasarım değişecekse önce bu doküman güncellenir.
-> **v2 (2026-11-06, onaylandı, henüz kodlanmadı):** roller, birimler ve e-posta kalkıyor; kimlik telefon, ilk temas
-> davet koduyla. Bkz. [§7](#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu). §1–§6 kodlanana kadar mevcut kodu anlatır.
+> **Durum (2026-11-07):** **Güncel tasarım §7 ve §8'dir** ve tamamı kodlandı (masaüstü 2.0.5, sunucu Railway'de).
+> §1–§6 ilk prototipi (v1: e-posta, roller, birimler) anlatır; temel yapı (§3 anahtarlar, §4 belge şifreleme ve
+> imza) aynen geçerlidir, kimlik ve ilk temas için §7 esas alınır. Kod bu dokümana uyar; tasarım değişecekse önce bu
+> doküman güncellenir.
 > İstemci: `desktop/src/main/java/com/desktop/crypto/`. Sunucu: `server/.../modules/key`, `server/.../modules/document`.
 
 ## 1. Neden değiştirdik? (eski sistemle karşılaştırma)
@@ -116,7 +117,8 @@ AAD sarmalanmış anahtarı **o belgeye** bağlar; başka bir belgenin anahtarı
 
 ## 7. v2: herkes kullanıcı, telefon ve davet kodu
 
-> Planlandı (2026-11-06). Kodlanınca §2–§6'daki ilgili kısımlar bu bölüme göre güncellenir.
+> Kodlandı (2026-11-06, masaüstü 2.0.0'dan beri yayında). §2 ve §4.4'teki e-posta ve birim anlatımlarının yerine
+> bu bölüm geçerlidir.
 
 ### 7.1 Amaç ve kapsam
 

@@ -1,137 +1,82 @@
 # Devam Rehberi
 
-> Son güncelleme: 2026-11-06 (gece). Bu dosya "nerede kaldık, sırada ne var" sorusunun cevabıdır.
-> Yeni bir oturuma başlarken önce bunu ve [Security.md](Security.md)'yi, sonra [Crypto_Design.md §7](Crypto_Design.md#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu)'yi ve [§8](Crypto_Design.md#8-gizlilik-sunucu-daha-kısa-süre-bilsin)'i okuyun.
+> Son güncelleme: 2026-11-07 (teslim öncesi). Bu dosya "proje ne durumda, sırada ne var" sorusunun cevabıdır.
+> Yeni bir oturuma başlarken önce bunu, sonra [Security.md](Security.md)'yi ve
+> [Crypto_Design.md §7–§8](Crypto_Design.md#7-v2-herkes-kullanıcı-telefon-ve-davet-kodu)'i okuyun.
 
-## Nerede kaldık (2026-11-06 gece) — buradan başlayın
+## Durum (2026-11-07)
 
-**v2 sunucu tarafı ve masaüstü kodu bitti, `main`'de ve Railway'de canlı.** Kodlama sırasının 1–7. adımları tamam
-(aşağıda ✅). Yaygın parola kontrolü de yapıldı. **v2 masaüstü 2.0.0 GitHub'da yayında.**
+**Sunucu Railway'de canlı (`main`), masaüstü 2.0.5 GitHub'da yayında.** Planlanan v2 işlerinin hepsi kodlandı ve
+yayında. Testler: sunucu 193, masaüstü 72; hepsi geçiyor.
 
-### 2.0.0 (2026-11-06 gece) — yapılanlar ve kalan
-- Varsayılan sunucu Railway (`server.url=https://guvenlipaylasim.up.railway.app`, sabitleme açık). `desktop\run.cmd`
-  `GPS_SERVER_URL` verilmezse yerel sunucuya (`http://localhost:8080`) bağlanır.
-- **Güncelleme imza anahtarı değişti.** "OğuzhanMonster" bilgisayarındaki `release-keys/` 1.0.4'ün eski anahtarıydı;
-  1.0.5'in anahtarı ("Oğuzhan Acer" bilgisayarında üretilmişti) burada yoktu. Yeni çift üretildi, açık anahtar
-  uygulamaya gömüldü; eski anahtar `release-keys/retired-1.0.4/`. 1.0.5 kullananlar 2.0.0'ı bir kez elle kurar.
-  Ayrıntı: [Update_Design.md §2](Update_Design.md).
-- MSI üretildi ve **zorunlu** olarak imzalandı (`desktop/dist/GuvenliPaylasim-2.0.0.msi` + `release.json`, git'te
-  yok); imza gömülü açık anahtarla doğrulandı. WiX 3.14.1 `C:\Projeler\.tools\wix3`'e açıldı.
-- GitHub release `v2.0.0` açıldı (`gh` CLI, `OguzhanDemircioglu` hesabıyla girişli); GitHub'dan indirilen MSI'ın
-  özeti `release.json` ile aynı. README'deki indirme düğmesi çalışıyor.
-- **Akıllı Uygulama Denetimi (Smart App Control) imzasız MSI'ı reddediyor** ("Sistem yöneticisi, bu yüklemeyi
-  engelleyecek ilkeler ayarladı"; msiexec 1625, günlükte 1718). Aynı uygulamanın kurulumsuz klasörü (jpackage
-  app-image) internetten gelmiş işaretiyle bile çalıştı. Release'e `GuvenliPaylasim-2.0.0-kurulumsuz.zip` eklendi,
-  `package.cmd` artık ZIP'i de üretir. Kalıcı çözüm kod imzalama (ör. Azure Trusted Signing, aylık ücretli); demo
-  için ertelendi. **Güncelleyici (2026-11-07, 2.0.2 ile yayında):** Akıllı Uygulama Denetimi açıksa MSI başlatılmaz,
-  "ZIP'i indir" gösterilir (Update_Design §2b). 2.0.1 ve öncesi bunu bilmez: onlarda "Şimdi güncelle" MSI'ı dener,
-  Windows engeller; ZIP elle indirilir. Sürümler zorunlu yapılmamalı. ZIP'in özeti imzalı değil (Security S7).
-- Giriş ekranında sürüm sağ altta, kayıt ekranında sol altta, lacivert zeminde beyaz; geçiş sırasında gizli (2.0.2).
-- **2.0.3 yayında (2026-11-07, GitHub release `v2.0.3`):** sürüm `v2.0.3` biçiminde, kenarı bilgi yazılarıyla aynı hizada;
-  "Kod gönder" sonrası 300 sn geri sayım; kayıtta ve girişte "Bu cihaza güven (30 gün)"; kenar çubuğunda kendi logomuz;
-  ad soyad 2–3 kelime, kelime başları Türkçe kurala göre büyük (sunucu da 2–3 kelimeyi denetler). Ayrıca: düğmeler
-  form tamamlanmadan kapalı (giriş, kod gönder, kayıt ol, profilde parola ve ad); parola 12–20 karakter ve dört karakter
-  türü (girişte de, Security S2); ad soyad en fazla 30 karakter.
-- **KVKK aydınlatma metni: TASLAK eklendi (2026-11-07, 2.0.3).** Metin
-  `desktop/src/main/resources/com/desktop/aydinlatma-metni.txt`; kayıtta "Aydınlatma metnini okudum" zorunlu, bağlantı
-  metni açar, "Okudum" kutuyu işaretler. Onay sadece istemcide; sunucuda kim hangi metin sürümünü ne zaman onayladı
-  tutulmuyor. **Gerçek kullanıcıdan önce:** avukat incelemesi; köşeli parantezli yerler (veri sorumlusu, iletişim,
-  Railway ülkesi, yurt dışı aktarım güvencesi, yedekleme); yurt dışı aktarım KVKK m.9 (2024 değişikliği: düzenli
-  aktarımda standart sözleşme vb., açık rıza sadece arızi) ya da sunucuyu Türkiye'ye taşımak; gerekirse onayın
-  sunucuda kaydı.
-- **Arayüz standartları (2026-11-07):** [UI_Standards.md](UI_Standards.md) — "Şifre" (parola değil), kısa etiketlerde
-  her kelime büyük harfle, Verdana 15 px, şifre alanı en fazla 20 karakter, uyarıların yeri (girişte yok; kayıtta ilk
-  şifrenin altında, tekrar uyuşmazsa altında), düğmeler form geçerli olmadan kapalı. Aynı belge StarterApp'in
-  `docs/` klasörüne de kondu (orada commit edilmedi; kullanıcı güncelleyecek).
-- **Hesabı silme ve test modu (2026-11-07, 2.0.4 ile yayında):** Profilim → "Hesabımı sil":
-  parola (+ TOTP) ile, her şey kalıcı silinir (Crypto_Design §7.13). Kayıt test modu (`VERIFICATION_TEST_MODE`)
-  **Railway'de açık** (2026-11-07, kullanıcı ekledi): kayıt kodu WhatsApp'a gitmez, uygulamaya döner; 2.0.3 kodu
-  göstermez, 2.0.4 ya da kaynaktan çalışan uygulama gösterir. Gerçek kullanıcıdan önce kapatılmalı (Security S8).
-- **Dosya türleri ve risk (2026-11-07, 2.0.5 ile yayında, GitHub release `v2.0.5`, zorunlu değil):** resim, Office, PDF, metin, arşiv, ses ve
-  görüntü gönderilebilir; programlar ve betikler engellenir. Alıcı riskli dosyada (makro, betikli PDF, içinde program
-  olan arşiv…) uyarı görür, kaydetmeden önce onay verir; kaydedilen dosyaya Windows dış kaynak etiketi konur
-  (UI_Standards §4.5, Security S4). Gönderilenler'deki "Yenile" kaldırıldı, liste gelen kutusu aralığıyla kendiliğinden
-  yenilenir. Gelen Kutusu'nda belge seçilince kendiliğinden açılır; "Açılınca Sil" kutusunda "Belgeyi Aç" gerekir.
-  **Kaydedilemez:** gönderen seçer (yazı, resim, PDF); alıcı sadece uygulamada görür, kopyalayamaz, ekran görüntüsü
-  alamaz (Crypto_Design §8.3.1). Kaydedilemez belgeyi 2.0.4 ve öncesi açamaz; 2.0.5 yayınlanınca zorunlu yapmak
-  düşünülebilir. PDFBox 3.0.8 eklendi (~4 MB). **Kişi Ekle:** Kişiler sayfasında; davet kodunu belge seçmeden,
-  tanışma yazısıyla oluşturur (Crypto_Design §7.7). Kodsuz onay isteği güvenlik nedeniyle yapılmadı.
-- **Ücretsiz kod imzalama: SignPath Foundation (ertelendi, 2026-11-06).** Demo şimdilik ZIP ile sürüyor. Başvurudan
-  önce gerekenler: lisans (**karar: MIT**, `LICENSE` henüz eklenmedi), MSI/ZIP'i GitHub Actions'ta kaynaktan üretmek
-  (doğrulanabilir derleme), README'de "Code signing policy" bölümü (roller; "Free code signing provided by
-  SignPath.io, certificate by SignPath Foundation"), gizlilik politikası, GitHub hesabında MFA, depo açıklamasını v2'ye
-  göre düzeltmek. Riskler: "doğrulanabilir itibar" isteniyor (depo yeni, yıldızsız); yayıncı "SignPath Foundation"
-  görünür; Akıllı Uygulama Denetimi'nin bu imzayı kabul ettiği sayfalarda yazmıyor. Her sürüm SignPath'te elle
-  onaylanır; `release.json` imzası imzalı MSI'a göre sonradan atılır. Şartlar: https://signpath.org/terms
-- **Kalan:** yeni özel anahtar (`release-keys/update-private-key.txt`) bu bilgisayardan başka, çevrimdışı bir yere
-  yedeklenmeli; Acer'daki 1.0.5 anahtarı artık kullanılmaz.
+| Parça | Durum |
+|---|---|
+| Sunucu | Railway, `https://guvenlipaylasim.up.railway.app`; `main`'e her push deploy eder (aşağıda "Demo kurulumu") |
+| Veritabanı | Railway Postgres (sunucuyla aynı proje, özel ağ). Aiven artık kullanılmıyor |
+| Masaüstü | 2.0.5 (GitHub release `v2.0.5`: MSI, kurulumsuz ZIP, imzalı `release.json`; zorunlu değil) |
+| Doğrulama mesajı | Vonage WhatsApp sandbox; Railway'de **test modu açık** (kayıt kodu uygulamaya döner) |
+| v1 (rollü, birimli prototip) | Masaüstü 1.0.5; v2 sunucusuna bağlanamaz, kullanılmıyor |
 
-### Doküman borcu (2.0.0'dan sonra)
-README'nin v1 bölümleri 2.0.0 ile düzeltildi. v2 kodlanırken §7, §8, Security.md ve bu rehber güncel tutuldu;
-şunlar hâlâ v1'i anlatıyor:
-- **Backend_Architecture.md** (en büyüğü): roller, menüler, birimler, ilk süperadmin, MapStruct, `BaseService`, soft
-  delete, kayıt hız sınırı silindi; yeni modüller (invite, contact, verification, totp, `ServerSeal`, kutu ömrü,
-  temizlik işleri, `SendQuota`) hiç anlatılmıyor.
-- **Crypto_Design.md §1–§6**: e-posta tuzu, ilk girişte anahtar, yönetici sıfırlaması, birime gönderim, SMS
-  bildirimi. §7 başlığındaki "Planlandı" notu da eski. §7–§8'e göre yeniden yazılmalı ya da "v1 (tarihçe)" diye
-  ayrılmalı.
-- **server/README.md**: v1 izleri.
+### Sürüm geçmişi (masaüstü)
 
-### Bilinen açıklar ve sonraya kalanlar
-- Günlük 200 kutu sınırı silinen kutuları saymıyor (sayım var olan kutulardan); kesin sayaç ayrı iş.
-- Güncelleme imza anahtarı hâlâ düz dosya (acil madde, Hatırlatmalar).
-- Security.md test planında eksik: uç noktaların sistematik IDOR testi, OWASP Dependency-Check, fuzz, sızma testi.
-- Gerçek kullanıcıya açılmadan önce: kayıtlı SMS gönderen adı ya da Meta onaylı WhatsApp hesabı (şu an WhatsApp
-  sandbox; sadece sandbox'a katılmış numaralar kod alır), KVKK (sunucu Türkiye dışında), **`VERIFICATION_TEST_MODE`
-  kapalı olmalı** (açıkken kayıt kodu WhatsApp'a gitmez, uygulamaya döner; telefon sahipliği doğrulanmaz; Security S8).
-  Test modunu sadece 2.0.4 ve sonrası ya da kaynaktan çalışan uygulama tanır; 2.0.3 kodu göstermez.
+| Sürüm | Tarih | Öne çıkanlar |
+|---|---|---|
+| 2.0.0 | 2026-11-06 | v2: telefonla kayıt (WhatsApp kodu), davet kodu ve kişiler, süreli kutu, açılınca sil, TOTP, sertifika sabitleme. Güncelleme imza anahtarı değişti (1.0.5 kullananlar bir kez elle kurar) |
+| 2.0.1 | 2026-11-06 | Telefon maskesi `(5xx) xxx xx xx`, alan kısıtları, profilde ad değiştirme, "Beni hatırla" (DPAPI, 30 gün) |
+| 2.0.2 | 2026-11-07 | Akıllı Uygulama Denetimi açıksa güncelleyici MSI yerine ZIP'i önerir (Update_Design §2b); sürüm etiketi |
+| 2.0.3 | 2026-11-07 | Kod gönderme geri sayımı (300 sn), "Bu Cihaza Güven", logo, ad soyad 2–3 kelime, KVKK aydınlatma metni (taslak), düğmeler form geçerli olmadan kapalı, şifre 12–20 karakter + dört karakter türü |
+| 2.0.4 | 2026-11-07 | Verdana ve büyük yazılar, "Şifre" ifadesi, şifre alanı 20 karakter, uyarı yerleri ([UI_Standards.md](UI_Standards.md)), "Hesabımı Sil", kayıt test modu |
+| 2.0.5 | 2026-11-07 | Geniş dosya türü listesi, programlar engellenir, alıcıya riskli dosya uyarısı ve dış kaynak etiketi (Security S4), **Kaydedilemez** belgeler (Crypto_Design §8.3.1), **Kişi Ekle**, tıklayınca açılan belge, kendiliğinden yenilenen Gönderilenler |
 
-### Başka bilgisayarda (evde) çalışmaya başlamak
-- `git pull` (dal: `main`). `v2` dalı birleştirildi, artık kullanılmıyor.
-- JDK 25 gerekir. Bu makinede: `~/.jdks/corretto-25.0.4.1`. Maven wrapper (`mvnw`) kurum ağındaki sertifika iptal
-  kontrolü yüzünden indiremedi; yerel Maven (`C:\tools\apache-maven-3.9.9`) kullanıldı. Evde `./mvnw` muhtemelen
-  çalışır.
-- Testler: `server/` ve `desktop/` klasörlerinde `mvn test` (son durum: sunucu 142, masaüstü 50 test, hepsi geçiyor).
-- Yerel sunucu: `server/.env` git'te yok. Gerekenler: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (Aiven ya da yerel
-  PostgreSQL), **`DB_SCHEMA=gps_v2`** (eski `guvenli_paylasim` şeması v1'dir). `SERVER_SEAL_KEY` dev'de verilmezse
-  herkesin bildiği sabit dev anahtarı kullanılır. `MESSAGING_PROVIDER` verilmezse doğrulama kodları sunucu log'una
-  yazılır (WhatsApp gerekmez). Çalıştırma: `mvn spring-boot:run -Dspring-boot.run.profiles=dev`.
-- Demo kullanıcıları (sadece dev): `5550000001`–`5550000004`, parola `DemoParola2026!`.
-- Masaüstünü yerel sunucuya bağlamak: varsayılan `http://localhost:8080`; Railway için
-  `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`.
-- Ekran görüntüsü aracı: `desktop` testlerindeki `com.desktop.ui.views.ScreenshotTour` (yerel sunucu açıkken).
-- Railway: proje `faithful-enthusiasm`, servis `GuvenliPaylasim` (kök `/server`), `main`'e her push deploy eder.
-  Claude için Railway MCP bu bilgisayarın `~/.claude.json` dosyasında (proje token'ı ile) tanımlı; evde yoksa Railway
-  panelinden yeni token alınıp `railway mcp local` aynı şekilde eklenir. Sohbette paylaşılan token yenilenmeli.
+### Gerçek kullanıma geçmeden önce yapılacaklar
+
+- **Doğrulama mesajı:** Railway'de `VERIFICATION_TEST_MODE` kapatılmalı (açıkken telefon sahipliği doğrulanmaz,
+  Security S8). Türkiye'ye SMS için Vonage'da kayıtlı gönderen adı ya da Meta onaylı WhatsApp Business hesabı
+  gerekir (ayrıntı: "Demo kurulumu").
+- **KVKK:** `desktop/src/main/resources/com/desktop/aydinlatma-metni.txt` TASLAK. Avukat incelemesi; köşeli
+  parantezli yerler (veri sorumlusu, iletişim, sunucu ülkesi, yurt dışı aktarım güvencesi); yurt dışı aktarım için
+  KVKK m.9 (2024 değişikliği) ya da sunucuyu Türkiye'ye taşımak; gerekirse onayın sunucuda kaydı.
+- **Kod imzalama:** imzasız MSI'ı Akıllı Uygulama Denetimi reddediyor; şimdilik kurulumsuz ZIP. Ücretsiz seçenek
+  SignPath Foundation (ertelendi): `LICENSE` (karar MIT) eklenmeli, MSI/ZIP GitHub Actions'ta kaynaktan üretilmeli,
+  README'ye "Code signing policy", gizlilik politikası, GitHub'da MFA. Şartlar: https://signpath.org/terms. Ücretli
+  seçenek: Azure Trusted Signing.
+- **Anahtar yedekleri:** `release-keys/update-private-key.txt` (git'te yok) düz dosya; parolayla şifrelenmeli ya da
+  donanım anahtarına taşınmalı ve çevrimdışı yedeklenmeli. Railway'deki `SERVER_SEAL_KEY` veritabanı yedeğinden ayrı
+  yedeklenmeli; kaybolursa bütün hesaplar açılamaz.
+- **Güvenlik testleri** (Security.md §5): uç noktaların sistematik IDOR testi, OWASP Dependency-Check, fuzz,
+  dışarıdan sızma testi.
+- **Bilinen küçük açıklar:** günlük 200 kutu sınırı silinen kutuları saymıyor; "Kaydedilemez" belgeyi 2.0.4 ve
+  öncesi açamaz (bir sonraki sürüm zorunlu yapılabilir); Gelen Kutusu'nda hâlâ "Yenile" düğmesi var.
+
+### Başka bilgisayarda çalışmaya başlamak
+
+- `git clone` / `git pull` (dal: `main`).
+- JDK 25 (ör. `~/.jdks/corretto-25.0.4.1`). Maven wrapper kurum ağında sertifika kontrolü yüzünden indiremeyebilir;
+  o zaman yerel Maven (ör. `C:	oolspache-maven-3.9.9`) kullanılır.
+- Testler: `server/` ve `desktop/` klasörlerinde `mvn test`.
+- Yerel sunucu: `server/.env` git'te yok. Gerekenler: `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (yerel PostgreSQL),
+  `DB_SCHEMA=gps_v2`. `SERVER_SEAL_KEY` dev'de verilmezse sabit dev anahtarı kullanılır. `MESSAGING_PROVIDER`
+  verilmezse doğrulama kodları sunucu log'una yazılır. Çalıştırma: `serverun-dev.cmd`.
+- Demo kullanıcıları (sadece dev): `5550000001`–`5550000004`, şifre `DemoParola2026!`.
+- Masaüstü: `desktopun.cmd` yerel sunucuya bağlanır; Railway için `GPS_SERVER_URL=https://guvenlipaylasim.up.railway.app`.
+- Ekran görüntüsü aracı: masaüstü testlerindeki `com.desktop.ui.views.ScreenshotTour` (yerel sunucu açıkken).
+- Sürüm yayımlamak için `release-keys/update-private-key.txt` ve WiX 3.14 (`C:\Projeler\.tools\wix3`) gerekir;
+  GitHub'a yükleme `gh` CLI ile (README › Yeni sürüm yayımlama).
+- Railway: proje `faithful-enthusiasm`, servis `GuvenliPaylasim` (kök `/server`). Claude için Railway MCP
+  `~/.claude.json`'da proje token'ıyla tanımlı; başka bilgisayarda panelden yeni token alınıp eklenir.
 
 ## Çalışma kuralı
 
-**Önce konuşulur, sonra kod yazılır.** Aşağıdaki konuların hepsi konuşulup kararlar `Crypto_Design.md`'ye yazılmadan
-v2 kodlamasına başlanmaz. Her kararda neyin gerekli, neyin gereksiz olduğu birlikte belirlenir.
+**Önce konuşulur, sonra kod yazılır.** Tasarım kararları önce ilgili dokümana (Crypto_Design, Security,
+UI_Standards) yazılır. Her değişiklikten sonra commit ve push sormadan yapılır.
 
 ## Ürünün amacı
 
 Kimsenin açamayacağı bir kutuya dosya ya da mesaj konur; kutu sadece alıcının bilgisayarında açılır. Herkes eşit
-kullanıcıdır; kapsam tek bir ağ ya da kurumla sınırlı değildir. Parolasını kaybeden, kendisine gelmiş kutuları da
+kullanıcıdır; kapsam tek bir ağ ya da kurumla sınırlı değildir. Şifresini kaybeden, kendisine gelmiş kutuları da
 kaybeder.
 
 Kapsam dışı: para ya da kripto para transferi, izlenemez ödeme veya takas sistemi.
-
-## Durum
-
-| Konu | Durum |
-|---|---|
-| v1 (rollü, birimli prototip) | Masaüstü 1.0.5; sunucu artık v2, 1.0.5 bağlanamaz |
-| v2 sunucu | **Canlı** (Railway, `main`) |
-| v2 masaüstü | **2.0.0 yayında** (GitHub release `v2.0.0`) |
-| 1. Temel dönüşüm (herkes kullanıcı, telefon, davet kodu, kişiler) | **Kodlandı**, Crypto_Design §7 |
-| 2. Gizlilik | **Kodlandı**, Crypto_Design §8 |
-| Yaygın parola kontrolü | **Yapıldı** (masaüstünde, `PasswordStrength`) |
-| 3. Karşılıklı teslim (kasa) | **Konuşuldu: yapılmayacak** (gerekçe aşağıda) |
-| Güvenlik: tehdit modeli ve test planı | **Konuşuldu**, [Security.md](Security.md)'de. §7 buna göre güncellendi |
-| 4. İnternete açılma | **Konuşuldu**, kararlar aşağıda. Demo sunucusu Railway'de |
-| Telefon maskesi `(5xx) xxx xx xx`, alan kısıtları, profilde ad değiştirme, "Beni hatırla" (DPAPI, 30 gün) | **Kodlandı** (2026-11-06 gece), Crypto_Design §7.4, Security S6. Masaüstü **2.0.1** ile yayında (GitHub release `v2.0.1`: MSI, kurulumsuz ZIP, `release.json`; zorunlu değil, çünkü Akıllı Uygulama Denetimi açık bilgisayarda ZIP kullanan MSI'ı kuramaz) |
-| TOTP ile giriş | **Yapıldı, isteğe bağlı** (2026-11-06): profilden açılır; girişte ve sıfırlamada kod, kurtarma kodları (§7.4) |
 
 ## 1. Temel dönüşüm: alınan kararlar (özet)
 
@@ -201,7 +146,8 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 ## Demo kurulumu (Railway)
 
 > 2026-11-06'da kuruldu; aynı gün `v2` `main`'e birleştirildi (`51e8ed6`). Railway'de çalışan kod **v2**'dir.
-> Yayındaki masaüstü 1.0.5 (v1) bu sunucuyla çalışmaz; v2 masaüstü sürümü (MSI) henüz yayınlanmadı.
+> Masaüstü 1.0.5 (v1) bu sunucuyla çalışmaz. 2026-11-07'den beri `VERIFICATION_TEST_MODE=true` (kayıt kodu
+> uygulamaya döner; gerçek kullanımdan önce kapatılmalı).
 
 | Konu | Değer |
 |---|---|

@@ -1,13 +1,15 @@
 # server
 
-Güvenli Paylaşım'ın Spring Boot backend'i (StarterApp şablonundan türetildi). Bağlayıcı kurallar ve tasarım kararları:
-[docs/Backend_Architecture.md](../docs/Backend_Architecture.md).
+Güvenli Paylaşım'ın Spring Boot backend'i (StarterApp şablonundan türetildi). Şifreli kutuları, açık anahtarları,
+davetleri ve kişileri tutar; içeriği göremez. Genel kurallar: [docs/Backend_Architecture.md](../docs/Backend_Architecture.md)
+(§20 bu projeye özgü). Şifreleme: [docs/Crypto_Design.md](../docs/Crypto_Design.md).
 
 | | |
 |---|---|
 | Java | 25 |
 | Spring Boot | 4.1.x |
-| Veritabanı | PostgreSQL 18 (dev, test ve prod) |
+| Veritabanı | PostgreSQL 18 (yerelde kurulu; canlıda Railway Postgres) |
+| Canlı | Railway, `https://guvenlipaylasim.up.railway.app` (`main`'e her push deploy eder) |
 | Build | Maven (`./mvnw`, Windows PowerShell'de `.\mvnw.cmd`) |
 
 ## İlk kurulum
@@ -45,8 +47,8 @@ CREATE USER guvenlipaylasim WITH PASSWORD '...';
 CREATE DATABASE guvenlipaylasim OWNER guvenlipaylasim;
 ```
 
-- Aiven gibi bulut veritabanlarında `DB_URL`'in sonuna `?sslmode=require` eklenir. `DB_HOST`/`DB_PORT`/`DB_NAME` okunmaz;
-  bağlantı sadece `DB_URL`'den alınır.
+- Bağlantı sadece `DB_URL`'den alınır (`DB_HOST`/`DB_PORT`/`DB_NAME` okunmaz). SSL isteyen uzak bir veritabanında
+  `DB_URL`'in sonuna `?sslmode=require` eklenir.
 - `DB_SCHEMA` küçük harf olmalıdır. Uygulamanın bütün tabloları bu şemada durur; şema yoksa ilk açılışta oluşturulur.
   Başka projelerle paylaşılan bir veritabanında diğer şemalara (ör. `public`) dokunulmaz. Dev profilinde varsayılanı
   `gps_v2`'dir (v2 şeması; v1 tabloları eski şemada kalır, Crypto_Design §7.11); prod'da **zorunludur**.
@@ -54,7 +56,8 @@ CREATE DATABASE guvenlipaylasim OWNER guvenlipaylasim;
   tabloları ve demo verisini yeniden oluşturur.
 
 Tablolar ilk açılışta Hibernate tarafından (`ddl-auto=update`), demo verisi migration class'larıyla oluşturulur.
-v2'de yönetici hesabı yoktur; herkes kendisi kayıt olur.
+v2'de yönetici hesabı yoktur; herkes kendisi kayıt olur. `MESSAGING_PROVIDER` verilmezse doğrulama kodları
+WhatsApp'a gitmez, sunucu log'una yazılır.
 
 ### 3. Çalıştırma
 
@@ -97,42 +100,39 @@ edildiği: [docs/Backend_Architecture.md §17](../docs/Backend_Architecture.md).
 
 Prod'da gereken değişkenlerin listesi [.env.example](.env.example) dosyasındadır.
 
-## Yeni modül ekleme
+## Modüller (`com.server.modules`)
 
-Referans modül `modules/unit`'tir. Örnek olarak `Product` modülü:
+| Modül | Görev | Uç noktalar |
+|---|---|---|
+| `auth` | Giriş, kayıt, şifre sıfırlama, oturumlar (JWT + refresh cookie), giriş denemesi sınırı | `/api/auth/login`, `register/start|complete`, `password-reset/start|complete`, `refresh`, `logout`, `PUT /api/auth/password` |
+| `verification` | WhatsApp/SMS doğrulama kodu, numara/IP/günlük sınırlar, test modu | (auth üzerinden) |
+| `notification` | Mesaj gönderimi: `VonageMessageGateway` ya da log'a yazan `SimulatedSmsGateway` | — |
+| `totp` | İsteğe bağlı iki adımlı doğrulama ve kurtarma kodları | `/api/auth/totp/setup|enable|disable` |
+| `user` | Ad değiştirme, hesabı kalıcı silme | `PUT /api/users/me/name`, `POST /api/users/me/delete` |
+| `key` | Açık anahtarlar ve istemcide şifrelenmiş özel anahtar paketi | `GET/POST /api/keys/me` |
+| `invite` | Davet kodu ile ilk temas, iki yönlü doğrulama | `/api/invites`, `redeem`, `{id}/accept|verify|reject`, `verifications`, `sent`, `DELETE {id}` |
+| `contact` | Doğrulanmış kişiler (imzalı kayıt) | `GET /api/contacts`, `DELETE /api/contacts/{userId}` |
+| `document` | Şifreli kutular, alıcı başına anahtar, kutu ömrü, açılınca sil, kota, zamanlanmış silme | `/api/documents`, `inbox`, `sent`, `{id}`, `{id}/opened`, `DELETE {id}` |
 
-1. **Klasör:** `modules/unit` klasörünü `modules/product` olarak kopyalayın, sınıf ve paket adlarını değiştirin.
-2. **Entity:** `Product extends BaseEntity`, sınıfa `@Entity`, `@SoftDelete`, `@Table(name = "products")` ekleyin.
-   - `@Data` değil `@Getter`/`@Setter` kullanın.
-   - Her `@ManyToOne` için `fetch = FetchType.LAZY`.
-   - Kolon adlarını `@Column(name = "...")` ile açıkça yazın (migration SQL'leri bu adları kullanır).
-   - Benzersiz alanlara `@Column(unique = true)` **koymayın** (bkz. 8. adım).
-3. **DTO'lar (`dto/`):** `ProductCreateRequest`, `ProductUpdateRequest`, `ProductResponse` record olarak.
-   - Update request `VersionedRequest`'i uygular ve `@NotNull(message = GlobalMessages.VERSION_REQUIRED) Long version` taşır.
-   - Response `version` alanını döner (istemci güncellemede geri gönderir).
-   - Her validation anotasyonuna `message = ProductMessages.XXX` verin; mesajı olmayan validation hataları `invalid_request` döner.
-4. **Mesajlar:** `ProductMessages` sınıfı; anahtarlar `product_` ile başlar, snake_case'tir.
-5. **Mapper:** `@Mapper(config = MapperSettings.class) interface ProductMapper extends BaseMapper<...>` — gövdesi yok.
-   Eşlenmemiş bir alan kalırsa proje derlenmez.
-6. **Servis:** `ProductService extends BaseService<...>` ve `ProductServiceImpl extends BaseServiceImpl<...>`.
-   İş kurallarını kancalarda yazın: `validateCreate`, `prepareCreate`, `validateUpdate`, `validateDelete`.
-   İş kuralı ihlalinde `throw new BusinessException(ProductMessages.XXX)` (422).
-7. **Controller:** `UnitController` kalıbı; dönüş tipi her zaman `ApiResponse<T>`.
-   Sadece admin'e açıksa sınıfa `@PreAuthorize("hasRole('ADMIN')")`; herkes okuyup sadece admin yazıyorsa
-   create/update/delete metotlarına.
-8. **Migration:** `migration/versions` altına bir sonraki numarayla (ör. `V008_ProductModule`) yazın
-   (`V004_UnitModule` örnek alınır):
-   - Benzersiz alanlar için silinmemiş kayıtlara özel index (PostgreSQL partial index):
-     `SoftDeleteUniqueIndex.create(jdbc, "ux_products_code", "products", "code")`
-   - Menü kaydı: `id` yazmadan, üst menüye alt sorguyla referans vererek;
-     `version = 0, deleted = false, created_at = now()` açıkça verilir.
-9. **Test:** `UnitServiceImplTest` örnek alınarak iş kurallarının testleri.
+Zamanlanmış işler: `DocumentCleanupJob`, `InviteCleanupJob`, `AuthCleanupJob` (süresi dolan kayıtları kalıcı siler).
+Migration'lar: `V001_DemoData` (sadece dev), `V002_HardDelete`, `V003_SealSecrets`.
 
-### Kurallar (özet)
+## Ortam değişkenleri (prod)
+
+Tam liste: [.env.example](.env.example). En önemlileri:
+
+| Değişken | Not |
+|---|---|
+| `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, `DB_SCHEMA` | Railway'de `${{Postgres.*}}` referanslarıyla; şema `gps_v2` |
+| `JWT_*` | RS256 anahtarları (Railway'de PEM değişkenleri, başlangıçta dosyaya yazılır) |
+| `SERVER_SEAL_KEY` | Şifre özetleri ve anahtar paketleri için ikinci kilit (32 bayt, Base64). **Kaybolursa bütün hesaplar açılamaz; ayrı yedeklenmeli** |
+| `MESSAGING_PROVIDER`, `VONAGE_*` | Doğrulama mesajı (Vonage WhatsApp/SMS) |
+| `VERIFICATION_TEST_MODE` | `true` iken kayıt kodu mesajla gitmez, cevapta döner. Sadece demo; gerçek kullanımda `false` |
+
+## Kurallar (özet)
 
 - Uygulanmış bir migration class'ı **değiştirilmez**; yeni sürüm yazılır.
 - Var olan kolonu değiştirmek (ad, tip, uzunluk) `ddl-auto` ile olmaz → migration class'ında `ALTER`.
-- Enum'a yeni değer eklendiğinde Hibernate'in oluşturduğu `check` constraint güncellenmez → migration class'ında `ALTER`.
 - Yeni kolonlar nullable ya da default değerli olmalıdır (rolling update sırasında eski sürüm de çalışır).
-- Tablo boşaltılırken `TRUNCATE tablo RESTART IDENTITY` kullanılır.
 - Response formatı `{ success, message, data, traceId }` **değişmez**.
+- Sunucu içerik, şifre ya da özel anahtar görmez; yeni bir özellik bu kuralı bozmamalı (Security.md).
