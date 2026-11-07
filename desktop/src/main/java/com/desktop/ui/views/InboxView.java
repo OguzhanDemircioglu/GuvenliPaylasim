@@ -68,9 +68,9 @@ final class InboxView extends VBox {
         Button redeem = Ui.button("Kod ile al", Material2OutlinedMZ.VPN_KEY, Styles.BUTTON_OUTLINED);
         redeem.setOnAction(e -> openRedeem());
         VBox left = new VBox(10, Ui.row(8, count, Ui.grow(), redeem, refresh), list);
-        left.setMinWidth(360);
-        left.setPrefWidth(400);
-        left.setMaxWidth(440);
+        left.setMinWidth(420);
+        left.setPrefWidth(460);
+        left.setMaxWidth(500);
 
         detail.getStyleClass().add("surface");
         HBox.setHgrow(detail, Priority.ALWAYS);

@@ -145,7 +145,7 @@ public final class ShellView extends BorderPane {
         ToggleButton button = new ToggleButton(text, Ui.icon(ikon, 19));
         if (trailing != null) {
             HBox graphic = Ui.row(12, Ui.icon(ikon, 19), Ui.label(text), Ui.grow(), trailing);
-            graphic.setPrefWidth(196);
+            graphic.setPrefWidth(228);
             button.setText(null);
             button.setGraphic(graphic);
         }

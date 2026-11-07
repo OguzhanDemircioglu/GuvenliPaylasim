@@ -60,8 +60,8 @@ final class SecurityView extends ScrollPane {
         VBox left = new VBox(20, profileCard(context), fingerprintCard, algorithmCard);
         HBox.setHgrow(left, Priority.ALWAYS);
         VBox right = new VBox(20, passwordCard, new TwoFactorCard(context), deleteCard(context));
-        right.setPrefWidth(420);
-        right.setMinWidth(380);
+        right.setPrefWidth(460);
+        right.setMinWidth(420);
         HBox body = new HBox(20, left, right);
 
         VBox page = new VBox(Ui.header("Profilim", "Adınız, telefonunuz ve belgelerinizi açan anahtarlar"), body);

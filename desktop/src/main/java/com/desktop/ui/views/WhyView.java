@@ -87,7 +87,7 @@ final class WhyView extends ScrollPane {
 
     private static Node comparison() {
         GridPane grid = new GridPane();
-        ColumnConstraints topic = new ColumnConstraints(190);
+        ColumnConstraints topic = new ColumnConstraints(230);
         ColumnConstraints before = new ColumnConstraints();
         before.setPercentWidth(38);
         ColumnConstraints after = new ColumnConstraints();

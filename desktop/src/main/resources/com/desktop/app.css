@@ -12,8 +12,14 @@
     -gps-sky-soft: rgba(90, 169, 255, 0.16);
     -gps-on-navy: #d6e2f3;
     -gps-on-navy-muted: #8aa1c2;
-    -fx-font-family: "Segoe UI", "Inter", system-ui, sans-serif;
-    -fx-font-size: 13.5px;
+    -fx-font-family: "Verdana", "Segoe UI", sans-serif;
+    -fx-font-size: 15px;
+}
+
+/* Metinli düğmeler (Ui.button): daha büyük tıklama alanı. Sadece ikonlu düğmeler temanın boyutunda kalır. */
+.gps-button {
+    -fx-padding: 10 18 10 18;
+    -fx-min-height: 40;
 }
 
 .content-area {
@@ -25,13 +31,13 @@
 }
 
 .page-title {
-    -fx-font-size: 24px;
+    -fx-font-size: 26.5px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-fg-default;
 }
 
 .page-subtitle {
-    -fx-font-size: 13.5px;
+    -fx-font-size: 15px;
     -fx-text-fill: -color-fg-muted;
 }
 
@@ -45,7 +51,7 @@
 }
 
 .section-title {
-    -fx-font-size: 15px;
+    -fx-font-size: 16.5px;
     -fx-font-weight: bold;
 }
 
@@ -60,25 +66,25 @@
 .sidebar {
     -fx-background-color: linear-gradient(to bottom, -gps-navy-900, -gps-navy-800);
     -fx-padding: 22 14 16 14;
-    -fx-min-width: 248;
-    -fx-pref-width: 248;
+    -fx-min-width: 280;
+    -fx-pref-width: 280;
     -fx-max-width: 248;
 }
 
 .brand-title {
     -fx-text-fill: white;
-    -fx-font-size: 15.5px;
+    -fx-font-size: 17px;
     -fx-font-weight: bold;
 }
 
 .brand-subtitle {
     -fx-text-fill: -gps-on-navy-muted;
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
 }
 
 .nav-section {
     -fx-text-fill: -gps-on-navy-muted;
-    -fx-font-size: 10.5px;
+    -fx-font-size: 11.5px;
     -fx-font-weight: bold;
     -fx-padding: 18 12 6 12;
 }
@@ -87,8 +93,8 @@
     -fx-background-color: transparent;
     -fx-background-radius: 9;
     -fx-text-fill: -gps-on-navy;
-    -fx-font-size: 13.5px;
-    -fx-padding: 9 12 9 12;
+    -fx-font-size: 15px;
+    -fx-padding: 11 14 11 14;
     -fx-alignment: center-left;
     -fx-graphic-text-gap: 12;
     -fx-cursor: hand;
@@ -129,7 +135,7 @@
     -fx-background-color: -gps-sky;
     -fx-background-radius: 10;
     -fx-text-fill: -gps-navy-900;
-    -fx-font-size: 10.5px;
+    -fx-font-size: 11.5px;
     -fx-font-weight: bold;
     -fx-padding: 1 7 1 7;
 }
@@ -147,7 +153,7 @@
 
 .user-unit {
     -fx-text-fill: -gps-on-navy-muted;
-    -fx-font-size: 11.5px;
+    -fx-font-size: 12.5px;
 }
 
 .sidebar-icon-button {
@@ -177,7 +183,7 @@
 
 .secure-pill .label {
     -fx-text-fill: #86efac;
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
 }
 
 .secure-pill .ikonli-font-icon {
@@ -202,7 +208,7 @@
 }
 
 .auth-title {
-    -fx-font-size: 30px;
+    -fx-font-size: 33px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-fg-default;
 }
@@ -223,7 +229,7 @@
     -fx-border-color: transparent transparent -color-fg-default transparent;
     -fx-border-width: 0 0 2 0;
     -fx-padding: 6 2 4 2;
-    -fx-font-size: 15px;
+    -fx-font-size: 16.5px;
     -fx-effect: null;
 }
 
@@ -240,7 +246,7 @@
 }
 
 .auth-input-label {
-    -fx-font-size: 15px;
+    -fx-font-size: 16.5px;
     -fx-text-fill: -color-fg-muted;
 }
 
@@ -253,9 +259,9 @@
     -fx-background-radius: 22;
     -fx-border-color: transparent;
     -fx-text-fill: white;
-    -fx-font-size: 15px;
+    -fx-font-size: 16.5px;
     -fx-font-weight: bold;
-    -fx-pref-height: 44;
+    -fx-pref-height: 48;
     -fx-cursor: hand;
 }
 
@@ -277,7 +283,7 @@
 
 .auth-version {
     -fx-text-fill: white;
-    -fx-font-size: 13px;
+    -fx-font-size: 14.5px;
     -fx-font-weight: bold;
 }
 
@@ -291,29 +297,29 @@
 
 .auth-info-title {
     -fx-text-fill: white;
-    -fx-font-size: 32px;
+    -fx-font-size: 35px;
     -fx-font-weight: bold;
 }
 
 .auth-info-text {
     -fx-text-fill: -gps-on-navy;
-    -fx-font-size: 15px;
+    -fx-font-size: 16.5px;
 }
 
 .hero-title {
     -fx-text-fill: white;
-    -fx-font-size: 34px;
+    -fx-font-size: 37.5px;
     -fx-font-weight: bold;
 }
 
 .hero-text {
     -fx-text-fill: -gps-on-navy;
-    -fx-font-size: 15px;
+    -fx-font-size: 16.5px;
 }
 
 .hero-feature-text {
     -fx-text-fill: -gps-on-navy-muted;
-    -fx-font-size: 12.5px;
+    -fx-font-size: 14px;
 }
 
 .login-form .text-field,
@@ -322,13 +328,13 @@
 }
 
 .login-form .button.accent {
-    -fx-pref-height: 42;
+    -fx-pref-height: 46;
     -fx-font-weight: bold;
 }
 
 .field-label {
     -fx-font-weight: bold;
-    -fx-font-size: 12.5px;
+    -fx-font-size: 14px;
     -fx-text-fill: -color-fg-default;
 }
 
@@ -386,7 +392,7 @@
 .chip {
     -fx-background-radius: 20;
     -fx-padding: 3 10 3 10;
-    -fx-font-size: 11.5px;
+    -fx-font-size: 12.5px;
     -fx-font-weight: bold;
 }
 
@@ -416,7 +422,7 @@
 
 .fingerprint {
     -fx-font-family: "Cascadia Mono", "Consolas", monospace;
-    -fx-font-size: 19px;
+    -fx-font-size: 21px;
     -fx-text-fill: -color-fg-default;
     -fx-letter-spacing: 1;
 }
@@ -456,7 +462,7 @@
 
 .inbox-sender {
     -fx-font-weight: bold;
-    -fx-font-size: 13.5px;
+    -fx-font-size: 15px;
 }
 
 .unread-dot {
@@ -492,7 +498,7 @@
 }
 
 .document-text {
-    -fx-font-size: 14px;
+    -fx-font-size: 15.5px;
 }
 
 .locked-panel {
@@ -558,7 +564,7 @@
 
 .send-button {
     -fx-pref-height: 44;
-    -fx-font-size: 14px;
+    -fx-font-size: 15.5px;
     -fx-font-weight: bold;
 }
 
@@ -579,7 +585,7 @@
 
 .step-row .step-detail {
     -fx-text-fill: -color-fg-subtle;
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
 }
 
 .step-icon {
@@ -596,7 +602,7 @@
 
 .cipher-preview {
     -fx-font-family: "Cascadia Mono", "Consolas", monospace;
-    -fx-font-size: 11px;
+    -fx-font-size: 12px;
     -fx-text-fill: -color-fg-muted;
     -fx-background-color: -color-bg-subtle;
     -fx-background-radius: 8;
@@ -614,12 +620,12 @@
 }
 
 .why-hero .hero-title {
-    -fx-font-size: 26px;
+    -fx-font-size: 28.5px;
 }
 
 .compare-header {
     -fx-font-weight: bold;
-    -fx-font-size: 12px;
+    -fx-font-size: 13px;
     -fx-text-fill: -color-fg-muted;
 }
 
@@ -653,7 +659,7 @@
 }
 
 .stat-value {
-    -fx-font-size: 22px;
+    -fx-font-size: 24px;
     -fx-font-weight: bold;
 }
 
@@ -680,7 +686,7 @@
 /* Davet kodu: tek seferlik gösterim, okunaklı ve kopyalanabilir */
 .invite-code {
     -fx-font-family: "Consolas", "Cascadia Mono", monospace;
-    -fx-font-size: 26px;
+    -fx-font-size: 28.5px;
     -fx-font-weight: bold;
     -fx-text-fill: -color-accent-fg;
     -fx-padding: 6 14;
@@ -690,5 +696,5 @@
 
 .code-input {
     -fx-font-family: "Consolas", "Cascadia Mono", monospace;
-    -fx-font-size: 18px;
+    -fx-font-size: 20px;
 }

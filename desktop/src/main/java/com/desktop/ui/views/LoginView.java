@@ -71,10 +71,12 @@ import java.util.function.Consumer;
  */
 public final class LoginView extends VBox {
 
-    public static final double WIDTH = 900;
-    public static final double HEIGHT = 540;
+    public static final double WIDTH = 1000;
+    public static final double HEIGHT = 600;
     /** Bilgi yazılarının ve sürüm etiketinin kartın dış kenarına uzaklığı. */
     private static final double INFO_EDGE = 48;
+    /** Paneller ilk 900 px genişliğindeki karta göre çizildi; kart büyüyünce aynı oranda büyür. */
+    private static final double SCALE = WIDTH / 900;
     private static final Duration ITEM_DURATION = Duration.seconds(0.7);
     private static final Duration ITEM_STEP = Duration.seconds(0.1);
     private static final Duration PANEL_DURATION = Duration.seconds(1.5);
@@ -214,8 +216,8 @@ public final class LoginView extends VBox {
 
         place(loginBox, 0, new Insets(0, 72, 0, 48));
         place(registerBox, WIDTH / 2, new Insets(0, 48, 0, 72));
-        place(loginInfo, WIDTH / 2, new Insets(0, INFO_EDGE, 72, 150));
-        place(registerInfo, 0, new Insets(0, 150, 72, INFO_EDGE));
+        place(loginInfo, WIDTH / 2, new Insets(0, INFO_EDGE, 72, 110));
+        place(registerInfo, 0, new Insets(0, 110, 72, INFO_EDGE));
         registerInfo.setMouseTransparent(true);
         loginInfo.setMouseTransparent(true);
 
@@ -250,8 +252,8 @@ public final class LoginView extends VBox {
 
     /** CSS: .rotate-bg — girişte eğik durup sağ yarıyı kaplar, kayıtta düzleşip bütün kartı kaplar. */
     private Rectangle rotatingPanel() {
-        double width = 1020;
-        double height = 720;
+        double width = 1020 * SCALE;
+        double height = 720 * SCALE;
         Rectangle panel = new Rectangle(width, height);
         panel.getStyleClass().add("auth-panel");
         panel.setLayoutX(WIDTH - width);
@@ -271,11 +273,11 @@ public final class LoginView extends VBox {
 
     /** CSS: .rotate-bg2 — girişte kartın altında bekler, kayıtta dönerek sağ yarıyı kart rengiyle kaplar. */
     private Rectangle sweepingPanel() {
-        double width = 1020;
-        double height = 840;
+        double width = 1020 * SCALE;
+        double height = 840 * SCALE;
         Rectangle panel = new Rectangle(width, height);
         panel.getStyleClass().add("auth-panel-light");
-        panel.setLayoutX(300);
+        panel.setLayoutX(300 * SCALE);
         panel.setLayoutY(HEIGHT);
         Rotate rotate = new Rotate(0, 0, height);
         Shear shear = new Shear(0, 0, 0, height);
@@ -351,7 +353,7 @@ public final class LoginView extends VBox {
         Node title = title("Kayıt ol");
         Node name = floating("Ad soyad", registerName, Material2OutlinedMZ.PERSON_OUTLINE);
         Node phone = floating("Cep telefonu (5xx) xxx xx xx", registerPhone, Material2OutlinedMZ.PHONE_ANDROID);
-        Node password = floating("Parola (12–20; büyük, küçük harf, rakam, sembol)", registerPassword, null);
+        Node password = floating("Parola (12–20 karakter)", registerPassword, null);
         Node repeat = floating("Parola (tekrar)", registerRepeat, null);
         Node code = floating("WhatsApp kodu", registerCode, null);
         registerCode.setRight(sendCode);
@@ -774,11 +776,11 @@ public final class LoginView extends VBox {
         TextField code = Inputs.digits(new TextField(), 6);
         code.setPromptText("WhatsApp kodu (6 hane)");
         PasswordTextField password = new PasswordTextField();
-        password.setPromptText("Yeni parola (12–20; büyük, küçük harf, rakam, sembol)");
+        password.setPromptText("Yeni parola (12–20 karakter)");
         PasswordTextField repeat = new PasswordTextField();
         repeat.setPromptText("Yeni parola (tekrar)");
         TextField totp = new TextField();
-        totp.setPromptText("Authenticator ya da kurtarma kodu (iki adımlı doğrulama açtıysanız)");
+        totp.setPromptText("İki adımlı doğrulama kodu (açtıysanız)");
         Label warning = Ui.muted("Parola sıfırlanınca size gelmiş bütün belgeler silinir; eski parolanızla "
                 + "kilitliydiler ve yeni parolayla açılamazlar. Kişilerinize anahtarınızın değiştiği bildirilir.");
         warning.setWrapText(true);

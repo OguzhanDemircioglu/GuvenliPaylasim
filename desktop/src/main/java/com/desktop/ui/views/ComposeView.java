@@ -88,8 +88,8 @@ final class ComposeView extends VBox {
         VBox content = contentPanel();
         HBox.setHgrow(content, Priority.ALWAYS);
         VBox recipientsPanel = recipientsPanel();
-        recipientsPanel.setPrefWidth(400);
-        recipientsPanel.setMinWidth(360);
+        recipientsPanel.setPrefWidth(480);
+        recipientsPanel.setMinWidth(440);
 
         HBox body = new HBox(20, content, recipientsPanel);
         VBox.setVgrow(body, Priority.ALWAYS);

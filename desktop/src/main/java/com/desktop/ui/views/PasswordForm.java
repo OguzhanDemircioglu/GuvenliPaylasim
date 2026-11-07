@@ -24,7 +24,7 @@ import org.kordamp.ikonli.material2.Material2OutlinedAL;
 final class PasswordForm extends VBox {
 
     private final PasswordTextField current = field("Mevcut parola");
-    private final PasswordTextField next = field("12–20; büyük, küçük harf, rakam, sembol");
+    private final PasswordTextField next = field("12–20 karakter");
     private final PasswordTextField repeat = field("Yeni parolayı tekrar girin");
     private final Label error = Ui.label("", "form-error");
     private final Button submit;

@@ -88,7 +88,7 @@ public final class ScreenshotTour {
             VBox toasts = new VBox();
             StackPane root = new StackPane(content, modal, toasts);
             Overlays.install(modal, toasts);
-            Scene scene = new Scene(root, 1320, 840);
+            Scene scene = new Scene(root, App.MAIN_WIDTH, App.MAIN_HEIGHT);
             scene.getStylesheets().add(App.class.getResource("/com/desktop/app.css").toExternalForm());
             Stage s = new Stage();
             s.setScene(scene);

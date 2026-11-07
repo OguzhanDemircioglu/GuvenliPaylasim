@@ -48,7 +48,13 @@ public final class Ui {
     }
 
     public static Button button(String text, Ikon ikon, String... styleClasses) {
-        Button button = new Button(text, ikon == null ? null : icon(ikon, 16));
+        Button button = new Button(text, ikon == null ? null : icon(ikon, 17));
+        if (text != null) {
+            // Metinli düğmeler büyük (app.css .gps-button); sadece ikonlu düğmeler temanın boyutunda kalır.
+            button.getStyleClass().add("gps-button");
+            // Düğme metni hiç kesilmez ("Kod i…" olmaz); yer daralırsa yanındaki yazı alt satıra kayar.
+            button.setMinWidth(Region.USE_PREF_SIZE);
+        }
         button.getStyleClass().addAll(styleClasses);
         return button;
     }

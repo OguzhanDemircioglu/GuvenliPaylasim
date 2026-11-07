@@ -32,6 +32,9 @@ public class App extends Application {
 
     private static final Preferences PREFS = Preferences.userNodeForPackage(App.class);
     private static final String PREF_DARK = "theme.dark";
+    /** Ana pencere: Verdana ve büyütülmüş yazıyla Gelen Kutusu'nda liste ve belge yan yana sığsın diye. */
+    public static final double MAIN_WIDTH = 1440;
+    public static final double MAIN_HEIGHT = 900;
 
     private final StackPane content = new StackPane();
     private final StackPane root = new StackPane();
@@ -158,12 +161,12 @@ public class App extends Application {
         stage.setMinWidth(0);
         stage.setMinHeight(0);
         stage.setResizable(!value);
-        root.setPrefSize(value ? LoginView.WIDTH : 1320, value ? LoginView.HEIGHT : 840);
+        root.setPrefSize(value ? LoginView.WIDTH : MAIN_WIDTH, value ? LoginView.HEIGHT : MAIN_HEIGHT);
         stage.sizeToScene();
         stage.centerOnScreen();
         if (!value) {
-            stage.setMinWidth(1120);
-            stage.setMinHeight(720);
+            stage.setMinWidth(1240);
+            stage.setMinHeight(760);
         }
     }
 
