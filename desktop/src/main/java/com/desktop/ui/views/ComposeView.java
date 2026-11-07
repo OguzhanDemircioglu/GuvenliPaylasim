@@ -7,6 +7,8 @@ import com.desktop.service.AuthService;
 import com.desktop.service.ContactService;
 import com.desktop.service.DocumentService;
 import com.desktop.service.InviteService;
+import com.desktop.service.FileRisk;
+import com.desktop.service.FileTypes;
 import com.desktop.ui.Async;
 import com.desktop.ui.Dialogs;
 import com.desktop.ui.Formats;
@@ -44,21 +46,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 /**
  * Yeni gönderi: düz yazı ya da dosya; alıcı doğrulanmış kişiler ya da davet koduyla yeni bir numara. İçerik bu
  * bilgisayarda şifrelenir; her alıcı kişi için belge anahtarı ayrı ayrı sarmalanır.
  */
 final class ComposeView extends VBox {
-
-    /** Eski sistemle aynı: Word, PDF ve JPEG. */
-    private static final Map<String, String> ALLOWED = Map.of(
-            "doc", "application/msword",
-            "docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            "pdf", "application/pdf",
-            "jpg", "image/jpeg",
-            "jpeg", "image/jpeg");
 
     private final Context context;
     private final ToggleButton textMode = new ToggleButton("Düz Yazı", Ui.icon(Material2OutlinedMZ.TEXT_SNIPPET, 16));
@@ -136,7 +129,7 @@ final class ComposeView extends VBox {
         VBox panel = Ui.surface(
                 Ui.row(10, Ui.label("İçerik", "section-title"), Ui.grow(), new HBox(textMode, fileMode)),
                 editor,
-                Ui.row(10, Ui.muted("En fazla 10 MB · Word, PDF ve JPEG"), Ui.grow(), clear));
+                Ui.row(10, Ui.muted("En fazla 10 MB · resim, Office, PDF, metin, arşiv"), Ui.grow(), clear));
         return panel;
     }
 
@@ -172,8 +165,8 @@ final class ComposeView extends VBox {
     private void chooseFile() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Gönderilecek belgeyi seçin");
-        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Word, PDF ve resim dosyaları",
-                ALLOWED.keySet().stream().map(ext -> "*." + ext).toList()));
+        chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Desteklenen dosyalar",
+                FileTypes.allowedExtensions().stream().sorted().map(ext -> "*." + ext).toList()));
         File chosen = chooser.showOpenDialog(getScene().getWindow());
         if (chosen != null) {
             setFile(chosen);
@@ -181,12 +174,19 @@ final class ComposeView extends VBox {
     }
 
     private void setFile(File chosen) {
-        if (mimeType(chosen) == null) {
-            Toasts.info("Sadece Word, PDF ve JPEG dosyaları gönderilebilir.");
+        if (FileTypes.mimeType(chosen.getName()) == null) {
+            Toasts.info("Bu dosya türü gönderilemez. Resim, Office, PDF, metin, arşiv, ses ve görüntü dosyaları "
+                    + "gönderilebilir; programlar ve betikler gönderilemez.");
             return;
         }
         if (chosen.length() > DocumentService.MAX_FILE_BYTES) {
             Toasts.info("Dosya 10 MB'tan büyük olamaz (" + Formats.size(chosen.length()) + ").");
+            return;
+        }
+        // Programlar (uzantısı değiştirilmiş olsa bile) gönderilemez; diğer riskler alıcıda uyarılır (FileRisk).
+        FileRisk.Result risk = FileRisk.analyze(chosen.getName(), readQuietly(chosen));
+        if (risk.level() == FileRisk.Level.BLOCKED) {
+            Toasts.info("Bu dosya gönderilemez: " + String.join(" ", risk.reasons()));
             return;
         }
         file = chosen;
@@ -205,10 +205,12 @@ final class ComposeView extends VBox {
         updateSendState();
     }
 
-    private static String mimeType(File file) {
-        String name = file.getName();
-        int dot = name.lastIndexOf('.');
-        return dot < 0 ? null : ALLOWED.get(name.substring(dot + 1).toLowerCase(Locale.ROOT));
+    private static byte[] readQuietly(File file) {
+        try {
+            return Files.readAllBytes(file.toPath());
+        } catch (java.io.IOException e) {
+            return new byte[0];
+        }
     }
 
     // ---------- Alıcılar ----------
@@ -391,7 +393,8 @@ final class ComposeView extends VBox {
 
     private static DocumentContent content(boolean isText, String plain, File chosen) throws java.io.IOException {
         return isText ? DocumentContent.ofText(plain)
-                : DocumentContent.ofFile(chosen.getName(), mimeType(chosen), Files.readAllBytes(chosen.toPath()));
+                : DocumentContent.ofFile(chosen.getName(), FileTypes.mimeType(chosen.getName()),
+                        Files.readAllBytes(chosen.toPath()));
     }
 
     private void clearAll() {

@@ -3,11 +3,13 @@ package com.desktop.ui.views;
 import atlantafx.base.theme.Styles;
 import atlantafx.base.theme.Tweaks;
 import com.desktop.api.Dto;
+import com.desktop.config.AppConfig;
 import com.desktop.ui.Async;
 import com.desktop.ui.Formats;
 import com.desktop.ui.Ui;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.scene.Node;
-import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tooltip;
@@ -15,6 +17,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 import org.kordamp.ikonli.material2.Material2OutlinedAL;
 import org.kordamp.ikonli.material2.Material2OutlinedMZ;
 
@@ -33,10 +36,8 @@ final class SentView extends VBox {
         this.context = context;
         getStyleClass().add("page");
 
-        Button refresh = Ui.button("Yenile", Material2OutlinedMZ.REFRESH, Styles.FLAT);
-        refresh.setOnAction(e -> load());
         HBox top = Ui.row(10, Ui.header("Gönderilenler",
-                "Ömrü dolmamış kutularınız ve okunma durumu. Silinen kutu bu listeden de kalkar."), Ui.grow(), refresh);
+                "Ömrü dolmamış kutularınız ve okunma durumu. Silinen kutu bu listeden de kalkar."));
 
         ScrollPane scroll = new ScrollPane(items);
         scroll.setFitToWidth(true);
@@ -45,6 +46,19 @@ final class SentView extends VBox {
         VBox.setVgrow(scroll, Priority.ALWAYS);
         getChildren().addAll(top, scroll);
         load();
+
+        // "Yenile" düğmesi yerine: okundu bilgisi Gelen Kutusu ile aynı aralıkta kendiliğinden güncellenir.
+        Timeline poller = new Timeline(new KeyFrame(Duration.seconds(AppConfig.get().inboxPollInterval().toSeconds()),
+                e -> Async.run(context.documents::sent, this::render, failure -> {
+                })));
+        poller.setCycleCount(Timeline.INDEFINITE);
+        sceneProperty().addListener((obs, old, scene) -> {
+            if (scene == null) {
+                poller.stop();
+            } else {
+                poller.play();
+            }
+        });
     }
 
     private void load() {

@@ -85,6 +85,21 @@ denetlenir; sunucu da (görebildiği her şeyi) denetler.
   görmüyorsa (Güvenli Paylaşım: istemci şifreden türetilmiş değer gönderir) kural sadece istemcidedir ve bu belgelenir.
 - En az 12 karakter bilinçli bir alt sınırdır; düşürülmeden önce güvenlik etkisi konuşulur.
 
+### 4.5 Dosya türleri ve risk
+
+- **Kabul edilen:** resim (jpg, png, gif, bmp, webp, tif, heic, svg, ico), PDF, metin (txt, csv, rtf, md, json,
+  xml), Office ve OpenDocument (doc/docx/docm, xls/xlsx/xlsm, ppt/pptx/pptm, odt/ods/odp), arşiv (zip, 7z, rar), ses
+  ve görüntü (mp3, wav, m4a, mp4, mov). Dosya seçicide "Desteklenen dosyalar" filtresi; ipucunda kısa liste.
+- **Reddedilen:** programlar ve betikler (exe, msi, bat, cmd, ps1, vbs, js, lnk, jar, dll, html, sh, py, iso…) —
+  uzantıdan ve içerikten (program başlığı) anlaşılır; adında yönü ters çeviren gizli karakter olan dosya. Gönderen
+  uyarıyı toast olarak görür, dosya eklenmez.
+- **Riskli (gönderilir, alıcı uyarılır):** makrolu Office, betik/başlatma/gömülü dosya içeren PDF, içinde program
+  olan zip, içi denetlenemeyen 7z/rar, betikli SVG, iki uzantılı ad, uzantıyla uyuşmayan içerik, bilinmeyen tür.
+- **Alıcıda:** dosya kartının altında sarı uyarı (program/betikse kırmızı) ve nedenler; "Bilgisayara Kaydet" önce
+  onay penceresi açar ("Yine de Kaydet"). Uyarıda teknik terim yerine etki yazılır ("makrolar kendiliğinden
+  çalışmaz"), "internetten geldi" gibi kullanıcıyı şaşırtan ifadeler kullanılmaz.
+- Denetim her iki uçta da yapılır; alıcı göndericinin denetimine güvenmez.
+
 ---
 
 ## 5. Uyarıların yeri ve zamanı

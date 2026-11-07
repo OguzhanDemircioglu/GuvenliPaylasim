@@ -496,6 +496,33 @@
     -fx-padding: 10 14 10 14;
 }
 
+/* Alıcıda riskli dosya uyarısı (FileRisk): dikkat sarı, program kırmızı. */
+.file-risk,
+.file-risk-blocked {
+    -fx-background-radius: 10;
+    -fx-padding: 10 14 10 14;
+}
+
+.file-risk {
+    -fx-background-color: -color-warning-subtle;
+}
+
+.file-risk .label,
+.file-risk .ikonli-font-icon {
+    -fx-text-fill: -color-warning-fg;
+    -fx-icon-color: -color-warning-fg;
+}
+
+.file-risk-blocked {
+    -fx-background-color: -color-danger-subtle;
+}
+
+.file-risk-blocked .label,
+.file-risk-blocked .ikonli-font-icon {
+    -fx-text-fill: -color-danger-fg;
+    -fx-icon-color: -color-danger-fg;
+}
+
 .signature-unknown .label {
     -fx-text-fill: -color-warning-fg;
 }

@@ -4,6 +4,8 @@ import atlantafx.base.theme.Styles;
 import com.desktop.api.Dto;
 import com.desktop.crypto.DocumentContent;
 import com.desktop.crypto.DocumentCrypto;
+import com.desktop.service.FileRisk;
+import com.desktop.service.WebMark;
 import com.desktop.ui.Async;
 import com.desktop.ui.Dialogs;
 import com.desktop.ui.Formats;
@@ -271,13 +273,35 @@ final class InboxView extends VBox {
     private Node fileBody(DocumentContent content) {
         Ikon ikon = content.mimeType().contains("pdf") ? Material2OutlinedMZ.PICTURE_AS_PDF
                 : content.mimeType().startsWith("image") ? Material2OutlinedAL.IMAGE : Material2OutlinedAL.DESCRIPTION;
+        // Gönderenin kontrolüne güvenilmez: açılan içerik burada yeniden denetlenir (FileRisk, Security.md S4).
+        FileRisk.Result risk = FileRisk.analyze(content.fileName(), content.data());
         Button save = Ui.primary("Bilgisayara Kaydet", Material2OutlinedMZ.SAVE_ALT);
-        save.setOnAction(e -> save(content));
+        save.setOnAction(e -> {
+            if (risk.safe()) {
+                save(content);
+            } else {
+                Dialogs.confirm(risk.level() == FileRisk.Level.BLOCKED ? "Bu dosya tehlikeli olabilir" : "Dikkat",
+                        String.join("\n", risk.reasons()) + "\n\nGöndereni tanıyor ve bu dosyayı bekliyorsanız kaydedin. "
+                                + "Windows ve Office dosyayı korumalı açar; makrolar kendiliğinden çalışmaz.",
+                        "Yine de Kaydet", Material2OutlinedMZ.SAVE_ALT, true, () -> save(content));
+            }
+        });
         HBox file = Ui.row(14, Ui.iconBadge(ikon, "accent", 48),
                 Ui.column(3, Ui.label(content.fileName(), Styles.TEXT_BOLD), Ui.muted(Formats.size(content.data().length)
                         + " · çözüldü, sadece bu bilgisayarda")), Ui.grow(), save);
         file.getStyleClass().add("file-card");
-        VBox box = new VBox(file);
+        VBox box = new VBox(10, file);
+        if (!risk.safe()) {
+            boolean blocked = risk.level() == FileRisk.Level.BLOCKED;
+            Label warning = new Label((blocked ? "Bu dosya bir program ya da betik olabilir. Açmayın; göndereni "
+                    + "başka bir yoldan doğrulayın.\n" : "Bu dosyayı açmadan önce dikkat edin:\n")
+                    + String.join("\n", risk.reasons()), Ui.icon(Material2OutlinedMZ.WARNING, 20));
+            warning.setWrapText(true);
+            warning.setGraphicTextGap(10);
+            HBox banner = new HBox(warning);
+            banner.getStyleClass().add(blocked ? "file-risk-blocked" : "file-risk");
+            box.getChildren().add(banner);
+        }
         box.setPadding(new Insets(4, 0, 0, 0));
         return box;
     }
@@ -292,6 +316,8 @@ final class InboxView extends VBox {
         }
         Async.run(() -> {
             Files.write(target.toPath(), content.data());
+            // Windows'un dış kaynak etiketi (Mark of the Web): Office makroları çalıştırmaz, SmartScreen uyarır.
+            WebMark.apply(target);
             return target;
         }, file -> Toasts.success("Kaydedildi: " + file.getName()), failure -> {
             if (failure instanceof IOException) {

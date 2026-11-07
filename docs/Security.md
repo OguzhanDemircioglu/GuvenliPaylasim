@@ -82,6 +82,14 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   - `register/start`, parola sıfırlama ve davet oluşturma, numara kayıtlı olsa da olmasa da **aynı yanıtı aynı
     sürede** verir. SMS kuyruktan gönderilir, yanıtı beklemez.
   - Davet kodu 80 bit. Kullanıcı başına 5 hatalı denemeden sonra 1 saat bekleme (Crypto_Design §7.9).
+- **Zararlı dosya göndermek:** Dosyalar uçtan uca şifreli olduğu için sunucu tarayamaz; denetim istemcilerde
+  (`FileRisk`, UI_Standards §4.5). Gönderen program ve betik gönderemez (uzantı ve içerik imzası: MZ+PE, ELF, Mach-O,
+  `#!/`). Alıcı göndericinin denetimine güvenmez (değiştirilmiş istemci atlayabilir): çözülen içerik yeniden denetlenir;
+  makrolu Office, betikli PDF, içinde program olan arşiv, uzantıyla uyuşmayan içerik, gizli uzantı için uyarı ve
+  kaydetmeden önce onay istenir. Kaydedilen her dosyaya Windows'un dış kaynak etiketi (Mark of the Web,
+  `Zone.Identifier`, ZoneId=3) konur: Office makroları çalıştırmaz ve Korumalı Görünüm'de açar, SmartScreen ve
+  antivirüs devreye girer. Sezgiseldir; okuyucudaki açığı kullanan bozuk bir dosyayı yakalamaz. Gönderenin kimliği
+  imzayla bilinir (kim gönderdi belli).
 
 ### S5. SIM kopyalayan
 - **Garanti:** Eski kutuları açamaz. Kişileri, ona farkında olmadan dosya gönderemez.
