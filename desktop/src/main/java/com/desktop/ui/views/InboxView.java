@@ -34,6 +34,7 @@ import org.kordamp.ikonli.material2.Material2OutlinedMZ;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 
 /** Gelen belgeler. Belge açılınca imzası doğrulanır ve içerik sadece bu bilgisayarda çözülür. */
 final class InboxView extends VBox {
@@ -49,6 +50,7 @@ final class InboxView extends VBox {
     private boolean pinned;
     /** Ekranda "Kaydedilemez" belge var: pencere ekran görüntüsünden hariç tutulur (ScreenGuard). */
     private boolean showingViewOnly;
+    private final java.util.function.Consumer<List<Dto.InboxItem>> pollListener = this::show;
 
     InboxView(Context context) {
         this.context = context;
@@ -68,13 +70,20 @@ final class InboxView extends VBox {
         });
         VBox.setVgrow(list, Priority.ALWAYS);
         // Başka sayfaya geçince koruma kalkar; geri dönülünce belge hâlâ ekrandaysa yeniden açılır.
-        sceneProperty().addListener((obs, old, scene) -> ScreenGuard.set(scene != null && showingViewOnly));
+        sceneProperty().addListener((obs, old, scene) -> {
+            ScreenGuard.set(scene != null && showingViewOnly);
+            // Ekrandayken kenar çubuğunun gelen kutusu kontrolü listeyi de yeniler (ek istek atılmaz).
+            if (scene != null) {
+                context.onInboxPolled = pollListener;
+            } else if (context.onInboxPolled == pollListener) {
+                context.onInboxPolled = items -> {
+                };
+            }
+        });
 
-        Button refresh = Ui.button("Yenile", Material2OutlinedMZ.REFRESH, Styles.FLAT);
-        refresh.setOnAction(e -> load());
         Button redeem = Ui.button("Kod ile Al", Material2OutlinedMZ.VPN_KEY, Styles.BUTTON_OUTLINED);
         redeem.setOnAction(e -> openRedeem());
-        VBox left = new VBox(10, Ui.row(8, count, Ui.grow(), redeem, refresh), list);
+        VBox left = new VBox(10, Ui.row(8, count, Ui.grow(), redeem), list);
         left.setMinWidth(420);
         left.setPrefWidth(460);
         left.setMaxWidth(500);
@@ -137,18 +146,21 @@ final class InboxView extends VBox {
     }
 
     private void load() {
-        Async.run(context.documents::inbox, items -> {
-            refreshing = true;
-            list.getItems().setAll(items);
-            items.stream().filter(i -> i.id().equals(shownId)).findFirst()
-                    .ifPresent(i -> list.getSelectionModel().select(i));
-            refreshing = false;
-            if (!pinned && shownId != null && items.stream().noneMatch(i -> i.id().equals(shownId))) {
-                showDetail(null);
-            }
-            long unread = items.stream().filter(i -> i.readAt() == null).count();
-            count.setText(items.size() + " belge · " + unread + " okunmamış");
-        });
+        Async.run(context.documents::inbox, this::show);
+    }
+
+    /** Liste yenilenir; açık belge ve seçim korunur. Kenar çubuğunun 15 saniyelik kontrolü de buraya gelir. */
+    private void show(List<Dto.InboxItem> items) {
+        refreshing = true;
+        list.getItems().setAll(items);
+        items.stream().filter(i -> i.id().equals(shownId)).findFirst()
+                .ifPresent(i -> list.getSelectionModel().select(i));
+        refreshing = false;
+        if (!pinned && shownId != null && items.stream().noneMatch(i -> i.id().equals(shownId))) {
+            showDetail(null);
+        }
+        long unread = items.stream().filter(i -> i.readAt() == null).count();
+        count.setText(items.size() + " belge · " + unread + " okunmamış");
     }
 
     private void showDetail(Dto.InboxItem item) {

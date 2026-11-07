@@ -855,5 +855,8 @@ Bu proje StarterApp şablonundan türetildi; §5 (API sözleşmesi), §7 (hata y
 - **Silme:** soft delete yoktur; silinen satır gerçekten silinir (V002). Ömrü dolan kutu, davet ve oturum kayıtları
   zamanlanmış işlerle kalıcı silinir. "Hesabımı Sil" kullanıcının bütün verisini tek transaction'da siler
   (`AccountDeletionService`, Crypto_Design §7.13).
+- **Sınırlar ve performans:** istek gövdesi en fazla 16 MB (`RequestSizeFilter`, 413). Gönderilenler listesi içerik
+  okumaz (`SentDocumentRow`); `documents(sender_id, expires_at)`, `documents(expires_at)` ve
+  `document_recipients(recipient_id)` indekslidir. Giriş kilidi IP + numara ve numara başına toplam (Security S4).
 - **Dev verisi:** `V001_DemoData` sadece `dev` profilinde (4 demo kullanıcısı). `POST /api/auth/dev-login` sadece dev.
 - **Canlı:** Railway; profil `prod`, Swagger ve dev-login kapalı (Devam_Rehberi › Demo kurulumu).

@@ -204,5 +204,6 @@ public final class ShellView extends BorderPane {
             }
         }
         firstPoll = false;
+        context.onInboxPolled.accept(items);
     }
 }

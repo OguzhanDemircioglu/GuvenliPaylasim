@@ -5,6 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
@@ -19,8 +20,10 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
+// Benzersizlik kısıtı document_id ile başlar; gelen kutusu alıcıya göre arar.
 @Table(name = "document_recipients",
-        uniqueConstraints = @UniqueConstraint(name = "ux_document_recipients", columnNames = {"document_id", "recipient_id"}))
+        uniqueConstraints = @UniqueConstraint(name = "ux_document_recipients", columnNames = {"document_id", "recipient_id"}),
+        indexes = @Index(name = "ix_document_recipients_recipient", columnList = "recipient_id"))
 public class DocumentRecipient {
 
     @Id

@@ -292,10 +292,10 @@ class DocumentServiceImplTest {
 
     @Test
     void sentListShowsOnlyLiveBoxes() {
-        when(documentRepository.findBySenderIdAndExpiresAtAfterOrderByCreatedAtDesc(any(), any())).thenReturn(List.of());
+        when(documentRepository.findSent(any(), any())).thenReturn(List.of());
 
         assertThat(service.sent(SENDER)).isEmpty();
-        verify(documentRepository).findBySenderIdAndExpiresAtAfterOrderByCreatedAtDesc(any(), any());
+        verify(documentRepository).findSent(any(), any());
     }
 
     // ---------- Yardımcılar ----------

@@ -37,7 +37,6 @@ public final class Formats {
         return String.format(TR, "%.1f MB", bytes / (1024.0 * 1024));
     }
 
-    /** "Ayşe Yılmaz" → "AY" */
     /** Kutunun silinmesine kalan süre: "3 gün", "5 saat", "40 dakika". */
     public static String remaining(Instant until) {
         java.time.Duration left = java.time.Duration.between(Instant.now(), until);

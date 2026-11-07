@@ -9,6 +9,7 @@ import com.server.modules.document.dto.DocumentSendRequest;
 import com.server.modules.document.dto.DocumentSentResponse;
 import com.server.modules.document.dto.InboxItemResponse;
 import com.server.modules.document.dto.RecipientKeyRequest;
+import com.server.modules.document.dto.SentDocumentRow;
 import com.server.modules.document.dto.SentItemResponse;
 import com.server.modules.document.dto.SentRecipientResponse;
 import com.server.modules.key.UserKey;
@@ -129,17 +130,16 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Override
     public List<SentItemResponse> sent(Long senderId) {
-        List<Document> documents = documentRepository.findBySenderIdAndExpiresAtAfterOrderByCreatedAtDesc(senderId,
-                Instant.now());
+        List<SentDocumentRow> documents = documentRepository.findSent(senderId, Instant.now());
         if (documents.isEmpty()) {
             return List.of();
         }
         Map<Long, List<SentRecipientResponse>> recipients = recipientRepository
-                .findSentRecipients(documents.stream().map(Document::getId).toList()).stream()
+                .findSentRecipients(documents.stream().map(SentDocumentRow::id).toList()).stream()
                 .collect(Collectors.groupingBy(SentRecipientResponse::documentId));
         return documents.stream()
-                .map(d -> new SentItemResponse(d.getId(), d.getKind(), d.getSizeBytes(), d.getCreatedAt(),
-                        d.getExpiresAt(), d.isDeleteOnOpen(), recipients.getOrDefault(d.getId(), List.of())))
+                .map(d -> new SentItemResponse(d.id(), d.kind(), d.sizeBytes(), d.createdAt(), d.expiresAt(),
+                        d.deleteOnOpen(), recipients.getOrDefault(d.id(), List.of())))
                 .toList();
     }
 

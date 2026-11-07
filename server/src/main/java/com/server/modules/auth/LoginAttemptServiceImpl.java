@@ -23,8 +23,17 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
 
     @Override
     public void recordFailure(String attemptKey) {
+        recordFailure(attemptKey, properties.maxAttempts());
+    }
+
+    @Override
+    public void recordPhoneFailure(String phone) {
+        recordFailure(LoginAttemptService.phoneKey(phone), properties.phoneMaxAttempts());
+    }
+
+    private void recordFailure(String attemptKey, int maxAttempts) {
         Instant now = Instant.now();
-        repository.recordFailure(attemptKey, now, now.plus(properties.blockDuration()), properties.maxAttempts());
+        repository.recordFailure(attemptKey, now, now.plus(properties.blockDuration()), maxAttempts);
     }
 
     @Override

@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,7 +23,10 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
-@Table(name = "documents")
+// Gönderilenler (gönderen + ömür) ve temizlik işi (ömür) için.
+@Table(name = "documents", indexes = {
+        @Index(name = "ix_documents_sender", columnList = "sender_id, expires_at"),
+        @Index(name = "ix_documents_expires", columnList = "expires_at")})
 public class Document {
 
     @Id

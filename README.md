@@ -146,7 +146,7 @@ cd server && mvnw.cmd test
 cd desktop && mvnw.cmd test
 ```
 
-Veritabanı ya da Docker gerekmez. Son durum: sunucu 193, masaüstü 72 test, hepsi geçiyor.
+Veritabanı ya da Docker gerekmez. Son durum: sunucu 160, masaüstü 72 test, hepsi geçiyor.
 
 ### Yeni sürüm yayımlama
 

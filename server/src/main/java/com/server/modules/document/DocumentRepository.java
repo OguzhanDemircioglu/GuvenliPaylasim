@@ -1,5 +1,6 @@
 package com.server.modules.document;
 
+import com.server.modules.document.dto.SentDocumentRow;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -10,7 +11,14 @@ import java.util.List;
 
 public interface DocumentRepository extends JpaRepository<Document, Long> {
 
-    List<Document> findBySenderIdAndExpiresAtAfterOrderByCreatedAtDesc(Long senderId, Instant now);
+    /** Gönderenin ömrü dolmamış kutuları, yeniden eskiye. İçerik (en fazla 10 MB) okunmaz; liste sık yenilenir. */
+    @Query("""
+            SELECT new com.server.modules.document.dto.SentDocumentRow(
+                       d.id, d.kind, d.sizeBytes, d.createdAt, d.expiresAt, d.deleteOnOpen)
+              FROM Document d
+             WHERE d.senderId = :senderId AND d.expiresAt > :now
+             ORDER BY d.createdAt DESC""")
+    List<SentDocumentRow> findSent(Long senderId, Instant now);
 
     long countBySenderIdAndCreatedAtAfter(Long senderId, Instant after);
 

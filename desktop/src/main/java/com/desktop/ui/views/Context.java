@@ -17,6 +17,9 @@ final class Context {
     /** Gelen kutusu değişince kenar çubuğundaki sayaç yenilenir. */
     Runnable onInboxChanged = () -> {
     };
+    /** Kenar çubuğunun düzenli gelen kutusu kontrolü; Gelen Kutusu ekrandayken listesini yeniler. */
+    java.util.function.Consumer<java.util.List<com.desktop.api.Dto.InboxItem>> onInboxPolled = items -> {
+    };
     /** Profilde ad soyad değişince kenar çubuğundaki ad yenilenir. */
     Runnable onProfileChanged = () -> {
     };

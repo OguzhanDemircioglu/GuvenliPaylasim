@@ -70,12 +70,15 @@ public class AuthServiceImpl implements AuthService {
     public AuthResult login(LoginRequest request, ClientInfo client) {
         String phone = Phones.toE164(request.phone());
         String attemptKey = client.ip() + "_" + phone;
+        String phoneKey = LoginAttemptService.phoneKey(phone);
         loginAttemptService.ensureNotBlocked(attemptKey);
+        loginAttemptService.ensureNotBlocked(phoneKey);
 
         Optional<User> user = userRepository.findByPhone(phone);
         String passwordHash = user.map(User::getPassword).orElse(dummyPasswordHash);
         if (!passwordEncoder.matches(request.password(), passwordHash) || user.isEmpty()) {
             loginAttemptService.recordFailure(attemptKey);
+            loginAttemptService.recordPhoneFailure(phone);
             throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
         }
         if (user.get().isTotpEnabled()) {
@@ -85,10 +88,12 @@ public class AuthServiceImpl implements AuthService {
             }
             if (!totpService.verify(user.get().getId(), request.totpCode())) {
                 loginAttemptService.recordFailure(attemptKey);
+                loginAttemptService.recordPhoneFailure(phone);
                 throw new UnauthorizedException(AuthMessages.TOTP_INVALID);
             }
         }
         loginAttemptService.clear(attemptKey);
+        loginAttemptService.clear(phoneKey);
         return openSession(user.get(), client);
     }
 

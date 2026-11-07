@@ -82,6 +82,10 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   - `register/start`, parola sıfırlama ve davet oluşturma, numara kayıtlı olsa da olmasa da **aynı yanıtı aynı
     sürede** verir. SMS kuyruktan gönderilir, yanıtı beklemez.
   - Davet kodu 80 bit. Kullanıcı başına 5 hatalı denemeden sonra 1 saat bekleme (Crypto_Design §7.9).
+  - Giriş: aynı IP + numara ile 5 yanlış denemede 1 saat kilit; IP değiştirerek denemeye karşı numara başına, bütün
+    IP'lerden toplam 30 yanlış denemede de 1 saat kilit (2026-11-07). Bu sınır bilerek yüksek: düşük olsaydı başkası
+    bir numarayı kolayca kilitleyebilirdi. Şifre 12+ karakter olduğu için çevrimiçi tahmin zaten pratik değil.
+  - İstek gövdesi en fazla 16 MB (`RequestSizeFilter`); büyük isteklerle bellek doldurma engellenir (413).
 - **Zararlı dosya göndermek:** Dosyalar uçtan uca şifreli olduğu için sunucu tarayamaz; denetim istemcilerde
   (`FileRisk`, UI_Standards §4.5). Gönderen program ve betik gönderemez (uzantı ve içerik imzası: MZ+PE, ELF, Mach-O,
   `#!/`). Alıcı göndericinin denetimine güvenmez (değiştirilmiş istemci atlayabilir): çözülen içerik yeniden denetlenir;

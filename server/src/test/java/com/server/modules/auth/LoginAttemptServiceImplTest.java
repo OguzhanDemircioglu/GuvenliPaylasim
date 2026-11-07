@@ -17,6 +17,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -37,7 +38,7 @@ class LoginAttemptServiceImplTest {
 
     @BeforeEach
     void setUp() {
-        service = new LoginAttemptServiceImpl(repository, new LoginProtectionProperties(5, BLOCK));
+        service = new LoginAttemptServiceImpl(repository, new LoginProtectionProperties(5, BLOCK, 30));
     }
 
     @Test
@@ -72,6 +73,13 @@ class LoginAttemptServiceImplTest {
         verify(repository).recordFailure(eq(KEY), now.capture(), blockedUntil.capture(), eq(5));
         assertThat(now.getValue()).isAfterOrEqualTo(before);
         assertThat(blockedUntil.getValue()).isEqualTo(now.getValue().plus(BLOCK));
+    }
+
+    @Test
+    void numberWideFailuresUseTheHigherLimit() {
+        service.recordPhoneFailure("+905551234567");
+
+        verify(repository).recordFailure(eq("phone_+905551234567"), any(), any(), eq(30));
     }
 
     @Test

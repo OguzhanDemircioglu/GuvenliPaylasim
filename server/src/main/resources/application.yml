@@ -58,6 +58,8 @@ app:
   login-protection:
     max-attempts: 5
     block-duration: 1h
+    # Numara başına, bütün IP'lerden toplam yanlış deneme (IP değiştirerek denemeye karşı)
+    phone-max-attempts: 30
   # Doğrulama kodu (Crypto_Design §7.9, Security.md S8)
   verification:
     code-ttl: 5m

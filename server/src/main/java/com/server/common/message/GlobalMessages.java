@@ -22,6 +22,7 @@ public final class GlobalMessages {
     public static final String RECORD_CONFLICT = "record_conflict";
     public static final String UNSUPPORTED_MEDIA_TYPE = "unsupported_media_type";
     public static final String UNEXPECTED_ERROR = "unexpected_error";
+    public static final String REQUEST_TOO_LARGE = "request_too_large";
 
     private GlobalMessages() {
     }

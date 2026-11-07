@@ -15,6 +15,7 @@ public final class Messages {
             Map.entry(SERVER_IDENTITY_FAILED, "Sunucunun kimliği doğrulanamadı; bağlantı güvenli değil ve kesildi. "
                     + "Başka bir ağdan deneyin ya da yöneticinize bildirin."),
             Map.entry("unexpected_error", "Beklenmeyen bir hata oluştu."),
+            Map.entry("request_too_large", "İstek çok büyük. En fazla 10 MB'lık belge gönderilebilir."),
             Map.entry("invalid_request", "İstek geçersiz."),
             Map.entry("access_denied", "Bu işlem için yetkiniz yok."),
             Map.entry("unauthorized", "Oturumunuz sona erdi. Lütfen tekrar giriş yapın."),

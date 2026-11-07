@@ -18,7 +18,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.Instant;
 
 /**
- * İş entity'lerinin ortak alanları. Soft delete için her entity sınıfına ayrıca @SoftDelete eklenir.
+ * İş entity'lerinin ortak alanları (id, version, oluşturma/güncelleme zamanı). v2'de soft delete yoktur; silinen
+ * satır gerçekten silinir (V002).
  */
 @Getter
 @Setter

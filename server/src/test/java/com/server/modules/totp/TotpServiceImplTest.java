@@ -53,7 +53,7 @@ class TotpServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new TotpServiceImpl(userRepository, recoveryCodeRepository, passwordEncoder, attemptRepository,
-                new LoginProtectionProperties(5, Duration.ofHours(1)));
+                new LoginProtectionProperties(5, Duration.ofHours(1), 30));
         user = new User();
         user.setId(USER_ID);
         user.setPhone("+905551234567");

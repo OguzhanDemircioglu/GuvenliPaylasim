@@ -82,7 +82,7 @@ public final class LoginView extends VBox {
     private static final Duration ITEM_STEP = Duration.seconds(0.1);
     private static final Duration PANEL_DURATION = Duration.seconds(1.5);
     /** CSS'teki "ease". */
-    private static final Interpolator EASE = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
+    private static final Interpolator EASE = Interpolator.ofSpline(0.25, 0.1, 0.25, 1);
     private static final PseudoClass RAISED = PseudoClass.getPseudoClass("raised");
 
     private final AuthService auth;

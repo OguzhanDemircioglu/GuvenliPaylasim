@@ -101,6 +101,7 @@ class AuthServiceImplTest {
         assertThat(saved.getValue().getUserId()).isEqualTo(USER_ID);
         assertThat(saved.getValue().getIp()).isEqualTo(CLIENT.ip());
         verify(loginAttemptService).clear(ATTEMPT_KEY);
+        verify(loginAttemptService).clear(LoginAttemptService.phoneKey(PHONE));
     }
 
     @Test
@@ -112,7 +113,19 @@ class AuthServiceImplTest {
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage(AuthMessages.INVALID_CREDENTIALS);
         verify(loginAttemptService).recordFailure(ATTEMPT_KEY);
+        verify(loginAttemptService).recordPhoneFailure(PHONE);
         verify(sessionRepository, never()).save(any());
+    }
+
+    @Test
+    void numberBlockedAcrossAllIpsIsRejected() {
+        // Strict stubbing: IP_numara anahtarıyla yapılan ilk kontrol de bu stub'a takılmasın.
+        org.mockito.Mockito.lenient().doThrow(new LoginBlockedException(AuthMessages.LOGIN_BLOCKED))
+                .when(loginAttemptService).ensureNotBlocked(LoginAttemptService.phoneKey(PHONE));
+
+        assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", null), CLIENT))
+                .isInstanceOf(LoginBlockedException.class);
+        verify(userRepository, never()).findByPhone(any());
     }
 
     @Test

@@ -85,7 +85,7 @@ class InviteServiceImplTest {
     @BeforeEach
     void setUp() throws Exception {
         service = new InviteServiceImpl(repository, userRepository, keyRepository, contactService, documentService,
-                attemptRepository, new LoginProtectionProperties(5, Duration.ofHours(1)), quota);
+                attemptRepository, new LoginProtectionProperties(5, Duration.ofHours(1), 30), quota);
         aliKey = key(ALI);
         ayseKey = key(AYSE);
         when(userRepository.findById(ALI)).thenReturn(Optional.of(user(ALI, "+905550000001", "Ali")));
