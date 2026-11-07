@@ -5,6 +5,7 @@ import atlantafx.base.controls.PasswordTextField;
 import com.desktop.api.ApiException;
 import com.desktop.config.AppConfig;
 import com.desktop.service.AuthService;
+import com.desktop.service.Phones;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
 import com.desktop.ui.Cooldown;
@@ -20,7 +21,11 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.css.PseudoClass;
 import javafx.geometry.Insets;
@@ -28,6 +33,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Control;
 import javafx.scene.control.Hyperlink;
@@ -111,8 +117,60 @@ public final class LoginView extends VBox {
 
         getChildren().add(card());
         setAlignment(Pos.CENTER);
+        bindButtons();
 
         apply(false);
+    }
+
+    // ---------- Düğmelerin açık/kapalı durumu ----------
+
+    /**
+     * Giriş: telefon 10 hane ve parola yazılmadan "Giriş yap" kapalı. Kayıt: form eksiksiz ve geçerli olmadan
+     * "Kod gönder" kapalı (geri sayımda da kapalı); WhatsApp kodu 6 hane olmadan "Kayıt ol" kapalı. İşlem sürerken
+     * düğme meşguldür ({@link #busyFlag}).
+     */
+    private void bindButtons() {
+        BooleanBinding loginReady = Bindings.createBooleanBinding(
+                () -> Phones.normalize(loginPhone.getText()) != null && !loginPassword.getPassword().isEmpty(),
+                loginPhone.textProperty(), loginPassword.passwordProperty());
+        loginSubmit.disableProperty().bind(busyFlag(loginSubmit).or(loginReady.not()));
+
+        BooleanBinding formReady = Bindings.createBooleanBinding(() -> registerFormProblem() == null,
+                registerName.textProperty(), registerPhone.textProperty(), registerPassword.passwordProperty(),
+                registerRepeat.passwordProperty(), noticeRead.selectedProperty());
+        sendCode.disableProperty().bind(busyFlag(sendCode).or(Cooldown.running(sendCode)).or(formReady.not()));
+
+        BooleanBinding codeReady = Bindings.createBooleanBinding(() -> validCode(registerCode.getText()),
+                registerCode.textProperty());
+        registerSubmit.disableProperty().bind(busyFlag(registerSubmit).or(formReady.not()).or(codeReady.not()));
+
+        // Form doldurulmuş ama bir kural tutmuyorsa (ör. zayıf parola) neden kod gönderilemediği yazılır.
+        formReady.addListener((obs, old, ready) -> showFormHint());
+        for (Observable field : List.of(registerName.textProperty(), registerPhone.textProperty(),
+                registerPassword.passwordProperty(), registerRepeat.passwordProperty(), noticeRead.selectedProperty())) {
+            field.addListener(obs -> showFormHint());
+        }
+    }
+
+    private String formHint;
+
+    private void showFormHint() {
+        boolean filled = !registerName.getText().isBlank() && !registerPhone.getText().isBlank()
+                && !registerPassword.getPassword().isEmpty() && !registerRepeat.getPassword().isEmpty();
+        String problem = filled ? registerFormProblem() : null;
+        boolean showingHint = formHint != null && formHint.equals(registerStatus.getText());
+        if (problem != null) {
+            formHint = problem;
+            showStatus(registerStatus, problem, true);
+        } else if (showingHint) {
+            formHint = null;
+            showStatus(registerStatus, null, false);
+        }
+    }
+
+    /** İşlem sürüyor mu (giriş, kod gönderme, kayıt)? Düğmenin kapalılığı buna ve formun durumuna bağlıdır. */
+    private static BooleanProperty busyFlag(ButtonBase button) {
+        return (BooleanProperty) button.getProperties().computeIfAbsent("busy", k -> new SimpleBooleanProperty(false));
     }
 
     // ---------- Kart ve paneller ----------
@@ -516,7 +574,7 @@ public final class LoginView extends VBox {
                 },
                 failure -> {
                     if (isTotpRequired(failure)) {
-                        loginSubmit.setDisable(false);
+                        busyFlag(loginSubmit).set(false);
                         showStatus(loginStatus, null, false);
                         askTotp(this::loginWith);
                     } else {
@@ -621,10 +679,8 @@ public final class LoginView extends VBox {
         }
     }
 
-    private String validateRegister() {
-        if (!noticeRead.isSelected()) {
-            return "Kayıt olmak için aydınlatma metnini okuyup onaylayın.";
-        }
+    /** Kod gönderilmeden önce form: ad, telefon, parola kuralları ve aydınlatma metni. Sorun yoksa null. */
+    private String registerFormProblem() {
         String nameError = Inputs.nameError(registerName.getText());
         if (nameError != null) {
             return nameError;
@@ -638,31 +694,41 @@ public final class LoginView extends VBox {
         if (passwordError != null) {
             return passwordError;
         }
+        return noticeRead.isSelected() ? null : "Kayıt olmak için aydınlatma metnini okuyup onaylayın.";
+    }
+
+    private String validateRegister() {
+        String problem = registerFormProblem();
+        if (problem != null) {
+            return problem;
+        }
         return validCode(registerCode.getText()) ? null
                 : "WhatsApp'a gelen 6 haneli kodu yazın. Kod gelmediyse \"Kod gönder\"e basın.";
     }
 
     /** Kayıt kodu: numara kayıtlı olsa da olmasa da aynı cevap gelir (Crypto_Design §7.2). */
     private void sendRegistrationCode() {
-        String phoneError = AuthService.validatePhone(registerPhone.getText());
-        if (phoneError != null) {
-            showStatus(registerStatus, phoneError, true);
+        String problem = registerFormProblem();
+        if (problem != null) {
+            showStatus(registerStatus, problem, true);
             return;
         }
-        sendCode.setDisable(true);
+        busyFlag(sendCode).set(true);
         showStatus(registerStatus, "Kod gönderiliyor…", false);
+        String phone = registerPhone.getText();
         Async.run(() -> {
-                    auth.startRegistration(registerPhone.getText());
+                    auth.startRegistration(phone);
                     return null;
                 },
                 ignored -> {
+                    busyFlag(sendCode).set(false);
                     Cooldown.start(sendCode, Cooldown.CODE_SECONDS, true);
                     showStatus(registerStatus, "Kod WhatsApp'a gönderildi; 5 dakika geçerlidir. Numara zaten kayıtlıysa "
                             + "kod gelmez, giriş yapın ya da parolanızı sıfırlayın.", false);
                     registerCode.requestFocus();
                 },
                 failure -> {
-                    sendCode.setDisable(false);
+                    busyFlag(sendCode).set(false);
                     showStatus(registerStatus, Toasts.describe(failure), true);
                 });
     }
@@ -708,22 +774,24 @@ public final class LoginView extends VBox {
                 showStatus(status, error, true);
                 return;
             }
-            codeButton.setDisable(true);
+            busyFlag(codeButton).set(true);
             Async.run(() -> {
                         auth.startPasswordReset(phone.getText());
                         return null;
                     },
                     ignored -> {
+                        busyFlag(codeButton).set(false);
                         Cooldown.start(codeButton, Cooldown.CODE_SECONDS);
                         showStatus(status, "Kod WhatsApp'a gönderildi; 5 dakika geçerlidir. Numara kayıtlı değilse kod "
                                 + "gelmez.", false);
                         code.requestFocus();
                     },
                     failure -> {
-                        codeButton.setDisable(false);
+                        busyFlag(codeButton).set(false);
                         showStatus(status, Toasts.describe(failure), true);
                     });
         });
+        codeButton.disableProperty().bind(busyFlag(codeButton).or(Cooldown.running(codeButton)));
 
         submit.setOnAction(e -> {
             String error = AuthService.validatePhone(phone.getText());
@@ -771,12 +839,12 @@ public final class LoginView extends VBox {
     }
 
     private static void busy(Button submit, Label status, String message) {
-        submit.setDisable(true);
+        busyFlag(submit).set(true);
         showStatus(status, message, false);
     }
 
     private static void failed(Button submit, Label status, Throwable failure) {
-        submit.setDisable(false);
+        busyFlag(submit).set(false);
         showStatus(status, Toasts.describe(failure), true);
     }
 
