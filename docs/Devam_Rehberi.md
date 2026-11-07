@@ -47,7 +47,7 @@
   parola (+ TOTP) ile, her şey kalıcı silinir (Crypto_Design §7.13). Kayıt test modu (`VERIFICATION_TEST_MODE`)
   **Railway'de açık** (2026-11-07, kullanıcı ekledi): kayıt kodu WhatsApp'a gitmez, uygulamaya döner; 2.0.3 kodu
   göstermez, 2.0.4 ya da kaynaktan çalışan uygulama gösterir. Gerçek kullanıcıdan önce kapatılmalı (Security S8).
-- **Dosya türleri ve risk (2026-11-07, yayınlanmadı — 2.0.5 bekliyor):** resim, Office, PDF, metin, arşiv, ses ve
+- **Dosya türleri ve risk (2026-11-07, 2.0.5 ile yayında, GitHub release `v2.0.5`, zorunlu değil):** resim, Office, PDF, metin, arşiv, ses ve
   görüntü gönderilebilir; programlar ve betikler engellenir. Alıcı riskli dosyada (makro, betikli PDF, içinde program
   olan arşiv…) uyarı görür, kaydetmeden önce onay verir; kaydedilen dosyaya Windows dış kaynak etiketi konur
   (UI_Standards §4.5, Security S4). Gönderilenler'deki "Yenile" kaldırıldı, liste gelen kutusu aralığıyla kendiliğinden

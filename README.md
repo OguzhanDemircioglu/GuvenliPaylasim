@@ -9,22 +9,22 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.4/GuvenliPaylasim-2.0.4.msi">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.5/GuvenliPaylasim-2.0.5.msi">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Sürüm 2.0.4 · Tıklayınca kurulum dosyası doğrudan iner · Uygulama yeni sürümleri açılışta kendisi kurar ·
+  <sub>Sürüm 2.0.5 · Tıklayınca kurulum dosyası doğrudan iner · Uygulama yeni sürümleri açılışta kendisi kurar ·
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
   <br>
   <sub>Kurulum "Sistem yöneticisi, bu yüklemeyi engelleyecek ilkeler ayarladı" derse:
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.4/GuvenliPaylasim-2.0.4-kurulumsuz.zip">kurulumsuz ZIP</a></sub>
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.5/GuvenliPaylasim-2.0.5-kurulumsuz.zip">kurulumsuz ZIP</a></sub>
 </p>
 
 ---
 
 ## Uygulama ne yapıyor?
 
-> **1.0.5 kullananlar:** 2.0.4'ü yukarıdaki düğmeden bir kez elle kurmalı. Güncelleme imza anahtarı değişti; 1.0.5
+> **1.0.5 kullananlar:** 2.0.5'ü yukarıdaki düğmeden bir kez elle kurmalı. Güncelleme imza anahtarı değişti; 1.0.5
 > yeni sürümü kendisi kuramaz ve v2 sunucusuna bağlanamaz.
 
 Kimsenin açamayacağı bir kutuya dosya ya da mesaj koyarsınız. Kutu sadece alıcının bilgisayarında açılır. Sunucu
