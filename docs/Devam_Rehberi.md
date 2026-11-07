@@ -27,7 +27,7 @@
   "ZIP'i indir" gösterilir (Update_Design §2b). 2.0.1 ve öncesi bunu bilmez: onlarda "Şimdi güncelle" MSI'ı dener,
   Windows engeller; ZIP elle indirilir. Sürümler zorunlu yapılmamalı. ZIP'in özeti imzalı değil (Security S7).
 - Giriş ekranında sürüm sağ altta, kayıt ekranında sol altta, lacivert zeminde beyaz; geçiş sırasında gizli (2.0.2).
-- **2.0.3 için kodlandı, yayınlanmadı (2026-11-07):** sürüm `v2.0.3` biçiminde, kenarı bilgi yazılarıyla aynı hizada;
+- **2.0.3 yayında (2026-11-07, GitHub release `v2.0.3`):** sürüm `v2.0.3` biçiminde, kenarı bilgi yazılarıyla aynı hizada;
   "Kod gönder" sonrası 300 sn geri sayım; kayıtta ve girişte "Bu cihaza güven (30 gün)"; kenar çubuğunda kendi logomuz;
   ad soyad 2–3 kelime, kelime başları Türkçe kurala göre büyük (sunucu da 2–3 kelimeyi denetler). Ayrıca: düğmeler
   form tamamlanmadan kapalı (giriş, kod gönder, kayıt ol, profilde parola ve ad); parola 12–20 karakter ve dört karakter
