@@ -24,11 +24,6 @@ public class CurrentUser {
         return sessionId.longValue();
     }
 
-    /** Giriş yapılmamışsa boş döner (ör. audit alanları için sistem işlemleri). */
-    public Optional<Long> findId() {
-        return findJwt().map(jwt -> Long.valueOf(jwt.getSubject()));
-    }
-
     private Jwt jwt() {
         return findJwt().orElseThrow(() -> new IllegalStateException("No authenticated user in security context"));
     }

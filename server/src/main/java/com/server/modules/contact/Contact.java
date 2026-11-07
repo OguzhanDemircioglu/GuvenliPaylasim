@@ -7,6 +7,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
@@ -27,7 +28,9 @@ import java.time.Instant;
 @Setter
 @Entity
 @Table(name = "contacts",
-        uniqueConstraints = @UniqueConstraint(name = "ux_contacts_owner_contact", columnNames = {"owner_id", "contact_id"}))
+        uniqueConstraints = @UniqueConstraint(name = "ux_contacts_owner_contact", columnNames = {"owner_id", "contact_id"}),
+        // Hesap silinirken "contact_id = ?" ile aranır; unique constraint sadece owner_id ile başlayan aramalara yarar.
+        indexes = @Index(name = "ix_contacts_contact", columnList = "contact_id"))
 public class Contact {
 
     @Id

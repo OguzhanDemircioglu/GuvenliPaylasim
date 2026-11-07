@@ -115,7 +115,7 @@ Prod'da gereken değişkenlerin listesi [.env.example](.env.example) dosyasında
 | `document` | Şifreli kutular, alıcı başına anahtar, kutu ömrü, açılınca sil, kota, zamanlanmış silme | `/api/documents`, `inbox`, `sent`, `{id}`, `{id}/opened`, `DELETE {id}` |
 
 Zamanlanmış işler: `DocumentCleanupJob`, `InviteCleanupJob`, `AuthCleanupJob` (süresi dolan kayıtları kalıcı siler).
-Migration'lar: `V001_DemoData` (sadece dev), `V002_HardDelete`, `V003_SealSecrets`.
+Migration'lar: `V001_DemoData` (sadece dev), `V002_HardDelete`, `V003_SealSecrets`, `V004_DropUserAuditColumns`.
 
 ## Ortam değişkenleri (prod)
 

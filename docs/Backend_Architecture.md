@@ -99,7 +99,6 @@ modules/category/
 | `id` | `Long` | `GenerationType.IDENTITY` |
 | `version` | `Long` | `@Version`, optimistic lock (§4.4) |
 | `createdAt` / `updatedAt` | `Instant` | JPA Auditing doldurur |
-| `createdBy` / `updatedBy` | `Long` | Kullanıcı id'si; `CurrentUser`'dan gelir, sistem işlemlerinde `null` |
 
 BaseEntity'de `deleted` alanı **yoktur**: soft delete için her entity sınıfına ayrıca `@SoftDelete` eklenir (§10.4).
 `deleted` kolonunu Hibernate oluşturur ve yönetir.
@@ -476,7 +475,6 @@ public class CurrentUser {
 ```
 
 - Server session (`HttpSession`) **kullanılmaz**. Uygulama tamamen stateless çalışır; birden fazla replica varsa istek hangisine düşerse düşsün aynı sonuç alınır.
-- Audit alanları (`createdBy`, `updatedBy`) `CurrentUser`'dan doldurulur.
 - Token'da olmayan kullanıcı bilgileri gerektiğinde DB'den okunur.
 
 ### 8.8 Kullanıcı kuralları
