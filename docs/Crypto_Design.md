@@ -296,6 +296,11 @@ Böylece sunucu iki yönde de araya sahte anahtar koyamaz (Security S3).
   düşer, uygulama içi bildirim gider. Sunucu gönderimi sadece kişi kaydı varsa kabul eder.
 - Kişilere SMS bildirimi gönderilmez (SMS sadece doğrulama ve sıfırlama içindir).
 - Bir taraf kişiyi silerse kayıt **iki yönde de** silinir. Tekrar göndermek için yeni davet kodu gerekir.
+- **Kişi Ekle (2026-11-07):** Kişiler sayfasındaki düğme, belge seçmeden aynı daveti oluşturur: telefon + kodun
+  geçerlilik süresi; içerik kısa bir tanışma yazısı ("sizi kişi olarak ekledim"), kutu ömrü 7 gün. Kodsuz
+  "Onayla/İptal" isteği bilinçli olarak yapılmadı: anahtarı sadece sunucu söylerdi ve sunucu araya sahte anahtar
+  koyabilirdi (Security S3); ayrıca numaranın kayıtlı olduğunu ele verirdi (S4). Gerekirse ileride "güvenlik kodunu
+  karşılaştır" ekranıyla birlikte düşünülür.
 
 ### 7.8 Anahtar değişikliği: yeni kod gerekir
 

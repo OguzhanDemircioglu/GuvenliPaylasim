@@ -28,8 +28,6 @@ import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
@@ -378,33 +376,12 @@ final class ComposeView extends VBox {
                 sent -> {
                     clearAll();
                     invitePhone.clear();
-                    showCode(sent);
+                    InviteCodeDialog.show(sent);
                 },
                 failure -> {
                     updateSendState();
                     Toasts.error(failure);
                 });
-    }
-
-    /** Kod sadece burada, bir kez gösterilir; hiçbir yere kaydedilmez. */
-    private void showCode(InviteService.SentCode sent) {
-        Label code = Ui.label(sent.code(), "invite-code");
-        Button copy = Ui.button("Kopyala", Material2OutlinedAL.CONTENT_COPY, Styles.BUTTON_OUTLINED);
-        copy.setOnAction(e -> {
-            ClipboardContent clip = new ClipboardContent();
-            clip.putString(sent.code());
-            Clipboard.getSystemClipboard().setContent(clip);
-            Toasts.info("Kod panoya kopyalandı.");
-        });
-        Label text = Ui.muted("Bu kodu " + Formats.phone(sent.recipientPhone()) + " numaralı kişiye kendi kanalınızla "
-                + "(yüz yüze, telefonla, başka bir uygulamayla) iletin. Kod sunucuya gönderilmedi ve bir daha "
-                + "gösterilemez. Son geçerlilik: " + Formats.fullDate(sent.expiresAt()) + ".");
-        text.setWrapText(true);
-        text.setMaxWidth(440);
-        Button done = Ui.primary("Tamam", Material2OutlinedAL.DONE);
-        done.setDefaultButton(true);
-        done.setOnAction(e -> Dialogs.close());
-        Dialogs.show("Davet Kodu", new VBox(14, Ui.row(12, code, copy), text), done);
     }
 
     private static DocumentContent content(boolean isText, String plain, File chosen, boolean noSave)
