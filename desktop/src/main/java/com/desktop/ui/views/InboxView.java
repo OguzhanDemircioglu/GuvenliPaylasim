@@ -9,6 +9,7 @@ import com.desktop.service.WebMark;
 import com.desktop.ui.Async;
 import com.desktop.ui.Dialogs;
 import com.desktop.ui.Formats;
+import com.desktop.ui.ScreenGuard;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import javafx.geometry.Insets;
@@ -46,6 +47,8 @@ final class InboxView extends VBox {
     private boolean refreshing;
     /** Açılınca silinen kutunun içeriği ekranda: liste yenilense de kullanıcı başka belge seçene kadar kalır. */
     private boolean pinned;
+    /** Ekranda "Kaydedilemez" belge var: pencere ekran görüntüsünden hariç tutulur (ScreenGuard). */
+    private boolean showingViewOnly;
 
     InboxView(Context context) {
         this.context = context;
@@ -64,6 +67,8 @@ final class InboxView extends VBox {
             }
         });
         VBox.setVgrow(list, Priority.ALWAYS);
+        // Başka sayfaya geçince koruma kalkar; geri dönülünce belge hâlâ ekrandaysa yeniden açılır.
+        sceneProperty().addListener((obs, old, scene) -> ScreenGuard.set(scene != null && showingViewOnly));
 
         Button refresh = Ui.button("Yenile", Material2OutlinedMZ.REFRESH, Styles.FLAT);
         refresh.setOnAction(e -> load());
@@ -148,6 +153,7 @@ final class InboxView extends VBox {
 
     private void showDetail(Dto.InboxItem item) {
         shownId = item == null ? null : item.id();
+        setViewOnly(false);
         if (item == null) {
             detail.getChildren().setAll(Ui.emptyState(Material2OutlinedAL.LOCK, "Bir Belge Seçin",
                     "Belgeler sunucuda şifreli durur. Açtığınızda bu bilgisayarda, sizin özel anahtarınızla çözülür."));
@@ -221,7 +227,9 @@ final class InboxView extends VBox {
 
     private void showOpened(Dto.InboxItem item, DocumentCrypto.Opened opened, boolean removedFromServer) {
         DocumentContent content = opened.content();
-        Node body = content.text() ? textBody(content) : fileBody(content);
+        boolean guarded = setViewOnly(content.viewOnly());
+        Node body = content.viewOnly() ? ViewOnlyViewer.create(content)
+                : content.text() ? textBody(content) : fileBody(content);
         VBox.setVgrow(body, Priority.ALWAYS);
 
         Button delete = Ui.button("Okudum ve Sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER, Styles.BUTTON_OUTLINED);
@@ -240,10 +248,22 @@ final class InboxView extends VBox {
                 })));
 
         VBox page = new VBox(16, documentHeader(item), signatureBanner(item, opened.signature()));
+        if (content.viewOnly()) {
+            Label notice = new Label("Gönderen kaydetmeye izin vermedi: belge sadece burada görüntülenir, kopyalanamaz. "
+                    + (guarded ? "Ekran görüntüsü alınamaz." : "Bu Windows sürümünde ekran görüntüsü engellenemedi."),
+                    Ui.icon(Material2OutlinedMZ.VISIBILITY, 18));
+            notice.setWrapText(true);
+            notice.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
+            notice.setGraphicTextGap(10);
+            notice.getStyleClass().add("recipient-summary");
+            page.getChildren().add(notice);
+        }
         if (removedFromServer) {
-            Label gone = new Label("Bu kutu açıldı ve sunucudan silindi. Pencereyi değiştirirseniz bir daha açamazsınız; "
-                    + "saklamak istiyorsanız şimdi kaydedin.", Ui.icon(Material2OutlinedMZ.WARNING, 18));
+            Label gone = new Label("Bu kutu açıldı ve sunucudan silindi. Pencereyi değiştirirseniz bir daha açamazsınız"
+                    + (content.viewOnly() ? "." : "; saklamak istiyorsanız şimdi kaydedin."),
+                    Ui.icon(Material2OutlinedMZ.WARNING, 18));
             gone.setWrapText(true);
+            gone.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
             gone.setGraphicTextGap(10);
             gone.getStyleClass().add("recipient-summary");
             page.getChildren().addAll(gone, body);
@@ -251,6 +271,13 @@ final class InboxView extends VBox {
             page.getChildren().addAll(body, Ui.row(10, Ui.grow(), delete));
         }
         detail.getChildren().setAll(page);
+    }
+
+    /** Ekran korumasını belgeye göre açar/kapatır; açıkken korunabildiyse true. */
+    private boolean setViewOnly(boolean on) {
+        boolean changed = on != showingViewOnly;
+        showingViewOnly = on;
+        return !changed || getScene() == null ? on : ScreenGuard.set(on);
     }
 
     private static Node signatureBanner(Dto.InboxItem item, DocumentCrypto.SignatureStatus status) {
@@ -261,6 +288,8 @@ final class InboxView extends VBox {
                 : "Gönderenin anahtarları sonradan sıfırlanmış; imza doğrulanamıyor. İçeriğe dikkatle yaklaşın.";
         Label label = new Label(text, Ui.icon(ikon, 20));
         label.setWrapText(true);
+        // Altındaki görüntüleyici büyüse de şerit kısalıp "…" ile kesilmesin.
+        label.setMinHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
         label.setGraphicTextGap(10);
         HBox banner = new HBox(label);
         banner.getStyleClass().add(verified ? "signature-ok" : "signature-unknown");

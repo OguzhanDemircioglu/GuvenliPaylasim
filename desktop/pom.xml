@@ -52,6 +52,12 @@
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.version}</version>
         </dependency>
+        <!-- "Kaydedilemez" PDF'leri uygulama içinde göstermek için: sayfaları resme çizer, JavaScript çalıştırmaz. -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.8</version>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>

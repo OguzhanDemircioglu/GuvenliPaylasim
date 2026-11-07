@@ -52,6 +52,9 @@
   olan arşiv…) uyarı görür, kaydetmeden önce onay verir; kaydedilen dosyaya Windows dış kaynak etiketi konur
   (UI_Standards §4.5, Security S4). Gönderilenler'deki "Yenile" kaldırıldı, liste gelen kutusu aralığıyla kendiliğinden
   yenilenir. Gelen Kutusu'nda belge seçilince kendiliğinden açılır; "Açılınca Sil" kutusunda "Belgeyi Aç" gerekir.
+  **Kaydedilemez:** gönderen seçer (yazı, resim, PDF); alıcı sadece uygulamada görür, kopyalayamaz, ekran görüntüsü
+  alamaz (Crypto_Design §8.3.1). Kaydedilemez belgeyi 2.0.4 ve öncesi açamaz; 2.0.5 yayınlanınca zorunlu yapmak
+  düşünülebilir. PDFBox 3.0.8 eklendi (~4 MB).
 - **Ücretsiz kod imzalama: SignPath Foundation (ertelendi, 2026-11-06).** Demo şimdilik ZIP ile sürüyor. Başvurudan
   önce gerekenler: lisans (**karar: MIT**, `LICENSE` henüz eklenmedi), MSI/ZIP'i GitHub Actions'ta kaynaktan üretmek
   (doğrulanabilir derleme), README'de "Code signing policy" bölümü (roller; "Free code signing provided by

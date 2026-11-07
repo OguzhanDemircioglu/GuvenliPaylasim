@@ -90,6 +90,10 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   `Zone.Identifier`, ZoneId=3) konur: Office makroları çalıştırmaz ve Korumalı Görünüm'de açar, SmartScreen ve
   antivirüs devreye girer. Sezgiseldir; okuyucudaki açığı kullanan bozuk bir dosyayı yakalamaz. Gönderenin kimliği
   imzayla bilinir (kim gönderdi belli).
+- **"Kaydedilemez" belgeyi saklamak:** Garanti değil, caydırıcı (Crypto_Design §8.3.1). Alıcı uygulaması kaydetmeyi,
+  kopyalamayı kapatır ve pencereyi ekran görüntüsünden hariç tutar (Win+Shift+S, PrintScreen, PowerToys Metin
+  Ayıklayıcı, ekran paylaşımı boş görür; 2026-11-07'de ekrandan yakalamayla denendi). Değiştirilmiş istemci, telefon
+  kamerası, sanal makine dışından görüntü engellenmez.
 
 ### S5. SIM kopyalayan
 - **Garanti:** Eski kutuları açamaz. Kişileri, ona farkında olmadan dosya gönderemez.

@@ -100,6 +100,16 @@ denetlenir; sunucu da (görebildiği her şeyi) denetler.
   çalışmaz"), "internetten geldi" gibi kullanıcıyı şaşırtan ifadeler kullanılmaz.
 - Denetim her iki uçta da yapılır; alıcı göndericinin denetimine güvenmez.
 
+### 4.6 Kaydedilemez belge
+
+- Gönderende "Kaydedilemez" kutusu, "Açılınca Sil"in yanında. Sadece uygulamanın gösterebildiği içerikte açık: düz
+  yazı, jpg/png/gif/bmp, PDF. Diğer türlerde kutu kapalı ve işareti kalkar; ipucu nedenini ve sınırını yazar
+  ("caydırıcıdır").
+- Alıcıda: kaydet düğmesi yok; içerik seçilemez/kopyalanamaz; şerit: "Gönderen kaydetmeye izin vermedi: belge sadece
+  burada görüntülenir, kopyalanamaz. Ekran görüntüsü alınamaz." Ekran koruması kurulamazsa şerit bunu söyler.
+- Ekran koruması sadece böyle bir belge ekrandayken açıktır; başka belgeye ya da sayfaya geçince kalkar.
+- Bilgi şeritleri görüntüleyici büyüse de kısalmaz ("…" ile kesilmez): `minHeight = USE_PREF_SIZE`.
+
 ---
 
 ## 5. Uyarıların yeri ve zamanı

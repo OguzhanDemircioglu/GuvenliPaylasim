@@ -12,17 +12,26 @@ import java.nio.charset.StandardCharsets;
  *
  * @param fileName düz yazıda null
  * @param mimeType düz yazıda "text/plain"
+ * @param viewOnly gönderen kaydetmeye izin vermedi: alıcı sadece uygulama içinde görüntüler (Crypto_Design §8.3.1).
+ *                 Bayrak şifreli ve imzalı içeriğin içindedir; sunucu ne görebilir ne kaldırabilir. Alıcının
+ *                 uygulaması uygular, şifreleme garantisi değildir.
  */
-public record DocumentContent(boolean text, String fileName, String mimeType, byte[] data) {
+public record DocumentContent(boolean text, String fileName, String mimeType, byte[] data, boolean viewOnly) {
 
-    private static final byte VERSION = 1;
+    /** v1: bayraksız. v2: {@code viewOnly} ekli; sadece kaydedilemez belgelerde yazılır, eski sürümler v2'yi açmaz. */
+    private static final byte VERSION_1 = 1;
+    private static final byte VERSION_2 = 2;
 
     public static DocumentContent ofText(String text) {
-        return new DocumentContent(true, null, "text/plain", text.getBytes(StandardCharsets.UTF_8));
+        return new DocumentContent(true, null, "text/plain", text.getBytes(StandardCharsets.UTF_8), false);
     }
 
     public static DocumentContent ofFile(String fileName, String mimeType, byte[] data) {
-        return new DocumentContent(false, fileName, mimeType, data);
+        return new DocumentContent(false, fileName, mimeType, data, false);
+    }
+
+    public DocumentContent asViewOnly() {
+        return new DocumentContent(text, fileName, mimeType, data, true);
     }
 
     public String asText() {
@@ -33,10 +42,13 @@ public record DocumentContent(boolean text, String fileName, String mimeType, by
         try {
             ByteArrayOutputStream bytes = new ByteArrayOutputStream(data.length + 128);
             DataOutputStream out = new DataOutputStream(bytes);
-            out.writeByte(VERSION);
+            out.writeByte(viewOnly ? VERSION_2 : VERSION_1);
             out.writeBoolean(text);
             out.writeUTF(fileName == null ? "" : fileName);
             out.writeUTF(mimeType == null ? "" : mimeType);
+            if (viewOnly) {
+                out.writeBoolean(true);
+            }
             out.writeInt(data.length);
             out.write(data);
             return bytes.toByteArray();
@@ -47,14 +59,16 @@ public record DocumentContent(boolean text, String fileName, String mimeType, by
 
     static DocumentContent deserialize(byte[] bytes) {
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(bytes))) {
-            if (in.readByte() != VERSION) {
+            byte version = in.readByte();
+            if (version != VERSION_1 && version != VERSION_2) {
                 throw new CryptoException("Belge biçimi tanınmıyor");
             }
             boolean text = in.readBoolean();
             String fileName = in.readUTF();
             String mimeType = in.readUTF();
+            boolean viewOnly = version == VERSION_2 && in.readBoolean();
             byte[] data = in.readNBytes(in.readInt());
-            return new DocumentContent(text, fileName.isEmpty() ? null : fileName, mimeType, data);
+            return new DocumentContent(text, fileName.isEmpty() ? null : fileName, mimeType, data, viewOnly);
         } catch (IOException e) {
             throw new CryptoException("Belge bozuk", e);
         }

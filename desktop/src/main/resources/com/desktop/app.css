@@ -535,6 +535,23 @@
     -fx-font-size: 15.5px;
 }
 
+/* "Kaydedilemez" belge görüntüleyicisi: seçilemeyen yazı, resim ve PDF sayfaları. */
+.view-only {
+    -fx-background-color: -color-bg-subtle;
+    -fx-background-radius: 8;
+    -fx-border-color: -color-border-default;
+    -fx-border-radius: 8;
+}
+
+.view-only > .viewport {
+    -fx-background-color: transparent;
+}
+
+.view-only-text {
+    -fx-font-size: 15.5px;
+    -fx-max-width: Infinity;
+}
+
 .locked-panel {
     -fx-background-color: -color-bg-subtle;
     -fx-background-radius: 12;

@@ -401,6 +401,20 @@ kimden, kime, ne zaman, okundu mu) kutunun ömrü bitince sunucudan tamamen sili
   kalmayacağı anlamına gelir, kopyalanamayacağı anlamına gelmez. Arayüzde bu açıkça yazılır.
 - Seçenek kapalıyken bugünkü "Okudum ve sil" düğmesi kalır. Alıcı silince kendi satırı tamamen silinir (§8.5).
 
+### 8.3.1 Kaydedilemez (sadece görüntüleme)
+
+- Gönderen **"Kaydedilemez"** seçebilir (düz yazı, jpg/png/gif/bmp, PDF). Alıcı belgeyi sadece uygulama içinde görür:
+  kaydetme düğmesi yok, yazı seçilemez, resim ve PDF sayfaları resim olarak çizilir (PDFBox; JavaScript çalışmaz).
+  Belge ekrandayken pencere ekran görüntüsünden ve kayıttan hariç tutulur (`SetWindowDisplayAffinity`,
+  `WDA_EXCLUDEFROMCAPTURE`; Windows 10 2004 öncesinde pencere siyah çıkar).
+- Bayrak **şifreli ve imzalı içeriğin içindedir** (`DocumentContent` v2): sunucu göremez, kaldıramaz; değiştirilirse
+  imza tutmaz. Sunucuda değişiklik yok.
+- **Biçim:** bayraksız belge eskisi gibi v1 yazılır (eski sürümler açar). Kaydedilemez belge v2 yazılır; 2.0.4 ve
+  öncesi v2'yi tanımaz ve "Belge biçimi tanınmıyor" der, yani eski sürümde kaydetme imkânı doğmaz.
+- **Sınır:** Kuralı alıcının uygulaması uygular; anahtar alıcıda olduğu için değiştirilmiş bir uygulama atlayabilir.
+  Telefonla ekranın fotoğrafı, sanal makine/uzak masaüstü dışından görüntü engellenmez. Caydırıcıdır, şifreleme
+  garantisi değildir; arayüzde (ipucu) böyle yazar.
+
 ### 8.4 Gönderilenler ve okunma durumu
 
 - Kutu yaşadığı sürece gönderen her alıcı için "okundu" ya da "okunmadı" durumunu görür (`read_at`).

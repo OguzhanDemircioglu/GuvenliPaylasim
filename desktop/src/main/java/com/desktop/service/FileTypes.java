@@ -60,6 +60,14 @@ public final class FileTypes {
         return ALLOWED.get(extension(fileName));
     }
 
+    /** Kaydedilemez gönderilebilen, uygulama içinde gösterilebilen türler: JavaFX'in çizdiği resimler ve PDF. */
+    private static final Set<String> VIEWABLE = Set.of("jpg", "jpeg", "png", "gif", "bmp", "pdf");
+
+    /** Dosya uygulama içinde gösterilebilir mi ("Kaydedilemez" seçeneği sadece bunlarda; düz yazı her zaman). */
+    public static boolean viewable(String fileName) {
+        return VIEWABLE.contains(extension(fileName));
+    }
+
     public static Set<String> allowedExtensions() {
         return ALLOWED.keySet();
     }

@@ -72,6 +72,7 @@ final class ComposeView extends VBox {
     /** Kutunun ömrü (Crypto_Design §8.2); Ttl ile aynı biçim. Varsayılan 7 gün. */
     private final ComboBox<Ttl> lifetime = new ComboBox<>();
     private final CheckBox deleteOnOpen = new CheckBox("Açılınca Sil");
+    private final CheckBox viewOnly = new CheckBox("Kaydedilemez");
     private File file;
 
     ComposeView(Context context) {
@@ -269,7 +270,14 @@ final class ComposeView extends VBox {
         deleteOnOpen.setTooltip(new javafx.scene.control.Tooltip("Alıcı açtığı anda kutu sunucudan silinir. Alıcı "
                 + "içeriği kaydedebilir; bu seçenek sadece sunucuda kalmamasını sağlar."));
         HBox.setHgrow(lifetime, Priority.ALWAYS);
-        HBox lifetimeRow = Ui.row(10, Ui.label("Kutunun Ömrü", Styles.TEXT_BOLD), lifetime, deleteOnOpen);
+        viewOnly.setTooltip(new javafx.scene.control.Tooltip("Alıcı belgeyi sadece uygulama içinde görür: kaydedemez, "
+                + "kopyalayamaz, ekran görüntüsü alamaz. Düz yazı, resim (jpg, png, gif, bmp) ve PDF'te seçilebilir. "
+                + "Telefonla ekranın fotoğrafı çekilebilir; bu bir engel değil, caydırıcıdır."));
+        Label lifetimeLabel = Ui.label("Kutunun Ömrü", Styles.TEXT_BOLD);
+        lifetimeLabel.setMinWidth(Region.USE_PREF_SIZE);
+        deleteOnOpen.setMinWidth(Region.USE_PREF_SIZE);
+        viewOnly.setMinWidth(Region.USE_PREF_SIZE);
+        VBox lifetimeRow = new VBox(10, Ui.row(10, lifetimeLabel, lifetime), Ui.row(18, deleteOnOpen, viewOnly));
 
         summary.setWrapText(true);
         summary.setMinHeight(Region.USE_PREF_SIZE);
@@ -324,6 +332,12 @@ final class ComposeView extends VBox {
                 ? AuthService.validatePhone(invitePhone.getText()) == null && !codeOutlivesBox()
                 : !selectedRecipients().isEmpty();
         send.setDisable(!hasContent || !hasRecipient);
+        // "Kaydedilemez" sadece uygulamanın gösterebildiği içerikte (UI_Standards §4.6).
+        boolean viewable = textMode.isSelected() || (file != null && FileTypes.viewable(file.getName()));
+        if (!viewable) {
+            viewOnly.setSelected(false);
+        }
+        viewOnly.setDisable(!viewable);
     }
 
     private boolean codeOutlivesBox() {
@@ -347,7 +361,8 @@ final class ComposeView extends VBox {
         progress.show();
         int hours = lifetime.getValue().hours();
         boolean once = deleteOnOpen.isSelected();
-        Async.run(() -> context.documents.send(content(isText, plain, chosen), to, hours, once),
+        boolean noSave = viewOnly.isSelected();
+        Async.run(() -> context.documents.send(content(isText, plain, chosen, noSave), to, hours, once),
                 progress::completed,
                 progress::failed);
     }
@@ -357,8 +372,9 @@ final class ComposeView extends VBox {
         int codeHours = ttl.getValue().hours();
         int boxHours = lifetime.getValue().hours();
         boolean once = deleteOnOpen.isSelected();
+        boolean noSave = viewOnly.isSelected();
         send.setDisable(true);
-        Async.run(() -> context.invites.send(content(isText, plain, chosen), phone, codeHours, boxHours, once),
+        Async.run(() -> context.invites.send(content(isText, plain, chosen, noSave), phone, codeHours, boxHours, once),
                 sent -> {
                     clearAll();
                     invitePhone.clear();
@@ -391,10 +407,12 @@ final class ComposeView extends VBox {
         Dialogs.show("Davet Kodu", new VBox(14, Ui.row(12, code, copy), text), done);
     }
 
-    private static DocumentContent content(boolean isText, String plain, File chosen) throws java.io.IOException {
-        return isText ? DocumentContent.ofText(plain)
+    private static DocumentContent content(boolean isText, String plain, File chosen, boolean noSave)
+            throws java.io.IOException {
+        DocumentContent content = isText ? DocumentContent.ofText(plain)
                 : DocumentContent.ofFile(chosen.getName(), FileTypes.mimeType(chosen.getName()),
                         Files.readAllBytes(chosen.toPath()));
+        return noSave ? content.asViewOnly() : content;
     }
 
     private void clearAll() {
