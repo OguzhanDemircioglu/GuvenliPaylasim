@@ -43,7 +43,7 @@
   her kelime büyük harfle, Verdana 15 px, şifre alanı en fazla 20 karakter, uyarıların yeri (girişte yok; kayıtta ilk
   şifrenin altında, tekrar uyuşmazsa altında), düğmeler form geçerli olmadan kapalı. Aynı belge StarterApp'in
   `docs/` klasörüne de kondu (orada commit edilmedi; kullanıcı güncelleyecek).
-- **Hesabı silme ve test modu (2026-11-07, kodlandı, masaüstü sürümü 2.0.4 çıkmadı):** Profilim → "Hesabımı sil":
+- **Hesabı silme ve test modu (2026-11-07, 2.0.4 ile yayında):** Profilim → "Hesabımı sil":
   parola (+ TOTP) ile, her şey kalıcı silinir (Crypto_Design §7.13). Kayıt test modu (`VERIFICATION_TEST_MODE`)
   **Railway'de açık** (2026-11-07, kullanıcı ekledi): kayıt kodu WhatsApp'a gitmez, uygulamaya döner; 2.0.3 kodu
   göstermez, 2.0.4 ya da kaynaktan çalışan uygulama gösterir. Gerçek kullanıcıdan önce kapatılmalı (Security S8).

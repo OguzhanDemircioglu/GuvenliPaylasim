@@ -151,8 +151,9 @@ kapatılmaz. **StarterApp:** `[disabled]="form.invalid || loading()"`; `nzLoadin
 
 ## 9. Kayıt ve hesap
 
-- **Aydınlatma metni** (KVKK m.10): kayıtta "Aydınlatma Metnini Okudum" zorunlu; bağlantı metni açar, "Okudum" kutuyu
-  işaretler. Metin hukuki incelemeden geçmeden "TASLAK" diye işaretli kalır.
+- **Aydınlatma metni** (KVKK m.10): kayıtta "Aydınlatma Metnini Onaylıyorum" zorunlu; bağlantı metni açar, "Onaylıyorum" kutuyu
+  işaretler. Metin hukuki incelemeden geçmeden "TASLAK" diye işaretli kalır. Not: aydınlatma bir bilgilendirmedir,
+  açık rıza değildir; açık rıza gereken bir işlem (ör. yurt dışına arızi aktarım) olursa ayrı bir kutuyla alınır.
 - **Hesabımı Sil:** profilde; uyarı penceresinde neyin silineceği ve geri alınamayacağı yazar; şifre (+ iki adımlı
   doğrulama kodu) istenir; yanlış denemeler sayılır. Kişi ve ilgili her şey kalıcı silinir, "silindi" işareti tutulmaz.
 - **Profil:** ad değiştirilebilir (aynı ad kuralı); telefon gibi kimliğe bağlı alanlar salt okunur gösterilir ve nedeni

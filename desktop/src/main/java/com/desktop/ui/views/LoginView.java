@@ -360,7 +360,7 @@ public final class LoginView extends VBox {
         Hyperlink notice = new Hyperlink("Aydınlatma Metnini");
         notice.getStyleClass().add("auth-link");
         notice.setOnAction(e -> showNotice());
-        Label noticeText = Ui.label("Okudum", "auth-link-text");
+        Label noticeText = Ui.label("Onaylıyorum", "auth-link-text");
         noticeText.setOnMouseClicked(e -> noticeRead.setSelected(!noticeRead.isSelected()));
         HBox noticeRow = new HBox(4, noticeRead, notice, noticeText);
         noticeRow.setAlignment(Pos.CENTER_LEFT);
@@ -668,7 +668,7 @@ public final class LoginView extends VBox {
                 failure -> failed(registerSubmit, registerStatus, failure));
     }
 
-    /** KVKK m.10 aydınlatma metni (taslak, resources/com/desktop/aydinlatma-metni.txt). "Okudum" kutuyu işaretler. */
+    /** KVKK m.10 aydınlatma metni (taslak, resources/com/desktop/aydinlatma-metni.txt). "Onaylıyorum" kutuyu işaretler. */
     private void showNotice() {
         TextArea text = new TextArea(noticeText());
         text.setEditable(false);
@@ -677,7 +677,7 @@ public final class LoginView extends VBox {
         Button close = Ui.button("Kapat", null);
         close.setCancelButton(true);
         close.setOnAction(e -> Dialogs.close());
-        Button read = Ui.primary("Okudum", Material2OutlinedAL.CHECK);
+        Button read = Ui.primary("Onaylıyorum", Material2OutlinedAL.CHECK);
         read.setDefaultButton(true);
         read.setOnAction(e -> {
             noticeRead.setSelected(true);
