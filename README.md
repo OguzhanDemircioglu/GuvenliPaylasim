@@ -9,15 +9,16 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.6/GuvenliPaylasim-2.0.6.msi">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.6/GuvenliPaylasim-2.0.6-kurulumsuz.zip">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
   <sub>Sürüm 2.0.6 · Uygulama yeni sürümleri açılışta kendisi bulur ·
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
   <br>
-  <sub>Kurulum "Sistem yöneticisi, bu yüklemeyi engelleyecek ilkeler ayarladı" derse:
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.6/GuvenliPaylasim-2.0.6-kurulumsuz.zip">kurulumsuz ZIP</a></sub>
+  <sub>Kurulum dosyası tercih ederseniz:
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.6/GuvenliPaylasim-2.0.6.msi">MSI ile kur</a>
+  (Akıllı Uygulama Denetimi açıksa Windows engelleyebilir)</sub>
 </p>
 
 ---
@@ -96,11 +97,12 @@ ekranında da var.
 
 ## Kurulum (kullanıcılar)
 
-1. Yukarıdaki **Windows için indir** düğmesiyle `.msi` dosyasını indirip açın. Yönetici yetkisi ve ayrıca Java
+1. Yukarıdaki **Windows için indir** düğmesiyle kurulumsuz ZIP'i indirin, bir klasöre çıkarın, içindeki
+   `GuvenliPaylasim.exe`'yi çalıştırın. Yönetici yetkisi ve ayrıca Java gerekmez; Windows ayarlarına dokunmanız
    gerekmez.
-2. "Güvenli Paylaşım" Başlat menüsüne ve masaüstüne eklenir.
-3. **Kurulum engellenirse** (Windows'ta Akıllı Uygulama Denetimi açıksa, imzasız MSI reddedilir):
-   **kurulumsuz ZIP**'i indirin, bir klasöre çıkarın, içindeki `GuvenliPaylasim.exe`'yi çalıştırın.
+2. **Kurulum dosyası tercih ederseniz:** alttaki **MSI ile kur** bağlantısından `.msi`'yi indirip açın; "Güvenli
+   Paylaşım" Başlat menüsüne ve masaüstüne eklenir. Windows'ta Akıllı Uygulama Denetimi açıksa imzasız MSI
+   reddedilebilir; o durumda ZIP'i kullanın.
 
 Uygulama demo sunucusuna (`https://guvenlipaylasim.up.railway.app`) bağlanır. Demo sunucusu **test modunda**:
 kayıt kodu WhatsApp'a gitmez, uygulamaya kendiliğinden yazılır.

@@ -14,7 +14,7 @@
   </g>
   <g font-family="Segoe UI, Helvetica, Arial, sans-serif" fill="#ffffff">
     <text x="128" y="66" font-size="38" font-weight="700">Windows için indir</text>
-    <text x="129" y="96" font-size="18" fill="#c9d6ea">Kurulum dosyası (.msi) · yönetici yetkisi gerekmez</text>
+    <text x="129" y="96" font-size="18" fill="#c9d6ea">Kurulumsuz ZIP · yönetici yetkisi gerekmez</text>
   </g>
   <circle cx="570" cy="64" r="38" fill="#9b1c31"/>
   <g fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
