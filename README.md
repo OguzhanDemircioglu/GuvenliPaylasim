@@ -97,6 +97,7 @@ ekranında da gösterilir.
 | [docs/Devam_Rehberi.md](docs/Devam_Rehberi.md) | Nerede kaldık, sırada ne var (v2 yol haritası) |
 | [docs/Crypto_Design.md](docs/Crypto_Design.md) | Şifreleme tasarımı ve eski sistemle karşılaştırma |
 | [docs/Update_Design.md](docs/Update_Design.md) | GitHub üzerinden imzalı, zorunlu güncelleme |
+| [docs/UI_Standards.md](docs/UI_Standards.md) | Arayüz ve form standartları (StarterApp ile ortak): metinler, alan kuralları, uyarılar, düğmeler |
 | [docs/Backend_Architecture.md](docs/Backend_Architecture.md) | Sunucunun bağlayıcı kuralları (StarterApp'ten; §20 bu projeye özgü eklemeler) |
 
 ### Gereksinimler

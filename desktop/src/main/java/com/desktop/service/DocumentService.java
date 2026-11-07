@@ -53,7 +53,7 @@ public final class DocumentService {
     }
 
     /**
-     * Belgeyi indirir, imzasını doğrular ve çözer; ilk açılışta sunucu belgeyi "okundu" işaretler. "Açılınca sil"
+     * Belgeyi indirir, imzasını doğrular ve çözer; ilk açılışta sunucu belgeyi "okundu" işaretler. "Açılınca Sil"
      * kutusunda onay ancak içerik bu bilgisayarda çözülüp doğrulandıktan sonra gönderilir (Crypto_Design §8.3);
      * onay gönderilemezse kutu ömrü dolana kadar sunucuda kalır ve tekrar açılabilir.
      */
@@ -75,7 +75,7 @@ public final class DocumentService {
         return new OpenResult(opened, removed);
     }
 
-    /** "Okudum ve sil": alıcının kutusu silinir; son alıcıysa belge sunucudan tamamen silinir. */
+    /** "Okudum ve Sil": alıcının kutusu silinir; son alıcıysa belge sunucudan tamamen silinir. */
     public void delete(long documentId) {
         session.api().delete("/api/documents/" + documentId);
     }

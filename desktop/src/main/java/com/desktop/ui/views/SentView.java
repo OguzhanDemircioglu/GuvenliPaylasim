@@ -53,7 +53,7 @@ final class SentView extends VBox {
 
     private void render(List<Dto.SentItem> sent) {
         if (sent.isEmpty()) {
-            items.getChildren().setAll(Ui.emptyState(Material2OutlinedMZ.SEND, "Henüz belge göndermediniz",
+            items.getChildren().setAll(Ui.emptyState(Material2OutlinedMZ.SEND, "Henüz Belge Göndermediniz",
                     "Yeni Gönderi ekranından şifreli yazı ya da belge gönderebilirsiniz."));
             return;
         }
@@ -63,7 +63,7 @@ final class SentView extends VBox {
     private Node card(Dto.SentItem item) {
         boolean text = item.kind() == Dto.DocumentKind.TEXT;
         long read = item.recipients().stream().filter(r -> r.readAt() != null).count();
-        Label title = Ui.label((text ? "Şifreli yazı" : "Şifreli belge") + " · No " + item.id(), Styles.TEXT_BOLD);
+        Label title = Ui.label((text ? "Şifreli Yazı" : "Şifreli Belge") + " · No " + item.id(), Styles.TEXT_BOLD);
         Label meta = Ui.muted(Formats.fullDate(item.createdAt()) + " · " + Formats.size(item.sizeBytes())
                 + " · " + Formats.remaining(item.expiresAt()) + " sonra silinir"
                 + (item.deleteOnOpen() ? " · açılınca silinir" : ""));

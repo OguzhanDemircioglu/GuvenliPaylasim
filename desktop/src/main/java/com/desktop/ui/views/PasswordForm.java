@@ -5,6 +5,7 @@ import com.desktop.service.AuthService;
 import com.desktop.service.PasswordStrength;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
+import com.desktop.ui.PasswordFields;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import javafx.beans.binding.Bindings;
@@ -23,10 +24,12 @@ import org.kordamp.ikonli.material2.Material2OutlinedAL;
  */
 final class PasswordForm extends VBox {
 
-    private final PasswordTextField current = field("Mevcut parola");
+    private final PasswordTextField current = field("Mevcut Şifre");
     private final PasswordTextField next = field("12–20 karakter");
-    private final PasswordTextField repeat = field("Yeni parolayı tekrar girin");
+    private final PasswordTextField repeat = field("Yeni şifreyi tekrar girin");
     private final Label error = Ui.label("", "form-error");
+    private final Label nextHint = PasswordFields.hint();
+    private final Label repeatHint = PasswordFields.hint();
     private final Button submit;
     private final BooleanProperty busy = new SimpleBooleanProperty(false);
 
@@ -42,8 +45,9 @@ final class PasswordForm extends VBox {
                 () -> PasswordStrength.composition(current.getPassword()) == null && problem(session) == null,
                 current.passwordProperty(), next.passwordProperty(), repeat.passwordProperty());
         submit.disableProperty().bind(busy.or(ready.not()));
-        next.passwordProperty().addListener(obs -> showHint(session));
-        repeat.passwordProperty().addListener(obs -> showHint(session));
+        // Yeni şifrenin altında kural uyarısı, tekrarın altında "Şifreler uyuşmuyor." (docs/UI_Standards.md).
+        PasswordFields.bindHints(next, repeat, nextHint, repeatHint,
+                password -> PasswordStrength.check(password, session.fullName(), session.user().phone()));
 
         submit.setOnAction(e -> {
             String invalid = problem(session);
@@ -52,7 +56,7 @@ final class PasswordForm extends VBox {
                 return;
             }
             busy.set(true);
-            submit.setText("Anahtarlarınız yeni parolayla şifreleniyor…");
+            submit.setText("Anahtarlarınız yeni şifreyle şifreleniyor…");
             Async.run(() -> {
                         auth.changePassword(session, current.getPassword().toCharArray(), next.getPassword().toCharArray());
                         return true;
@@ -74,9 +78,9 @@ final class PasswordForm extends VBox {
         });
 
         getChildren().addAll(
-                Ui.label("Mevcut parola", "field-label"), current, gap(),
-                Ui.label("Yeni parola", "field-label"), next, gap(),
-                Ui.label("Yeni parola (tekrar)", "field-label"), repeat, gap(), error, submit);
+                Ui.label("Mevcut Şifre", "field-label"), current, gap(),
+                Ui.label("Yeni Şifre", "field-label"), next, nextHint, gap(),
+                Ui.label("Yeni Şifre (tekrar)", "field-label"), repeat, repeatHint, gap(), error, submit);
         getStyleClass().add("login-form");
     }
 
@@ -85,19 +89,13 @@ final class PasswordForm extends VBox {
                 session.fullName(), session.user().phone());
     }
 
-    /** Yeni parola ve tekrarı yazıldıysa ve bir kural tutmuyorsa nedeni gösterilir. */
-    private void showHint(Session session) {
-        boolean filled = !next.getPassword().isEmpty() && !repeat.getPassword().isEmpty();
-        showError(filled ? problem(session) : null);
-    }
-
     private void showError(String message) {
         error.setText(message == null ? "" : message);
         error.setManaged(message != null);
     }
 
     private static PasswordTextField field(String prompt) {
-        PasswordTextField field = new PasswordTextField();
+        PasswordTextField field = PasswordFields.limit(new PasswordTextField());
         field.setPromptText(prompt);
         return field;
     }

@@ -342,6 +342,13 @@
     -fx-text-fill: -color-danger-fg;
 }
 
+/* Alanın hemen altındaki uyarı (PasswordFields.hint): kural tutana kadar görünür. */
+.field-hint {
+    -fx-text-fill: -color-danger-fg;
+    -fx-font-size: 12.5px;
+    -fx-padding: 2 0 0 2;
+}
+
 /* ---------- Ortak parçalar ---------- */
 
 .avatar-text {

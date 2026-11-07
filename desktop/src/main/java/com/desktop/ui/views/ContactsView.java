@@ -39,7 +39,7 @@ final class ContactsView extends VBox {
 
         VBox body = new VBox(18,
                 Ui.row(8, Ui.label("Kişilerim", "section-title"), Ui.grow(), refresh), contacts,
-                Ui.label("Bekleyen davetlerim", "section-title"),
+                Ui.label("Bekleyen Davetlerim", "section-title"),
                 Ui.muted("Kodu henüz girilmemiş davetler. Süresi dolan davet içeriğiyle birlikte kalıcı olarak silinir."),
                 invites);
         ScrollPane scroll = new ScrollPane(body);
@@ -59,7 +59,7 @@ final class ContactsView extends VBox {
 
     private void showContacts(List<ContactService.Contact> list) {
         if (list.isEmpty()) {
-            contacts.getChildren().setAll(Ui.emptyState(Material2OutlinedAL.CONTACTS, "Henüz kişiniz yok",
+            contacts.getChildren().setAll(Ui.emptyState(Material2OutlinedAL.CONTACTS, "Henüz Kişiniz Yok",
                     "Yeni Gönderi'de \"Davet kodu ile\" seçip birine ilk kutuyu gönderin. Kodu girdiğinde kişileriniz arasına eklenir."));
             return;
         }
@@ -69,14 +69,14 @@ final class ContactsView extends VBox {
     private Node contactCard(ContactService.Contact contact) {
         Label chip = switch (contact.state()) {
             case VERIFIED -> Ui.chip("Doğrulandı", "success");
-            case PENDING -> Ui.chip("Doğrulama bekleniyor", "accent");
+            case PENDING -> Ui.chip("Doğrulama Bekleniyor", "accent");
             case KEY_CHANGED -> Ui.chip("Anahtarı değişti · yeni davet kodu gerekir", "warning");
-            case UNTRUSTED -> Ui.chip("Kayıt doğrulanamadı", "danger");
+            case UNTRUSTED -> Ui.chip("Kayıt Doğrulanamadı", "danger");
         };
         Label fingerprint = Ui.muted(contact.fingerprint() == null ? "" : "Parmak izi: " + contact.fingerprint());
 
-        Button delete = Ui.iconButton(Material2OutlinedMZ.PERSON_REMOVE, "Kişiyi sil", Styles.FLAT);
-        delete.setOnAction(e -> Dialogs.confirm("Kişiyi sil",
+        Button delete = Ui.iconButton(Material2OutlinedMZ.PERSON_REMOVE, "Kişiyi Sil", Styles.FLAT);
+        delete.setOnAction(e -> Dialogs.confirm("Kişiyi Sil",
                 contact.fullName() + " iki taraflı olarak silinir. Tekrar göndermek için yeni davet kodu gerekir.",
                 "Sil", Material2OutlinedMZ.PERSON_REMOVE, true,
                 () -> Async.run(() -> {
@@ -104,7 +104,7 @@ final class ContactsView extends VBox {
     }
 
     private Node inviteCard(Dto.SentInvite invite) {
-        Button cancel = Ui.button("Geri al", Material2OutlinedAL.DELETE_OUTLINE, Styles.FLAT);
+        Button cancel = Ui.button("Geri Al", Material2OutlinedAL.DELETE_OUTLINE, Styles.FLAT);
         cancel.setOnAction(e -> Async.run(() -> {
             context.invites.cancel(invite.id());
             return null;
@@ -113,7 +113,7 @@ final class ContactsView extends VBox {
             load();
         }));
         VBox text = Ui.column(3, Ui.label(Formats.phone(invite.recipientPhone()), Styles.TEXT_BOLD),
-                Ui.muted((invite.kind() == Dto.DocumentKind.TEXT ? "Şifreli yazı" : "Şifreli belge") + " · "
+                Ui.muted((invite.kind() == Dto.DocumentKind.TEXT ? "Şifreli Yazı" : "Şifreli Belge") + " · "
                         + Formats.size(invite.sizeBytes()) + " · son geçerlilik " + Formats.fullDate(invite.expiresAt())));
         HBox.setHgrow(text, Priority.ALWAYS);
         HBox card = Ui.row(14, Ui.iconBadge(Material2OutlinedMZ.VPN_KEY, "accent", 40), text, cancel);

@@ -8,8 +8,8 @@ import javafx.scene.control.ButtonBase;
 import javafx.util.Duration;
 
 /**
- * "Kod gönder" sonrası bekleme: kod 5 dakika geçerlidir (sunucu {@code code-ttl: 5m}); bu sürede düğme kalan süreyi
- * gösterir, süre bitince "Tekrar gönder" olur. Düğmenin kapalı olması {@link #running} ile bağlanır (düğmenin
+ * "Kod Gönder" sonrası bekleme: kod 5 dakika geçerlidir (sunucu {@code code-ttl: 5m}); bu sürede düğme kalan süreyi
+ * gösterir, süre bitince "Tekrar Gönder" olur. Düğmenin kapalı olması {@link #running} ile bağlanır (düğmenin
  * kapalılığı başka koşullara da bağlı olduğu için burada doğrudan değiştirilmez).
  */
 public final class Cooldown {
@@ -43,7 +43,7 @@ public final class Cooldown {
             if (left[0] > 0) {
                 button.setText(label(left[0], compact));
             } else {
-                button.setText("Tekrar gönder");
+                button.setText("Tekrar Gönder");
                 running(button).set(false);
                 button.getProperties().remove(TIMELINE);
             }
@@ -54,7 +54,7 @@ public final class Cooldown {
     }
 
     private static String label(int seconds, boolean compact) {
-        return compact ? format(seconds) : "Tekrar gönder (" + format(seconds) + ")";
+        return compact ? format(seconds) : "Tekrar Gönder (" + format(seconds) + ")";
     }
 
     /** {@code 299} → {@code 4:59}. */

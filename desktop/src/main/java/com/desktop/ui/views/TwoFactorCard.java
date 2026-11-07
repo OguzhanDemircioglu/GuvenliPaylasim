@@ -6,6 +6,7 @@ import com.desktop.api.Dto;
 import com.desktop.ui.Async;
 import com.desktop.ui.Dialogs;
 import com.desktop.ui.Inputs;
+import com.desktop.ui.PasswordFields;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import com.google.zxing.BarcodeFormat;
@@ -48,9 +49,9 @@ final class TwoFactorCard extends VBox {
         boolean on = context.session.totpEnabled();
         Label status = Ui.chip(on ? "Açık" : "Kapalı", on ? "success" : "neutral");
         Label text = Ui.muted(on
-                ? "Girişte ve parola sıfırlamada Authenticator kodu isteniyor. Telefonunuzu kaybederseniz kurtarma "
+                ? "Girişte ve şifre sıfırlamada Authenticator kodu isteniyor. Telefonunuzu kaybederseniz kurtarma "
                         + "kodlarınızdan birini kullanın."
-                : "İsteğe bağlı. Açarsanız girişte ve parola sıfırlamada Authenticator uygulamasındaki kod da istenir; "
+                : "İsteğe bağlı. Açarsanız girişte ve şifre sıfırlamada Authenticator uygulamasındaki kod da istenir; "
                         + "numaranız kopyalansa bile hesabınız ele geçirilemez.");
         text.setWrapText(true);
         Button action = on
@@ -63,7 +64,7 @@ final class TwoFactorCard extends VBox {
                 startSetup(action);
             }
         });
-        getChildren().setAll(Ui.row(10, Ui.label("İki adımlı doğrulama", "section-title"), Ui.grow(), status), text,
+        getChildren().setAll(Ui.row(10, Ui.label("İki Adımlı Doğrulama", "section-title"), Ui.grow(), status), text,
                 action);
     }
 
@@ -83,7 +84,7 @@ final class TwoFactorCard extends VBox {
     private void showSetup(Dto.TotpSetup setup) {
         ImageView qr = new ImageView(qr(setup.uri(), 200));
         Label secret = Ui.label(grouped(setup.secret()), "fingerprint");
-        Button copy = Ui.button("Anahtarı kopyala", Material2OutlinedAL.CONTENT_COPY, Styles.FLAT);
+        Button copy = Ui.button("Anahtarı Kopyala", Material2OutlinedAL.CONTENT_COPY, Styles.FLAT);
         copy.setOnAction(e -> copy(setup.secret(), "Anahtar panoya kopyalandı."));
         Label help = Ui.muted("1. Authenticator uygulamanızda (Google Authenticator, Microsoft Authenticator vb.) QR kodu "
                 + "okutun ya da anahtarı elle girin.\n2. Uygulamanın gösterdiği 6 haneli kodu aşağıya yazın.");
@@ -97,7 +98,7 @@ final class TwoFactorCard extends VBox {
         Button cancel = Ui.button("Vazgeç", null);
         cancel.setCancelButton(true);
         cancel.setOnAction(e -> Dialogs.close());
-        Button confirm = Ui.primary("Doğrula ve aç", Material2OutlinedAL.LOCK);
+        Button confirm = Ui.primary("Doğrula ve Aç", Material2OutlinedAL.LOCK);
         confirm.setDefaultButton(true);
         confirm.setOnAction(e -> {
             confirm.setDisable(true);
@@ -111,7 +112,7 @@ final class TwoFactorCard extends VBox {
             });
         });
         VBox body = new VBox(12, help, Ui.row(16, qr, new VBox(8, Ui.muted("Anahtar"), secret, copy)), code, status);
-        Dialogs.show("İki adımlı doğrulamayı aç", body, cancel, confirm);
+        Dialogs.show("İki Adımlı Doğrulamayı Aç", body, cancel, confirm);
         code.requestFocus();
     }
 
@@ -121,10 +122,10 @@ final class TwoFactorCard extends VBox {
         grid.setPrefWrapLength(420);
         codes.forEach(c -> grid.getChildren().add(Ui.label(c, "fingerprint")));
         Label warning = Ui.muted("Bu kodlar bir daha gösterilmez. Kâğıda yazın ya da güvenli bir yerde saklayın. "
-                + "Authenticator'a erişemezseniz her biri bir kez giriş ya da parola sıfırlama için kullanılabilir.");
+                + "Authenticator'a erişemezseniz her biri bir kez giriş ya da şifre sıfırlama için kullanılabilir.");
         warning.setWrapText(true);
         warning.setMaxWidth(440);
-        Button copy = Ui.button("Hepsini kopyala", Material2OutlinedAL.CONTENT_COPY, Styles.BUTTON_OUTLINED);
+        Button copy = Ui.button("Hepsini Kopyala", Material2OutlinedAL.CONTENT_COPY, Styles.BUTTON_OUTLINED);
         copy.setOnAction(e -> copy(String.join("\n", codes), "Kurtarma kodları panoya kopyalandı."));
         Button done = Ui.primary("Kaydettim", Material2OutlinedAL.DONE);
         done.setDefaultButton(true);
@@ -132,14 +133,14 @@ final class TwoFactorCard extends VBox {
             Dialogs.close();
             Toasts.success("İki adımlı doğrulama açıldı.");
         });
-        Dialogs.show("Kurtarma kodlarınız", new VBox(14, warning, grid), copy, done);
+        Dialogs.show("Kurtarma Kodlarınız", new VBox(14, warning, grid), copy, done);
     }
 
     // ---------- Kapatma ----------
 
     private void openDisable() {
-        PasswordTextField password = new PasswordTextField();
-        password.setPromptText("Mevcut parola");
+        PasswordTextField password = PasswordFields.limit(new PasswordTextField());
+        password.setPromptText("Mevcut Şifre");
         TextField code = new TextField();
         code.setPromptText("Authenticator kodu ya da kurtarma kodu");
         Label status = errorLabel();
@@ -162,10 +163,10 @@ final class TwoFactorCard extends VBox {
                 showError(status, failure);
             });
         });
-        Label help = Ui.muted("Kapatınca girişte sadece parola istenir ve kurtarma kodlarınız geçersiz olur.");
+        Label help = Ui.muted("Kapatınca girişte sadece şifre istenir ve kurtarma kodlarınız geçersiz olur.");
         help.setWrapText(true);
         help.setMaxWidth(420);
-        Dialogs.show("İki adımlı doğrulamayı kapat", new VBox(12, help, password, code, status), cancel, confirm);
+        Dialogs.show("İki Adımlı Doğrulamayı Kapat", new VBox(12, help, password, code, status), cancel, confirm);
     }
 
     // ---------- Yardımcılar ----------

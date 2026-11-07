@@ -246,7 +246,7 @@ public final class AuthService {
             return weak;
         }
         if (!value.equals(new String(repeat))) {
-            return "Parolalar birbiriyle aynı değil.";
+            return "Şifreler birbiriyle aynı değil.";
         }
         return null;
     }

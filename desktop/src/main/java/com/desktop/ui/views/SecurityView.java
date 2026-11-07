@@ -9,6 +9,7 @@ import com.desktop.ui.Async;
 import com.desktop.ui.Dialogs;
 import com.desktop.ui.Formats;
 import com.desktop.ui.Inputs;
+import com.desktop.ui.PasswordFields;
 import com.desktop.ui.Toasts;
 import com.desktop.ui.Ui;
 import javafx.scene.Node;
@@ -33,28 +34,28 @@ final class SecurityView extends ScrollPane {
         Label fingerprint = Ui.label(keys.fingerprint(), "fingerprint");
         VBox fingerprintCard = Ui.surface(
                 Ui.row(12, Ui.iconBadge(Material2OutlinedAL.FINGERPRINT, "accent", 44),
-                        Ui.column(2, Ui.label("Anahtar parmak iziniz", "section-title"),
+                        Ui.column(2, Ui.label("Anahtar Parmak İziniz", "section-title"),
                                 Ui.muted("Açık anahtarlarınızın özeti. Gizli değildir."))),
                 fingerprint,
                 Ui.muted("Bir meslektaşınızla telefonda ya da yüz yüze bu değeri karşılaştırarak, sunucunun araya "
                         + "sahte bir anahtar koymadığından emin olabilirsiniz."));
 
         GridPane algorithms = new GridPane(18, 14);
-        addAlgorithm(algorithms, 0, Material2OutlinedAL.LOCK, "Şifreleme anahtarı", "X25519 (Curve25519)",
+        addAlgorithm(algorithms, 0, Material2OutlinedAL.LOCK, "Şifreleme Anahtarı", "X25519 (Curve25519)",
                 "Size gönderilen belgelerin anahtarı bununla sarmalanır.");
-        addAlgorithm(algorithms, 1, Material2OutlinedMZ.VERIFIED_USER, "İmza anahtarı", "Ed25519",
+        addAlgorithm(algorithms, 1, Material2OutlinedMZ.VERIFIED_USER, "İmza Anahtarı", "Ed25519",
                 "Gönderdiğiniz her belge bununla imzalanır.");
-        addAlgorithm(algorithms, 2, Material2OutlinedAL.ENHANCED_ENCRYPTION, "Belge şifreleme", "AES-256-GCM",
+        addAlgorithm(algorithms, 2, Material2OutlinedAL.ENHANCED_ENCRYPTION, "Belge Şifreleme", "AES-256-GCM",
                 "Her belgeye özel rastgele anahtar; değişiklik anında fark edilir.");
-        addAlgorithm(algorithms, 3, Material2OutlinedMZ.VPN_KEY, "Parola koruması", "PBKDF2-SHA256 · 600.000 tur",
-                "Özel anahtarlarınız parolanızdan türetilen anahtarla şifrelidir; parolanız sunucuya gitmez.");
-        VBox algorithmCard = Ui.surface(Ui.label("Kullanılan algoritmalar", "section-title"), algorithms);
+        addAlgorithm(algorithms, 3, Material2OutlinedMZ.VPN_KEY, "Şifre Koruması", "PBKDF2-SHA256 · 600.000 tur",
+                "Özel anahtarlarınız şifrenizden türetilen anahtarla şifrelidir; şifreniz sunucuya gitmez.");
+        VBox algorithmCard = Ui.surface(Ui.label("Kullanılan Algoritmalar", "section-title"), algorithms);
 
-        PasswordForm form = new PasswordForm(context.auth, context.session, "Parolayı değiştir",
-                () -> Toasts.success("Parolanız değişti; özel anahtarlarınız yeni parolayla yeniden şifrelendi."));
+        PasswordForm form = new PasswordForm(context.auth, context.session, "Şifreyi Değiştir",
+                () -> Toasts.success("Şifreniz değişti; özel anahtarlarınız yeni şifreyle yeniden şifrelendi."));
         form.setMaxWidth(380);
-        VBox passwordCard = Ui.surface(Ui.label("Parolayı değiştir", "section-title"),
-                Ui.muted("Anahtarlarınız değişmez; sadece onları koruyan parola değişir. Size gelen belgeler "
+        VBox passwordCard = Ui.surface(Ui.label("Şifreyi Değiştir", "section-title"),
+                Ui.muted("Anahtarlarınız değişmez; sadece onları koruyan şifre değişir. Size gelen belgeler "
                         + "açılmaya devam eder."), form);
 
         VBox left = new VBox(20, profileCard(context), fingerprintCard, algorithmCard);
@@ -74,9 +75,9 @@ final class SecurityView extends ScrollPane {
 
     /** Hesabı ve ilgili her şeyi kalıcı olarak siler (Crypto_Design §7.13). Geri alınamaz; parola istenir. */
     private static VBox deleteCard(Context context) {
-        Button open = Ui.button("Hesabımı sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER);
+        Button open = Ui.button("Hesabımı Sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER);
         open.setOnAction(e -> confirmDelete(context));
-        return Ui.surface(Ui.label("Hesabı sil", "section-title"),
+        return Ui.surface(Ui.label("Hesabı Sil", "section-title"),
                 Ui.muted("Hesabınız ve onunla ilgili her şey sunucudan kalıcı olarak silinir. Geri alınamaz."), open);
     }
 
@@ -87,8 +88,8 @@ final class SecurityView extends ScrollPane {
                 + "hiçbir şey geri gelmez.");
         warning.setWrapText(true);
         warning.setMaxWidth(440);
-        PasswordTextField password = new PasswordTextField();
-        password.setPromptText("Parolanız");
+        PasswordTextField password = PasswordFields.limit(new PasswordTextField());
+        password.setPromptText("Şifreniz");
         TextField totp = new TextField();
         totp.setPromptText("Authenticator ya da kurtarma kodu");
         boolean needsTotp = context.session.totpEnabled();
@@ -102,7 +103,7 @@ final class SecurityView extends ScrollPane {
         Button cancel = Ui.button("Vazgeç", null);
         cancel.setCancelButton(true);
         cancel.setOnAction(e -> Dialogs.close());
-        Button delete = Ui.button("Hesabımı kalıcı olarak sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER);
+        Button delete = Ui.button("Hesabımı Kalıcı Olarak Sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER);
         javafx.beans.property.BooleanProperty busy = new javafx.beans.property.SimpleBooleanProperty(false);
         delete.disableProperty().bind(busy.or(javafx.beans.binding.Bindings.createBooleanBinding(
                 () -> PasswordStrength.composition(password.getPassword()) != null
@@ -129,7 +130,7 @@ final class SecurityView extends ScrollPane {
                         error.setManaged(true);
                     });
         });
-        Dialogs.show("Hesabınızı silmek üzeresiniz", new VBox(12, warning, password, totp, error), cancel, delete);
+        Dialogs.show("Hesabınızı Silmek Üzeresiniz", new VBox(12, warning, password, totp, error), cancel, delete);
         password.requestFocus();
     }
 
@@ -144,7 +145,7 @@ final class SecurityView extends ScrollPane {
         Label error = Ui.label("", "form-error");
         error.setWrapText(true);
         error.setManaged(false);
-        Button save = Ui.primary("Adı kaydet", Material2OutlinedMZ.SAVE);
+        Button save = Ui.primary("Adı Kaydet", Material2OutlinedMZ.SAVE);
         save.disableProperty().bind(name.textProperty()
                 .map(text -> Inputs.normalizeName(text).equals(context.session.fullName())
                         || Inputs.nameError(text) != null));
@@ -182,9 +183,9 @@ final class SecurityView extends ScrollPane {
                     });
         });
         return Ui.surface(Ui.label("Profil", "section-title"),
-                Ui.label("Ad soyad", "field-label"), name,
-                Ui.label("Cep telefonu", "field-label"), phone,
-                Ui.muted("Telefon numarası değiştirilemez: parolanız ve anahtarlarınız bu numaraya bağlıdır."),
+                Ui.label("Ad Soyad", "field-label"), name,
+                Ui.label("Cep Telefonu", "field-label"), phone,
+                Ui.muted("Telefon numarası değiştirilemez: şifreniz ve anahtarlarınız bu numaraya bağlıdır."),
                 error, save);
     }
 

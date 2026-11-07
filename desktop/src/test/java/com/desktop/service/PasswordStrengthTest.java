@@ -36,16 +36,16 @@ class PasswordStrengthTest {
 
     @Test
     void lengthAndCharacterTypesAreRequired() {
-        assertEquals("Parola 12–20 karakter olmalıdır.", PasswordStrength.check("Kalem-Tas99"), "11 karakter");
-        assertEquals("Parola 12–20 karakter olmalıdır.", PasswordStrength.check("Uzun-Parola-12345678x"), "21 karakter");
+        assertEquals("Şifre 12–20 karakter olmalıdır.", PasswordStrength.check("Kalem-Tas99"), "11 karakter");
+        assertEquals("Şifre 12–20 karakter olmalıdır.", PasswordStrength.check("Uzun-Parola-12345678x"), "21 karakter");
         assertNull(PasswordStrength.composition("Kalem-Tas999"), "12 karakter yeter");
-        assertEquals("Parolada en az bir büyük harf olmalıdır.", PasswordStrength.composition("kalem-tasi-99"));
-        assertEquals("Parolada en az bir küçük harf olmalıdır.", PasswordStrength.composition("KALEM-TASI-99"));
-        assertEquals("Parolada en az bir rakam olmalıdır.", PasswordStrength.composition("Kalem-Tasi-xx"));
-        assertEquals("Parolada en az bir özel karakter olmalıdır.", PasswordStrength.composition("KalemTasi9999"));
-        assertEquals("Parolada en az bir büyük harf, rakam, özel karakter olmalıdır.",
+        assertEquals("Şifrede en az bir büyük harf olmalıdır.", PasswordStrength.composition("kalem-tasi-99"));
+        assertEquals("Şifrede en az bir küçük harf olmalıdır.", PasswordStrength.composition("KALEM-TASI-99"));
+        assertEquals("Şifrede en az bir rakam olmalıdır.", PasswordStrength.composition("Kalem-Tasi-xx"));
+        assertEquals("Şifrede en az bir özel karakter olmalıdır.", PasswordStrength.composition("KalemTasi9999"));
+        assertEquals("Şifrede en az bir büyük harf, rakam, özel karakter olmalıdır.",
                 PasswordStrength.composition("kalemtasixyzw"));
-        assertEquals("Parolada en az bir özel karakter olmalıdır.", PasswordStrength.composition("Kalem Tas 9999"),
+        assertEquals("Şifrede en az bir özel karakter olmalıdır.", PasswordStrength.composition("Kalem Tas 9999"),
                 "boşluk özel karakter sayılmaz");
         assertNull(PasswordStrength.composition("Şule.Işık.2026"), "Türkçe büyük/küçük harfler sayılır");
         assertNull(PasswordStrength.composition("DemoParola2026!"), "demo parolası kurala uyar");

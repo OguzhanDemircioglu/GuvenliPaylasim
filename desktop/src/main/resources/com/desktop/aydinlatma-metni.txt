@@ -8,14 +8,14 @@ KİŞİSEL VERİLERİN İŞLENMESİNE İLİŞKİN AYDINLATMA METNİ
 
 2. Hangi verilerinizi işliyoruz
 - Kimlik ve iletişim: ad soyad, cep telefonu numarası.
-- Hesap güvenliği: parolanızdan bu bilgisayarda türetilen bir değerin özeti. Parolanızın kendisi sunucuya hiç gönderilmez. İki adımlı doğrulamayı açarsanız Authenticator anahtarınız ve kurtarma kodlarınızın özeti.
-- Anahtarlar: açık anahtarlarınız ve parolanızla şifrelenmiş özel anahtar paketiniz. Sunucu bu paketi açamaz.
+- Hesap güvenliği: şifrenizden bu bilgisayarda türetilen bir değerin özeti. Şifrenizin kendisi sunucuya hiç gönderilmez. İki adımlı doğrulamayı açarsanız Authenticator anahtarınız ve kurtarma kodlarınızın özeti.
+- Anahtarlar: açık anahtarlarınız ve şifrenizle şifrelenmiş özel anahtar paketiniz. Sunucu bu paketi açamaz.
 - Kişiler ve davetler: kimlerle kişi olduğunuz, hangi numaraya ne zaman davet gönderdiğiniz. Davet kodu sunucuda tutulmaz.
 - Kutular: gönderdiğiniz ve size gelen kutuların şifreli içeriği ile kimden kime, ne zaman gönderildiği, boyutu ve okunma durumu. İçerik ve dosya adları uçtan uca şifrelidir; sunucu dahil hiç kimse okuyamaz.
 - İşlem kayıtları: oturum açtığınız cihazın IP adresi ve uygulama bilgisi, giriş denemeleri, doğrulama kodu istekleri.
 
 3. Neden işliyoruz (amaçlar)
-Hesabınızı açmak ve telefonunuzu doğrulamak; kimliğinizi doğrulamak; kutuları doğru kişiye teslim etmek; hesabınızı ve hizmeti kötüye kullanıma (parola deneme, toplu kod isteme) karşı korumak.
+Hesabınızı açmak ve telefonunuzu doğrulamak; kimliğinizi doğrulamak; kutuları doğru kişiye teslim etmek; hesabınızı ve hizmeti kötüye kullanıma (şifre deneme, toplu kod isteme) karşı korumak.
 
 4. Hukuki sebep
 Hizmetin sunulması için sözleşmenin kurulması ve ifası (KVKK m.5/2-c); güvenlik ve kötüye kullanımın önlenmesi için meşru menfaatimiz (m.5/2-f). [Avukatla doğrulanacak.]

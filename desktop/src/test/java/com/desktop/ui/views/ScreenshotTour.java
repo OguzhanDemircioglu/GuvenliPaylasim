@@ -102,7 +102,7 @@ public final class ScreenshotTour {
         snap(stage, "01-giris" + suffix);
         onFx(() -> {
             login.lookupAll(".hyperlink").stream()
-                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Kayıt ol".equals(h.getText()))
+                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Kayıt Ol".equals(h.getText()))
                     .findFirst().ifPresent(n -> ((javafx.scene.control.Hyperlink) n).fire());
             return null;
         });
@@ -110,14 +110,14 @@ public final class ScreenshotTour {
         snap(stage, "01b-kayit" + suffix);
         onFx(() -> {
             login.lookupAll(".hyperlink").stream()
-                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Giriş yap".equals(h.getText()))
+                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Giriş Yap".equals(h.getText()))
                     .findFirst().ifPresent(n -> ((javafx.scene.control.Hyperlink) n).fire());
             return null;
         });
         pause(3200);
         onFx(() -> {
             login.lookupAll(".hyperlink").stream()
-                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Parolamı unuttum".equals(h.getText()))
+                    .filter(n -> n instanceof javafx.scene.control.Hyperlink h && "Şifremi Unuttum".equals(h.getText()))
                     .findFirst().ifPresent(n -> ((javafx.scene.control.Hyperlink) n).fire());
             return null;
         });

@@ -22,7 +22,7 @@ public final class Messages {
             Map.entry("record_modified", "Kayıt bu arada başka biri tarafından değiştirildi. Listeyi yenileyin."),
             Map.entry("record_conflict", "Kayıt başka kayıtlarla çakışıyor."),
 
-            Map.entry("auth_invalid_credentials", "Telefon ya da parola hatalı."),
+            Map.entry("auth_invalid_credentials", "Telefon ya da şifre hatalı."),
             Map.entry("auth_phone_required", "Cep telefonu zorunludur."),
             Map.entry("auth_totp_required", "Authenticator kodunuzu girin."),
             Map.entry("auth_totp_invalid", "Authenticator kodu ya da kurtarma kodu hatalı."),
@@ -35,9 +35,9 @@ public final class Messages {
             Map.entry("auth_phone_invalid", "Cep telefonunu (5xx) xxx xx xx biçiminde yazın."),
             Map.entry("auth_session_expired", "Oturumunuz sona erdi. Lütfen tekrar giriş yapın."),
             Map.entry("auth_login_blocked", "Çok sayıda hatalı deneme yapıldı. Bir saat sonra tekrar deneyin."),
-            Map.entry("auth_current_password_incorrect", "Mevcut parolanız hatalı."),
+            Map.entry("auth_current_password_incorrect", "Mevcut şifreniz hatalı."),
 
-            Map.entry("user_phone_exists", "Bu numarayla kayıtlı bir hesap var. Giriş yapın ya da parolanızı sıfırlayın."),
+            Map.entry("user_phone_exists", "Bu numarayla kayıtlı bir hesap var. Giriş yapın ya da şifrenizi sıfırlayın."),
             Map.entry("user_phone_required", "Cep telefonu zorunludur."),
             Map.entry("user_phone_invalid", "Cep telefonunu (5xx) xxx xx xx biçiminde yazın."),
             Map.entry("user_full_name_required", "Ad soyad zorunludur."),

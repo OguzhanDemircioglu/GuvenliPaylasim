@@ -51,14 +51,14 @@ public final class PasswordStrength {
             return composition;
         }
         if (password.chars().distinct().count() < 6) {
-            return "Parolada aynı karakterler çok fazla tekrar ediyor.";
+            return "Şifrede aynı karakterler çok fazla tekrar ediyor.";
         }
         String lower = password.toLowerCase(Locale.forLanguageTag("tr"));
         if (hasRun(lower)) {
-            return "Parola aynı karakterin uzun tekrarını içeriyor.";
+            return "Şifre aynı karakterin uzun tekrarını içeriyor.";
         }
         if (hasSequence(simplify(lower))) {
-            return "Parola klavye ya da sıra dizisi içeriyor (ör. 12345, qwerty, 1q2w3e). Tahmin edilmesi kolaydır.";
+            return "Şifre klavye ya da sıra dizisi içeriyor (ör. 12345, qwerty, 1q2w3e). Tahmin edilmesi kolaydır.";
         }
         String personalHit = personalHit(lower, personal);
         if (personalHit != null) {
@@ -67,10 +67,10 @@ public final class PasswordStrength {
         String simple = simplify(lower);
         String letters = simple.replaceAll("[^a-z]", "");
         if (letters.length() < 4) {
-            return "Parola neredeyse sadece rakamlardan oluşuyor. Birkaç kelime kullanın.";
+            return "Şifre neredeyse sadece rakamlardan oluşuyor. Birkaç kelime kullanın.";
         }
         if (isCommon(letters) || isCommon(deLeet(simple))) {
-            return "Parola çok bilinen bir kelime ya da isme rakam eklenmiş hali. Birbiriyle ilgisiz birkaç kelime kullanın.";
+            return "Şifre çok bilinen bir kelime ya da isme rakam eklenmiş hali. Birbiriyle ilgisiz birkaç kelime kullanın.";
         }
         return null;
     }
@@ -81,7 +81,7 @@ public final class PasswordStrength {
      */
     public static String composition(String password) {
         if (password.length() < MIN_LENGTH || password.length() > MAX_LENGTH) {
-            return "Parola " + MIN_LENGTH + "–" + MAX_LENGTH + " karakter olmalıdır.";
+            return "Şifre " + MIN_LENGTH + "–" + MAX_LENGTH + " karakter olmalıdır.";
         }
         List<String> missing = new java.util.ArrayList<>();
         if (password.chars().noneMatch(Character::isUpperCase)) {
@@ -96,7 +96,7 @@ public final class PasswordStrength {
         if (password.chars().noneMatch(PasswordStrength::isSpecial)) {
             missing.add("özel karakter");
         }
-        return missing.isEmpty() ? null : "Parolada en az bir " + String.join(", ", missing) + " olmalıdır.";
+        return missing.isEmpty() ? null : "Şifrede en az bir " + String.join(", ", missing) + " olmalıdır.";
     }
 
     static boolean isSpecial(int c) {
@@ -168,13 +168,13 @@ public final class PasswordStrength {
                 String mobile = digits.substring(digits.length() - 10);
                 for (int i = 0; i + 6 <= mobile.length(); i++) {
                     if (lower.contains(mobile.substring(i, i + 6))) {
-                        return "Parola telefon numaranızın bir kısmını içeriyor.";
+                        return "Şifre telefon numaranızın bir kısmını içeriyor.";
                     }
                 }
             }
             for (String part : simplify(info.toLowerCase(Locale.forLanguageTag("tr"))).split("[^a-z]+")) {
                 if (part.length() >= 4 && plain.contains(part)) {
-                    return "Parola adınızı ya da soyadınızı içeriyor.";
+                    return "Şifre adınızı ya da soyadınızı içeriyor.";
                 }
             }
         }

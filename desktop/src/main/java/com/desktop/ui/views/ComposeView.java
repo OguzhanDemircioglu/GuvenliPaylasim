@@ -61,16 +61,16 @@ final class ComposeView extends VBox {
             "jpeg", "image/jpeg");
 
     private final Context context;
-    private final ToggleButton textMode = new ToggleButton("Düz yazı", Ui.icon(Material2OutlinedMZ.TEXT_SNIPPET, 16));
+    private final ToggleButton textMode = new ToggleButton("Düz Yazı", Ui.icon(Material2OutlinedMZ.TEXT_SNIPPET, 16));
     private final ToggleButton fileMode = new ToggleButton("Dosya", Ui.icon(Material2OutlinedAL.ATTACH_FILE, 16));
     private final TextArea text = new TextArea();
     private final StackPane fileArea = new StackPane();
     private final StackPane editor = new StackPane();
     private final Label summary = new Label();
-    private final Button send = Ui.button("Şifrele ve gönder", Material2OutlinedAL.ENHANCED_ENCRYPTION,
+    private final Button send = Ui.button("Şifrele ve Gönder", Material2OutlinedAL.ENHANCED_ENCRYPTION,
             Styles.ACCENT, "send-button");
     private final ToggleButton contactsMode = new ToggleButton("Kişilerim", Ui.icon(Material2OutlinedMZ.PEOPLE, 16));
-    private final ToggleButton inviteMode = new ToggleButton("Davet kodu ile", Ui.icon(Material2OutlinedMZ.VPN_KEY, 16));
+    private final ToggleButton inviteMode = new ToggleButton("Davet Kodu ile", Ui.icon(Material2OutlinedMZ.VPN_KEY, 16));
     private final StackPane recipientEditor = new StackPane();
     private final ListView<ContactService.Contact> contactList = new ListView<>();
     private final ObservableSet<Long> selected = FXCollections.observableSet();
@@ -78,7 +78,7 @@ final class ComposeView extends VBox {
     private final ComboBox<Ttl> ttl = new ComboBox<>();
     /** Kutunun ömrü (Crypto_Design §8.2); Ttl ile aynı biçim. Varsayılan 7 gün. */
     private final ComboBox<Ttl> lifetime = new ComboBox<>();
-    private final CheckBox deleteOnOpen = new CheckBox("Açılınca sil");
+    private final CheckBox deleteOnOpen = new CheckBox("Açılınca Sil");
     private File file;
 
     ComposeView(Context context) {
@@ -125,7 +125,7 @@ final class ComposeView extends VBox {
         editor.getChildren().setAll(text);
         VBox.setVgrow(editor, Priority.ALWAYS);
 
-        Button clear = Ui.button("Alanları temizle", Material2OutlinedAL.CLOSE, Styles.FLAT);
+        Button clear = Ui.button("Alanları Temizle", Material2OutlinedAL.CLOSE, Styles.FLAT);
         clear.setOnAction(e -> {
             text.clear();
             file = null;
@@ -142,7 +142,7 @@ final class ComposeView extends VBox {
 
     private void showFilePicker() {
         Label title = Ui.label("Dosyayı buraya sürükleyin", Styles.TITLE_4);
-        Button choose = Ui.button("Dosya seç", Material2OutlinedAL.ATTACH_FILE, Styles.BUTTON_OUTLINED);
+        Button choose = Ui.button("Dosya Seç", Material2OutlinedAL.ATTACH_FILE, Styles.BUTTON_OUTLINED);
         choose.setOnAction(e -> chooseFile());
         VBox zone = new VBox(12, Ui.iconBadge(Material2OutlinedAL.CLOUD_UPLOAD, "accent", 60), title,
                 Ui.muted("ya da bilgisayarınızdan seçin"), choose);
@@ -190,7 +190,7 @@ final class ComposeView extends VBox {
             return;
         }
         file = chosen;
-        Button remove = Ui.iconButton(Material2OutlinedAL.CLOSE, "Dosyayı kaldır");
+        Button remove = Ui.iconButton(Material2OutlinedAL.CLOSE, "Dosyayı Kaldır");
         remove.setOnAction(e -> {
             file = null;
             showFilePicker();
@@ -255,7 +255,7 @@ final class ComposeView extends VBox {
         ttl.getSelectionModel().select(1);
         ttl.setMaxWidth(Double.MAX_VALUE);
         Inputs.phone(invitePhone);
-        invitePhone.setPromptText("Alıcının cep telefonu (5xx) xxx xx xx");
+        invitePhone.setPromptText("Alıcının Cep Telefonu (5xx) xxx xx xx");
         invitePhone.textProperty().addListener((obs, old, value) -> updateSummary());
         ttl.valueProperty().addListener((obs, old, value) -> updateSummary());
 
@@ -267,7 +267,7 @@ final class ComposeView extends VBox {
         deleteOnOpen.setTooltip(new javafx.scene.control.Tooltip("Alıcı açtığı anda kutu sunucudan silinir. Alıcı "
                 + "içeriği kaydedebilir; bu seçenek sadece sunucuda kalmamasını sağlar."));
         HBox.setHgrow(lifetime, Priority.ALWAYS);
-        HBox lifetimeRow = Ui.row(10, Ui.label("Kutunun ömrü", Styles.TEXT_BOLD), lifetime, deleteOnOpen);
+        HBox lifetimeRow = Ui.row(10, Ui.label("Kutunun Ömrü", Styles.TEXT_BOLD), lifetime, deleteOnOpen);
 
         summary.setWrapText(true);
         summary.setMinHeight(Region.USE_PREF_SIZE);
@@ -289,8 +289,8 @@ final class ComposeView extends VBox {
         Label help = Ui.muted("İlk kutu bir kodla kilitlenir. Kodu alıcıya siz iletirsiniz (yüz yüze, telefonla). "
                 + "Alıcı kayıtlı değilse bu sürede kayıt olabilir. Kodu girene kadar kutuyu göremez.");
         help.setWrapText(true);
-        VBox form = new VBox(10, help, Ui.label("Cep telefonu", Styles.TEXT_BOLD), invitePhone,
-                Ui.label("Kod geçerlilik süresi", Styles.TEXT_BOLD), ttl);
+        VBox form = new VBox(10, help, Ui.label("Cep Telefonu", Styles.TEXT_BOLD), invitePhone,
+                Ui.label("Kod Geçerlilik Süresi", Styles.TEXT_BOLD), ttl);
         return form;
     }
 
@@ -386,7 +386,7 @@ final class ComposeView extends VBox {
         Button done = Ui.primary("Tamam", Material2OutlinedAL.DONE);
         done.setDefaultButton(true);
         done.setOnAction(e -> Dialogs.close());
-        Dialogs.show("Davet kodu", new VBox(14, Ui.row(12, code, copy), text), done);
+        Dialogs.show("Davet Kodu", new VBox(14, Ui.row(12, code, copy), text), done);
     }
 
     private static DocumentContent content(boolean isText, String plain, File chosen) throws java.io.IOException {

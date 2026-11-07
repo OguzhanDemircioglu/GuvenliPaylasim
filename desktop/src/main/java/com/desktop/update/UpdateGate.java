@@ -46,7 +46,7 @@ public final class UpdateGate extends StackPane {
         }
         ProgressIndicator spinner = new ProgressIndicator();
         spinner.setPrefSize(28, 28);
-        card.getChildren().setAll(Ui.row(14, spinner, Ui.column(2, Ui.label("Güncellemeler denetleniyor", Styles.TITLE_4),
+        card.getChildren().setAll(Ui.row(14, spinner, Ui.column(2, Ui.label("Güncellemeler Denetleniyor", Styles.TITLE_4),
                 Ui.muted("Sürüm " + updates.current()))));
         getChildren().add(card);
         Async.run(updates::check, this::onCheck, e -> onContinue.run());
@@ -65,7 +65,7 @@ public final class UpdateGate extends StackPane {
 
     private void showAvailable(UpdateService.Release release, boolean installerBlocked) {
         boolean blocking = release.blocking(Instant.now());
-        Label title = Ui.label(blocking ? "Güncelleme gerekli" : "Yeni sürüm hazır", Styles.TITLE_2);
+        Label title = Ui.label(blocking ? "Güncelleme Gerekli" : "Yeni Sürüm Hazır", Styles.TITLE_2);
         Label subtitle = Ui.muted("Sürüm " + updates.current() + " → " + release.version());
         Label when = Ui.muted(blocking
                 ? "Güvenliğiniz için bu sürüm zorunludur. Uygulama güncellenmeden açılmaz."
@@ -76,7 +76,7 @@ public final class UpdateGate extends StackPane {
         notes.setWrapText(true);
         notes.setPrefRowCount(6);
 
-        Button install = Ui.primary("Şimdi güncelle", Material2OutlinedMZ.SYSTEM_UPDATE);
+        Button install = Ui.primary("Şimdi Güncelle", Material2OutlinedMZ.SYSTEM_UPDATE);
         install.setDefaultButton(true);
         install.setMaxWidth(Double.MAX_VALUE);
         install.setOnAction(e -> install(release));
@@ -94,7 +94,7 @@ public final class UpdateGate extends StackPane {
                     + "engelliyor. Yeni sürümü kurulumsuz ZIP olarak indirin, bir klasöre çıkarın ve "
                     + "GuvenliPaylasim.exe'yi çalıştırın. Hatırlanan oturumunuz ve ayarlarınız korunur.");
             why.setWrapText(true);
-            Button zip = Ui.primary("ZIP'i indir", Material2OutlinedMZ.OPEN_IN_NEW);
+            Button zip = Ui.primary("ZIP'i İndir", Material2OutlinedMZ.OPEN_IN_NEW);
             zip.setDefaultButton(true);
             zip.setMaxWidth(Double.MAX_VALUE);
             zip.setOnAction(e -> openInBrowser(release.portableUrl()));
@@ -102,7 +102,7 @@ public final class UpdateGate extends StackPane {
                     56), title, subtitle, when, notes, why, zip);
         }
         if (!blocking) {
-            Button later = Ui.button("Daha sonra", null, Styles.FLAT);
+            Button later = Ui.button("Daha Sonra", null, Styles.FLAT);
             later.setMaxWidth(Double.MAX_VALUE);
             later.setOnAction(e -> onContinue.run());
             card.getChildren().add(later);
@@ -123,12 +123,12 @@ public final class UpdateGate extends StackPane {
         }, installer -> Platform.exit(), failure -> {
             Label error = Ui.label(failure.getMessage(), "form-error");
             error.setWrapText(true);
-            Button retry = Ui.primary("Tekrar dene", Material2OutlinedMZ.REFRESH);
+            Button retry = Ui.primary("Tekrar Dene", Material2OutlinedMZ.REFRESH);
             retry.setOnAction(e -> install(release));
             card.getChildren().setAll(Ui.iconBadge(Material2OutlinedAL.ERROR_OUTLINE, "danger", 56),
-                    Ui.label("Güncelleme kurulamadı", Styles.TITLE_3), error, retry);
+                    Ui.label("Güncelleme Kurulamadı", Styles.TITLE_3), error, retry);
             if (!release.blocking(Instant.now())) {
-                Button later = Ui.button("Daha sonra", null, Styles.FLAT);
+                Button later = Ui.button("Daha Sonra", null, Styles.FLAT);
                 later.setOnAction(e -> onContinue.run());
                 card.getChildren().add(later);
             }
@@ -147,13 +147,13 @@ public final class UpdateGate extends StackPane {
     }
 
     private void showOfflineBlocked(Version required) {
-        Button retry = Ui.primary("Tekrar dene", Material2OutlinedMZ.REFRESH);
+        Button retry = Ui.primary("Tekrar Dene", Material2OutlinedMZ.REFRESH);
         retry.setOnAction(e -> {
             getChildren().clear();
             getChildren().add(new UpdateGate(onContinue));
         });
         card.getChildren().setAll(Ui.iconBadge(Material2OutlinedAL.ERROR_OUTLINE, "warning", 56),
-                Ui.label("Güncelleme gerekli", Styles.TITLE_2),
+                Ui.label("Güncelleme Gerekli", Styles.TITLE_2),
                 Ui.muted("Sürüm " + required + " zorunlu hale geldi, ancak güncelleme sunucusuna şu an "
                         + "ulaşılamıyor. Ağ bağlantınızı (proxy) kontrol edip tekrar deneyin."),
                 retry);

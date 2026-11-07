@@ -26,24 +26,24 @@ final class WhyView extends ScrollPane {
     }
 
     private static final Comparison[] COMPARISONS = {
-            new Comparison("Anahtar paylaşımı",
+            new Comparison("Anahtar Paylaşımı",
                     "İki anahtar alıcılara SMS ile açık metin olarak gönderilir.",
-                    "Paylaşılan parola yoktur. Her kişinin kendi anahtar çifti vardır."),
-            new Comparison("Şifreleme anahtarı",
+                    "Paylaşılan şifre yoktur. Her kişinin kendi anahtar çifti vardır."),
+            new Comparison("Şifreleme Anahtarı",
                     "Kullanıcının yazdığı anahtarlar (ör. \"123\") kullanılır.",
                     "Her belgeye rastgele üretilen 256 bitlik AES-GCM anahtarı."),
-            new Comparison("Alıcıya özel erişim",
+            new Comparison("Alıcıya Özel Erişim",
                     "Aynı anahtarlar seçilen bütün birimlere gider.",
                     "Belge anahtarı her alıcı için ayrı ayrı sarmalanır."),
-            new Comparison("Gönderen doğrulaması",
+            new Comparison("Gönderen Doğrulaması",
                     "Belgenin kimden geldiği kanıtlanamaz.",
                     "Her belge Ed25519 ile imzalanır; sahte ya da değiştirilmiş belge açılmaz."),
-            new Comparison("Sunucu ele geçirilirse",
+            new Comparison("Sunucu Ele Geçirilirse",
                     "Veritabanı ve SMS'ler birlikte belgeleri açmaya yeter.",
                     "Sunucuda sadece şifreli veri vardır; açacak anahtar sunucuda yoktur."),
-            new Comparison("Parola",
-                    "Parola sunucuya gönderilir.",
-                    "Parola bilgisayardan çıkmaz; sunucuya ondan türetilen bir değer gider."),
+            new Comparison("Şifre",
+                    "Şifre sunucuya gönderilir.",
+                    "Şifre bilgisayardan çıkmaz; sunucuya ondan türetilen bir değer gider."),
             new Comparison("Silme",
                     "Okunan belge isteğe bağlı silinir.",
                     "Son alıcı da silince şifreli içerik veritabanından kalıcı olarak silinir."),
@@ -70,10 +70,10 @@ final class WhyView extends ScrollPane {
         text.setMaxWidth(720);
 
         HBox stats = Ui.row(28,
-                stat("0", "SMS'le gönderilen parola"),
+                stat("0", "SMS'le gönderilen şifre"),
                 stat("256 bit", "belgeye özel anahtar"),
                 stat("1", "alıcı başına sarmalanmış anahtar"),
-                stat("600.000", "tur parola koruması"));
+                stat("600.000", "tur şifre koruması"));
         VBox hero = new VBox(14, Ui.label("NEDEN GÜVENLİ?", "hero-feature-text"), title, text, stats);
         hero.getStyleClass().add("why-hero");
         return hero;
@@ -106,7 +106,7 @@ final class WhyView extends ScrollPane {
             grid.add(cell(way(Material2OutlinedAL.CANCEL, c.before(), "old-way")), 1, i + 1);
             grid.add(cell(way(Material2OutlinedAL.CHECK_CIRCLE, c.after(), "new-way")), 2, i + 1);
         }
-        return Ui.surface(Ui.label("Eski sistemle karşılaştırma", "section-title"),
+        return Ui.surface(Ui.label("Eski Sistemle Karşılaştırma", "section-title"),
                 Ui.muted("Eski sistemin davranışı kullanıcı kılavuzundan alınmıştır."), grid);
     }
 
@@ -138,7 +138,7 @@ final class WhyView extends ScrollPane {
                 arrow(),
                 flowStep(Material2OutlinedAL.DELETE_FOREVER, "5 · Silme", "Herkes silince içerik kalıcı olarak yok olur."));
         flow.getChildren().filtered(n -> n instanceof VBox).forEach(n -> HBox.setHgrow(n, Priority.ALWAYS));
-        return Ui.surface(Ui.label("Bir belgenin yolculuğu", "section-title"), flow);
+        return Ui.surface(Ui.label("Bir Belgenin Yolculuğu", "section-title"), flow);
     }
 
     private static Node flowStep(Ikon ikon, String title, String text) {
@@ -157,12 +157,12 @@ final class WhyView extends ScrollPane {
     }
 
     private static Node serverView() {
-        VBox sees = list(Material2OutlinedMZ.VISIBILITY, "success", "Sunucunun gördükleri",
-                "Kimin kime ne zaman belge gönderdiği", "Belgenin şifreli halinin boyutu",
-                "Kullanıcıların açık anahtarları", "Okundu ve silindi bilgisi");
-        VBox cannot = list(Material2OutlinedMZ.VISIBILITY_OFF, "danger", "Sunucunun göremedikleri",
-                "Belgenin içeriği ve dosya adı", "Belge anahtarları", "Kullanıcıların özel anahtarları",
-                "Kullanıcıların parolaları");
+        VBox sees = list(Material2OutlinedMZ.VISIBILITY, "success", "Sunucunun Gördükleri",
+                "Kimin kime ne zaman belge gönderdiği", "Belgenin Şifreli Halinin Boyutu",
+                "Kullanıcıların Açık Anahtarları", "Okundu ve Silindi Bilgisi");
+        VBox cannot = list(Material2OutlinedMZ.VISIBILITY_OFF, "danger", "Sunucunun Göremedikleri",
+                "Belgenin içeriği ve dosya adı", "Belge Anahtarları", "Kullanıcıların Özel Anahtarları",
+                "Kullanıcıların Şifreleri");
         HBox.setHgrow(sees, Priority.ALWAYS);
         HBox.setHgrow(cannot, Priority.ALWAYS);
         return new HBox(20, sees, cannot);

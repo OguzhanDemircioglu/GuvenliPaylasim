@@ -51,7 +51,7 @@ final class InboxView extends VBox {
 
         list.getStyleClass().add("inbox-list");
         list.setCellFactory(v -> new InboxCell());
-        list.setPlaceholder(Ui.emptyState(Material2OutlinedAL.INBOX, "Gelen kutunuz boş",
+        list.setPlaceholder(Ui.emptyState(Material2OutlinedAL.INBOX, "Gelen Kutunuz Boş",
                 "Size bir belge gönderildiğinde burada görünür ve bildirim alırsınız."));
         list.getSelectionModel().selectedItemProperty().addListener((obs, old, item) -> {
             // Liste yenilenirken seçim geçici olarak boşalır ve aynı belge yeniden seçilir; açılmış belge
@@ -65,7 +65,7 @@ final class InboxView extends VBox {
 
         Button refresh = Ui.button("Yenile", Material2OutlinedMZ.REFRESH, Styles.FLAT);
         refresh.setOnAction(e -> load());
-        Button redeem = Ui.button("Kod ile al", Material2OutlinedMZ.VPN_KEY, Styles.BUTTON_OUTLINED);
+        Button redeem = Ui.button("Kod ile Al", Material2OutlinedMZ.VPN_KEY, Styles.BUTTON_OUTLINED);
         redeem.setOnAction(e -> openRedeem());
         VBox left = new VBox(10, Ui.row(8, count, Ui.grow(), redeem, refresh), list);
         left.setMinWidth(420);
@@ -104,7 +104,7 @@ final class InboxView extends VBox {
         Button cancel = Ui.button("Vazgeç", null);
         cancel.setCancelButton(true);
         cancel.setOnAction(e -> Dialogs.close());
-        Button submit = Ui.primary("Kutuyu al", Material2OutlinedAL.LOCK_OPEN);
+        Button submit = Ui.primary("Kutuyu Al", Material2OutlinedAL.LOCK_OPEN);
         submit.setDefaultButton(true);
         submit.setOnAction(e -> {
             submit.setDisable(true);
@@ -125,7 +125,7 @@ final class InboxView extends VBox {
                         status.setManaged(true);
                     });
         });
-        Dialogs.show("Kod ile al", new VBox(12, help, code, status), cancel, submit);
+        Dialogs.show("Kod ile Al", new VBox(12, help, code, status), cancel, submit);
         code.requestFocus();
     }
 
@@ -147,11 +147,11 @@ final class InboxView extends VBox {
     private void showDetail(Dto.InboxItem item) {
         shownId = item == null ? null : item.id();
         if (item == null) {
-            detail.getChildren().setAll(Ui.emptyState(Material2OutlinedAL.LOCK, "Bir belge seçin",
+            detail.getChildren().setAll(Ui.emptyState(Material2OutlinedAL.LOCK, "Bir Belge Seçin",
                     "Belgeler sunucuda şifreli durur. Açtığınızda bu bilgisayarda, sizin özel anahtarınızla çözülür."));
             return;
         }
-        Button open = Ui.primary("Belgeyi aç", Material2OutlinedAL.LOCK_OPEN);
+        Button open = Ui.primary("Belgeyi Aç", Material2OutlinedAL.LOCK_OPEN);
         open.setOnAction(e -> openDocument(item, open));
 
         VBox locked = new VBox(12, Ui.iconBadge(Material2OutlinedAL.ENHANCED_ENCRYPTION, "accent", 56),
@@ -167,7 +167,7 @@ final class InboxView extends VBox {
     }
 
     private Node documentHeader(Dto.InboxItem item) {
-        Label title = Ui.label(item.kind() == Dto.DocumentKind.TEXT ? "Şifreli yazı" : "Şifreli belge", Styles.TITLE_3);
+        Label title = Ui.label(item.kind() == Dto.DocumentKind.TEXT ? "Şifreli Yazı" : "Şifreli Belge", Styles.TITLE_3);
         Label meta = Ui.muted(item.senderName() + " · " + Formats.fullDate(item.createdAt()));
         Label number = Ui.chip("No " + item.id(), "neutral");
         Label size = Ui.chip(Formats.size(item.sizeBytes()) + " şifreli", "neutral");
@@ -176,7 +176,7 @@ final class InboxView extends VBox {
                 + " tarihinde, açılmış olsun olmasın, sunucudan kalıcı olarak silinir."));
         javafx.scene.layout.FlowPane chips = new javafx.scene.layout.FlowPane(8, 6, number, size, expiry);
         if (item.deleteOnOpen()) {
-            chips.getChildren().add(Ui.chip("Açılınca silinir", "warning"));
+            chips.getChildren().add(Ui.chip("Açılınca Silinir", "warning"));
         }
         VBox text = Ui.column(3, title, meta, chips);
         HBox.setHgrow(text, Priority.ALWAYS);
@@ -206,7 +206,7 @@ final class InboxView extends VBox {
                 },
                 failure -> {
                     open.setDisable(false);
-                    open.setText("Belgeyi aç");
+                    open.setText("Belgeyi Aç");
                     open.setGraphic(Ui.icon(Material2OutlinedAL.LOCK_OPEN, 16));
                     Toasts.error(failure);
                 });
@@ -217,11 +217,11 @@ final class InboxView extends VBox {
         Node body = content.text() ? textBody(content) : fileBody(content);
         VBox.setVgrow(body, Priority.ALWAYS);
 
-        Button delete = Ui.button("Okudum ve sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER, Styles.BUTTON_OUTLINED);
+        Button delete = Ui.button("Okudum ve Sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER, Styles.BUTTON_OUTLINED);
         delete.setOnAction(e -> Dialogs.confirm("Belge kalıcı olarak silinsin mi?",
                 "Belge sizin kutunuzdan silinir. Son alıcı da silince belge sunucudan iz bırakmadan silinir. "
                         + "Bu işlem geri alınamaz.",
-                "Okudum, sil", Material2OutlinedAL.DELETE_FOREVER, true,
+                "Okudum, Sil", Material2OutlinedAL.DELETE_FOREVER, true,
                 () -> Async.run(() -> {
                     context.documents.delete(item.id());
                     return true;
@@ -271,7 +271,7 @@ final class InboxView extends VBox {
     private Node fileBody(DocumentContent content) {
         Ikon ikon = content.mimeType().contains("pdf") ? Material2OutlinedMZ.PICTURE_AS_PDF
                 : content.mimeType().startsWith("image") ? Material2OutlinedAL.IMAGE : Material2OutlinedAL.DESCRIPTION;
-        Button save = Ui.primary("Bilgisayara kaydet", Material2OutlinedMZ.SAVE_ALT);
+        Button save = Ui.primary("Bilgisayara Kaydet", Material2OutlinedMZ.SAVE_ALT);
         save.setOnAction(e -> save(content));
         HBox file = Ui.row(14, Ui.iconBadge(ikon, "accent", 48),
                 Ui.column(3, Ui.label(content.fileName(), Styles.TEXT_BOLD), Ui.muted(Formats.size(content.data().length)
@@ -284,7 +284,7 @@ final class InboxView extends VBox {
 
     private void save(DocumentContent content) {
         FileChooser chooser = new FileChooser();
-        chooser.setTitle("Belgeyi kaydet");
+        chooser.setTitle("Belgeyi Kaydet");
         chooser.setInitialFileName(content.fileName());
         File target = chooser.showSaveDialog(getScene().getWindow());
         if (target == null) {
@@ -315,7 +315,7 @@ final class InboxView extends VBox {
             Label sender = Ui.label(item.senderName(), "inbox-sender");
             Label when = Ui.muted(Formats.shortDate(item.createdAt()));
             Ikon kindIcon = item.kind() == Dto.DocumentKind.TEXT ? Material2OutlinedMZ.TEXT_SNIPPET : Material2OutlinedAL.ATTACH_FILE;
-            Label kind = new Label(item.kind() == Dto.DocumentKind.TEXT ? "Şifreli yazı" : "Şifreli belge",
+            Label kind = new Label(item.kind() == Dto.DocumentKind.TEXT ? "Şifreli Yazı" : "Şifreli Belge",
                     Ui.icon(kindIcon, 14));
             kind.getStyleClass().add(Styles.TEXT_MUTED);
 

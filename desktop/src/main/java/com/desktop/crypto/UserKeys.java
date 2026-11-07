@@ -82,7 +82,7 @@ public record UserKeys(KeyPair encryption, KeyPair signing) {
         try {
             plain = Aead.decrypt(kek, Arrays.copyOfRange(raw, 1, raw.length), aad(phoneE164));
         } catch (AEADBadTagException e) {
-            throw new CryptoException("Özel anahtarlar bu parolayla açılamadı");
+            throw new CryptoException("Özel anahtarlar bu şifreyle açılamadı");
         }
         try (DataInputStream in = new DataInputStream(new ByteArrayInputStream(plain))) {
             byte[] enc = in.readNBytes(in.readUnsignedShort());
