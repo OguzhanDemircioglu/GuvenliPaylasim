@@ -30,6 +30,8 @@ anahtarlarınızı hiçbir zaman göremez.
 
 ## Nasıl çalışır?
 
+![Güvenli Paylaşım sistem yaşam döngüsü](docs/assets/sistem_yasam_dongusu.png)
+
 1. **Kayıt:** Ad soyad, cep telefonu ve şifre girilir; telefon WhatsApp'a gelen kodla doğrulanır. Şifreleme
    anahtarları bu sırada bilgisayarda üretilir.
 2. **Kişi ekleme:** "Kişi Ekle" (ya da ilk gönderimde "Davet Kodu ile") 16 karakterlik bir kod üretir. Kodu karşı
