@@ -28,6 +28,10 @@ public final class Dto {
     public record UpdateNameRequest(String fullName) {
     }
 
+    /** {@code password}: authSecret; {@code totpCode}: iki adımlı doğrulama açıksa. */
+    public record DeleteAccountRequest(String password, String totpCode) {
+    }
+
     public record ChangePasswordRequest(String currentPassword, String newPassword, KeyBundle keys) {
     }
 

@@ -65,6 +65,10 @@ public final class ShellView extends BorderPane {
         poller = new Timeline(new KeyFrame(Duration.seconds(AppConfig.get().inboxPollInterval().toSeconds()),
                 e -> pollInbox()));
         poller.setCycleCount(Timeline.INDEFINITE);
+        context.onAccountDeleted = () -> {
+            poller.stop();
+            app.logout();
+        };
         sceneProperty().addListener((obs, old, scene) -> {
             if (scene == null) {
                 poller.stop();

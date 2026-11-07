@@ -346,6 +346,19 @@ ve özel anahtar paketleri yeni türetmeyle açılmaz. Henüz prod verisi olmad�
   ekler ve kapsam dışı bırakılan takas sistemine dönüşür (gerekçe: Devam_Rehberi §3).
 - Süreli ve açılınca silinen kutu §8'de tasarlandı; v2 ile birlikte kodlanır.
 
+### 7.13 Hesabı silme (2026-11-07)
+
+- Profilim → "Hesabımı sil". Uyarı penceresinde neyin silineceği yazar; mevcut parola (bu bilgisayarda authSecret'a
+  çevrilir) ve iki adımlı doğrulama açıksa kod istenir. Yanlış denemeler sayılır (5 / 1 saat, `delete_<id>`).
+- **"Silindi" işareti tutulmaz, her şey kalıcı silinir** (§8 kararı, KVKK m.7): hesap, anahtarlar, kurtarma kodları,
+  oturumlar, kişilikler (karşı tarafın listesinden de), gönderdiği ve numarasına gelmiş davetler, gelen kutuları (son
+  alıcıysa belgenin kendisi), **gönderdiği kutular bütün alıcılarından** (gönderenin açık anahtarı silinince imza
+  doğrulanamazdı), bekleyen doğrulama kodları. Kalanlar: giriş denemesi ve kod isteği kayıtları (kötüye kullanım
+  sınırları için; 24 saatte kendiliğinden silinir). Bu bilgisayardaki "Bu cihaza güven" kaydı da silinir.
+- Aynı numara sonra yeniden kayıt olabilir; eski hiçbir şey geri gelmez.
+- API: `POST /api/users/me/delete` (`password`, `totpCode`); `AccountDeletionService`, tek transaction (tablolar
+  arasında yabancı anahtar yok, silme sırası serviste).
+
 ## 8. Gizlilik: sunucu daha kısa süre bilsin
 
 > Konuşuldu ve kodlandı (2026-11-06, kodlama sırasının 6. adımı).

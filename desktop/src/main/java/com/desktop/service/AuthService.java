@@ -186,6 +186,16 @@ public final class AuthService {
                         bundle(session.keys(), next.kek(), e164)), ANY);
     }
 
+    /**
+     * Hesabı ve ilgili her şeyi sunucudan kalıcı olarak siler (Crypto_Design §7.13). Parola bu bilgisayarda authSecret'a
+     * çevrilir; iki adımlı doğrulama açıksa kod da gerekir. Bu bilgisayardaki "Bu cihaza güven" kaydı da silinir.
+     */
+    public void deleteAccount(Session session, char[] password, String totpCode) {
+        String secret = PasswordKeys.derive(session.user().phone(), password).authSecret();
+        session.api().post("/api/users/me/delete", new Dto.DeleteAccountRequest(secret, blankToNull(totpCode)), ANY);
+        remembered.clear();
+    }
+
     /** Ad soyad değişir; telefon değiştirilemez (parola telefonla türetilir, Crypto_Design §7.3). */
     public void updateName(Session session, String fullName) {
         String name = fullName.trim();

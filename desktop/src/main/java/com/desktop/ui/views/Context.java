@@ -20,6 +20,9 @@ final class Context {
     /** Profilde ad soyad değişince kenar çubuğundaki ad yenilenir. */
     Runnable onProfileChanged = () -> {
     };
+    /** Hesap silinince giriş ekranına dönülür. */
+    Runnable onAccountDeleted = () -> {
+    };
 
     Context(Session session, AuthService auth) {
         this.session = session;

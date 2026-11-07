@@ -1,9 +1,12 @@
 package com.desktop.ui.views;
 
+import atlantafx.base.controls.PasswordTextField;
 import atlantafx.base.theme.Styles;
 import atlantafx.base.theme.Tweaks;
 import com.desktop.crypto.UserKeys;
+import com.desktop.service.PasswordStrength;
 import com.desktop.ui.Async;
+import com.desktop.ui.Dialogs;
 import com.desktop.ui.Formats;
 import com.desktop.ui.Inputs;
 import com.desktop.ui.Toasts;
@@ -56,7 +59,7 @@ final class SecurityView extends ScrollPane {
 
         VBox left = new VBox(20, profileCard(context), fingerprintCard, algorithmCard);
         HBox.setHgrow(left, Priority.ALWAYS);
-        VBox right = new VBox(20, passwordCard, new TwoFactorCard(context));
+        VBox right = new VBox(20, passwordCard, new TwoFactorCard(context), deleteCard(context));
         right.setPrefWidth(420);
         right.setMinWidth(380);
         HBox body = new HBox(20, left, right);
@@ -67,6 +70,67 @@ final class SecurityView extends ScrollPane {
         setFitToWidth(true);
         getStyleClass().add(Tweaks.EDGE_TO_EDGE);
         setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+    }
+
+    /** Hesabı ve ilgili her şeyi kalıcı olarak siler (Crypto_Design §7.13). Geri alınamaz; parola istenir. */
+    private static VBox deleteCard(Context context) {
+        Button open = Ui.button("Hesabımı sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER);
+        open.setOnAction(e -> confirmDelete(context));
+        return Ui.surface(Ui.label("Hesabı sil", "section-title"),
+                Ui.muted("Hesabınız ve onunla ilgili her şey sunucudan kalıcı olarak silinir. Geri alınamaz."), open);
+    }
+
+    private static void confirmDelete(Context context) {
+        Label warning = Ui.muted("Şunlar kalıcı olarak silinir ve geri alınamaz: hesabınız, anahtarlarınız, size gelen "
+                + "ve sizin gönderdiğiniz bütün kutular (alıcılarından da), kişi listeniz (karşı tarafların listesinden "
+                + "de siz çıkarsınız) ve davetleriniz. Aynı numarayla daha sonra yeniden kayıt olabilirsiniz, ama eski "
+                + "hiçbir şey geri gelmez.");
+        warning.setWrapText(true);
+        warning.setMaxWidth(440);
+        PasswordTextField password = new PasswordTextField();
+        password.setPromptText("Parolanız");
+        TextField totp = new TextField();
+        totp.setPromptText("Authenticator ya da kurtarma kodu");
+        boolean needsTotp = context.session.totpEnabled();
+        totp.setVisible(needsTotp);
+        totp.setManaged(needsTotp);
+        Label error = Ui.label("", "form-error");
+        error.setWrapText(true);
+        error.setMaxWidth(440);
+        error.setManaged(false);
+
+        Button cancel = Ui.button("Vazgeç", null);
+        cancel.setCancelButton(true);
+        cancel.setOnAction(e -> Dialogs.close());
+        Button delete = Ui.button("Hesabımı kalıcı olarak sil", Material2OutlinedAL.DELETE_FOREVER, Styles.DANGER);
+        javafx.beans.property.BooleanProperty busy = new javafx.beans.property.SimpleBooleanProperty(false);
+        delete.disableProperty().bind(busy.or(javafx.beans.binding.Bindings.createBooleanBinding(
+                () -> PasswordStrength.composition(password.getPassword()) != null
+                        || (needsTotp && totp.getText().isBlank()),
+                password.passwordProperty(), totp.textProperty())));
+        delete.setOnAction(e -> {
+            busy.set(true);
+            error.setManaged(false);
+            error.setText("");
+            char[] secret = password.getPassword().toCharArray();
+            String code = totp.getText();
+            Async.run(() -> {
+                        context.auth.deleteAccount(context.session, secret, code);
+                        return true;
+                    },
+                    ok -> {
+                        Dialogs.close();
+                        Toasts.success("Hesabınız ve bütün verileriniz silindi.");
+                        context.onAccountDeleted.run();
+                    },
+                    failure -> {
+                        busy.set(false);
+                        error.setText(Toasts.describe(failure));
+                        error.setManaged(true);
+                    });
+        });
+        Dialogs.show("Hesabınızı silmek üzeresiniz", new VBox(12, warning, password, totp, error), cancel, delete);
+        password.requestFocus();
     }
 
     /** Ad soyad düzenlenir (sadece harf); telefon salt okunurdur, çünkü parola telefonla türetilir. */

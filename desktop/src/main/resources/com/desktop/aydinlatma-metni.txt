@@ -38,4 +38,4 @@ Masaüstü uygulamasına girdiğiniz bilgilerden ve uygulamanın kullanımı sı
 "Bu cihaza güven" seçerseniz oturumunuz ve anahtarlarınız bu bilgisayarda, Windows hesabınıza bağlı olarak şifreli saklanır. "Güvenli çıkış" bu kaydı siler.
 
 9. Haklarınız (KVKK m.11)
-Verilerinizin işlenip işlenmediğini öğrenme, bilgi isteme, amacını öğrenme, aktarıldığı kişileri bilme, eksik ya da yanlış işlenmişse düzeltilmesini, silinmesini ya da yok edilmesini isteme, bu işlemlerin aktarılan kişilere bildirilmesini isteme, otomatik analiz sonucu aleyhinize bir sonuca itiraz etme ve zarara uğrarsanız tazminat isteme haklarınız vardır. Başvuru: [e-posta / adres].
+Verilerinizin işlenip işlenmediğini öğrenme, bilgi isteme, amacını öğrenme, aktarıldığı kişileri bilme, eksik ya da yanlış işlenmişse düzeltilmesini, silinmesini ya da yok edilmesini isteme, bu işlemlerin aktarılan kişilere bildirilmesini isteme, otomatik analiz sonucu aleyhinize bir sonuca itiraz etme ve zarara uğrarsanız tazminat isteme haklarınız vardır. Hesabınızı ve bütün verilerinizi uygulamadan, Profilim → "Hesabımı sil" ile kendiniz kalıcı olarak silebilirsiniz. Diğer başvurular: [e-posta / adres].

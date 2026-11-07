@@ -39,6 +39,10 @@
   Railway ülkesi, yurt dışı aktarım güvencesi, yedekleme); yurt dışı aktarım KVKK m.9 (2024 değişikliği: düzenli
   aktarımda standart sözleşme vb., açık rıza sadece arızi) ya da sunucuyu Türkiye'ye taşımak; gerekirse onayın
   sunucuda kaydı.
+- **Hesabı silme ve test modu (2026-11-07, kodlandı, masaüstü sürümü 2.0.4 çıkmadı):** Profilim → "Hesabımı sil":
+  parola (+ TOTP) ile, her şey kalıcı silinir (Crypto_Design §7.13). Kayıt test modu (`VERIFICATION_TEST_MODE`)
+  **Railway'de açık** (2026-11-07, kullanıcı ekledi): kayıt kodu WhatsApp'a gitmez, uygulamaya döner; 2.0.3 kodu
+  göstermez, 2.0.4 ya da kaynaktan çalışan uygulama gösterir. Gerçek kullanıcıdan önce kapatılmalı (Security S8).
 - **Ücretsiz kod imzalama: SignPath Foundation (ertelendi, 2026-11-06).** Demo şimdilik ZIP ile sürüyor. Başvurudan
   önce gerekenler: lisans (**karar: MIT**, `LICENSE` henüz eklenmedi), MSI/ZIP'i GitHub Actions'ta kaynaktan üretmek
   (doğrulanabilir derleme), README'de "Code signing policy" bölümü (roller; "Free code signing provided by
