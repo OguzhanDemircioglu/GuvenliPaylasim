@@ -51,7 +51,7 @@
   görüntü gönderilebilir; programlar ve betikler engellenir. Alıcı riskli dosyada (makro, betikli PDF, içinde program
   olan arşiv…) uyarı görür, kaydetmeden önce onay verir; kaydedilen dosyaya Windows dış kaynak etiketi konur
   (UI_Standards §4.5, Security S4). Gönderilenler'deki "Yenile" kaldırıldı, liste gelen kutusu aralığıyla kendiliğinden
-  yenilenir.
+  yenilenir. Gelen Kutusu'nda belge seçilince kendiliğinden açılır; "Açılınca Sil" kutusunda "Belgeyi Aç" gerekir.
 - **Ücretsiz kod imzalama: SignPath Foundation (ertelendi, 2026-11-06).** Demo şimdilik ZIP ile sürüyor. Başvurudan
   önce gerekenler: lisans (**karar: MIT**, `LICENSE` henüz eklenmedi), MSI/ZIP'i GitHub Actions'ta kaynaktan üretmek
   (doğrulanabilir derleme), README'de "Code signing policy" bölümü (roller; "Free code signing provided by

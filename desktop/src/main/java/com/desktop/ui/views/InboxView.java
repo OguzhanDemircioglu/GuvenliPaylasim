@@ -166,6 +166,11 @@ final class InboxView extends VBox {
         VBox content = new VBox(18, documentHeader(item), locked);
         content.setFillWidth(true);
         detail.getChildren().setAll(content);
+        // Seçilince kendiliğinden açılır. "Açılınca Sil" kutusu açılınca sunucudan silindiği için yanlışlıkla
+        // tıklamayla harcanmasın: o kutuda "Belgeyi Aç"a basmak gerekir.
+        if (!item.deleteOnOpen()) {
+            openDocument(item, open);
+        }
     }
 
     private Node documentHeader(Dto.InboxItem item) {
