@@ -9,15 +9,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.5/GuvenliPaylasim-2.0.5.msi">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.6/GuvenliPaylasim-2.0.6.msi">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Sürüm 2.0.5 · Uygulama yeni sürümleri açılışta kendisi bulur ·
+  <sub>Sürüm 2.0.6 · Uygulama yeni sürümleri açılışta kendisi bulur ·
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
   <br>
   <sub>Kurulum "Sistem yöneticisi, bu yüklemeyi engelleyecek ilkeler ayarladı" derse:
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.5/GuvenliPaylasim-2.0.5-kurulumsuz.zip">kurulumsuz ZIP</a></sub>
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.6/GuvenliPaylasim-2.0.6-kurulumsuz.zip">kurulumsuz ZIP</a></sub>
 </p>
 
 ---
@@ -37,6 +37,30 @@ anahtarlarınızı hiçbir zaman göremez.
    kişileri olursunuz. Kod, sunucunun bile araya girememesini sağlar.
 3. **Gönderim:** Kişilerinize kodsuz gönderirsiniz; kutu doğrudan gelen kutularına düşer.
 4. **Kutunun ömrü:** 1 saat ile 30 gün arası. Süre dolunca kutu sunucudan iz bırakmadan silinir.
+
+**Henüz kayıt olmamış birine göndermek:** Yeni Gönderi'de "Davet Kodu ile"yi seçip kişinin telefonunu yazarsınız.
+Kutu bir davet koduyla kilitlenir ve kod size gösterilir; kodu kişiye kendiniz iletirsiniz. Kişi, kodun geçerlilik
+süresi (1 saat–7 gün) içinde uygulamayı kurup aynı telefonla kayıt olur ve kodu "Kod ile Al"a girer: kutu açılır,
+ikiniz kişi olursunuz. Kod girilmezse kutu süre dolunca içeriğiyle silinir. Kişiye SMS ya da bildirim gitmez; kod
+girilene kadar kutuyu kimse göremez. Gönderen, numaranın kayıtlı olup olmadığını öğrenmez.
+
+## Geliştirici Gözünden Nasıl Çalışır?
+
+Bütün şifreleme masaüstü uygulamasında yapılır; sunucu (Spring Boot + PostgreSQL) sadece şifreli veriyi saklar ve
+doğru kişiye teslim eder. Ayrıntı: [Crypto_Design.md](docs/Crypto_Design.md) §2–§4, §7–§8.
+
+| Adım | Ne olur |
+|---|---|
+| **Şifre** | `master = PBKDF2-HMAC-SHA256(şifre, tuz = telefon, 600.000 tur)`. Bundan iki değer türer: `authSecret` sunucuya giriş için gider (sunucu bcrypt'ler ve `SERVER_SEAL_KEY` ile bir kez daha AES-GCM'le kilitler), `kek` bilgisayardan hiç çıkmaz. Gerçek şifre sunucuya gitmez |
+| **Anahtarlar** | Kayıtta bilgisayarda üretilir: şifreleme için X25519, imza için Ed25519. Özel anahtarlar `kek` ile AES-256-GCM şifrelenmiş paket olarak sunucuda durur; girişte bilgisayarda açılır, sadece bellekte tutulur |
+| **Gönderim** | Her kutuya rastgele 256 bit anahtar `K`. İçerik (dosya adı dahil) `AES-256-GCM(K)` ile şifrelenir, gönderen Ed25519 ile imzalar. `K` her alıcı için ayrı sarmalanır: geçici X25519 + HKDF-SHA256 + AES-GCM (ECIES benzeri) |
+| **Açma** | Alıcı önce imzayı doğrular (geçersizse içerik çözülmez), sonra `K`'yı kendi X25519 anahtarıyla açar, içeriği çözer |
+| **Davet kodu** | 16 karakter (80 bit). Kutu anahtarı koddan HKDF ile türetilen anahtarla sarmalanır; sunucuya kodun kendisi değil, sadece özeti gider. Alıcı kodu girince iki taraf birbirinin açık anahtar parmak izini doğrular (kabul mührü, HMAC); sunucu araya sahte anahtar koyamaz |
+| **Kişiler** | Doğrulanmış parmak izi, sahibinin Ed25519 imzasıyla saklanır; sunucu değiştiremez. Anahtarı değişen kişiye yeni davet kodu gerekir |
+| **Sunucu ne görür?** | Kim kime ne zaman, ne boyutta gönderdi; içeriği, dosya adını, şifreyi ve özel anahtarları göremez. Bu bilgi de kutu silinince gider: ömrü dolan kutular, davetler ve oturumlar zamanlanmış işlerle kalıcı silinir (soft delete yok) |
+| **Ağ** | Sadece TLS 1.3; uygulama yalnızca Let's Encrypt köklerine zincirlenen sertifikayı kabul eder (sertifika sabitleme). Oturum: 15 dk JWT (RS256) + dönen refresh token |
+| **Güncelleme** | GitHub Releases'teki `release.json` Ed25519 ile imzalı; uygulama imzayı ve kurulum dosyasının SHA-256 özetini doğrulamadan kurmaz |
+| **Kayıt doğrulama** | Telefon WhatsApp koduyla (Vonage) doğrulanır; numara, IP ve günlük sınırlar var. Kayıtlı ve kayıtsız numara aynı cevabı aynı sürede alır |
 
 ## Özellikler
 
