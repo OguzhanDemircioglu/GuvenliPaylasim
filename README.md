@@ -47,7 +47,8 @@ girilene kadar kutuyu kimse göremez. Gönderen, numaranın kayıtlı olup olmad
 ## Geliştirici Gözünden Nasıl Çalışır?
 
 Bütün şifreleme masaüstü uygulamasında yapılır; sunucu (Spring Boot + PostgreSQL) sadece şifreli veriyi saklar ve
-doğru kişiye teslim eder. Ayrıntı: [Crypto_Design.md](docs/Crypto_Design.md) §2–§4, §7–§8.
+doğru kişiye teslim eder. Aşama aşama anlatım: [Sistem_Yasam_Dongusu.md](docs/Sistem_Yasam_Dongusu.md); ayrıntılı
+tasarım: [Crypto_Design.md](docs/Crypto_Design.md) §2–§4, §7–§8.
 
 | Adım | Ne olur |
 |---|---|
@@ -190,6 +191,7 @@ Ayrıntı: [docs/Update_Design.md](docs/Update_Design.md).
 | Doküman | İçerik |
 |---|---|
 | [Devam_Rehberi.md](docs/Devam_Rehberi.md) | Projenin durumu, alınan kararlar, Railway kurulumu, yapılacaklar |
+| [Sistem_Yasam_Dongusu.md](docs/Sistem_Yasam_Dongusu.md) | Sistemin 7 aşamalı yaşam döngüsü (kayıttan silmeye); görsel üretmek için kaynak |
 | [Crypto_Design.md](docs/Crypto_Design.md) | Şifreleme tasarımı (§7–§8 güncel tasarım) |
 | [Security.md](docs/Security.md) | Tehdit modeli (S1–S8) ve test planı |
 | [Update_Design.md](docs/Update_Design.md) | İmzalı otomatik güncelleme |
