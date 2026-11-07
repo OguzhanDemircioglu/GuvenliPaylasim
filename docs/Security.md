@@ -128,6 +128,10 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   (Crypto_Design §7.2); sınırlar aynıdır.
 - **Önlemler:** SMS sadece `^5\d{9}$` (TR mobil) numaralara gider. Numara başına saatte 3, IP başına saatte 10,
   **sistem geneli günlük tavan** (aşılınca SMS durur, alarm verilir). SMS kuyruktan gönderilir.
+- **Test modu (2026-11-07, `VERIFICATION_TEST_MODE`, varsayılan kapalı):** açıkken kayıt kodu gönderilmez, cevapta
+  istemciye döner ve uygulama alana yazar; **telefon sahipliği doğrulanmaz** (biri başkasının numarasıyla kayıt
+  olabilir). Sadece kayıtta geçerli; parola sıfırlama kodu asla dönmez (hesap ele geçirme olurdu). Açıkken sunucu her
+  başlangıçta uyarı loglar, uygulama "TEST MODU" yazar. **Gerçek kullanıcıdan önce kapatılmalı.**
 
 ## 4. Kapsam dışı (kabul edilen)
 

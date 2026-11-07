@@ -119,8 +119,11 @@ public final class AuthService {
     }
 
     /** Telefona WhatsApp ile kayıt kodu gönderilir. Numara kayıtlıysa kod gitmez ama cevap aynıdır. */
-    public void startRegistration(String phone) {
-        new ApiClient(serverUrl).post("/api/auth/register/start", new Dto.PhoneRequest(requirePhone(phone)), ANY);
+    public java.util.Optional<String> startRegistration(String phone) {
+        Dto.VerificationStart started = new ApiClient(serverUrl).post("/api/auth/register/start",
+                new Dto.PhoneRequest(requirePhone(phone)), new TypeReference<>() {
+                });
+        return java.util.Optional.ofNullable(started == null ? null : started.testCode());
     }
 
     /** Anahtarlar burada üretilir ve hesapla aynı istekte kaydedilir; ardından normal giriş yapılır. */

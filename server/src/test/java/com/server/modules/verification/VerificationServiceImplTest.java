@@ -50,7 +50,7 @@ class VerificationServiceImplTest {
     @BeforeEach
     void setUp() {
         service = new VerificationServiceImpl(verificationRepository, requestRepository, userRepository, sender,
-                new VerificationProperties(Duration.ofMinutes(5), 3, 3, 10, 200));
+                new VerificationProperties(Duration.ofMinutes(5), 3, 3, 10, 200, false));
     }
 
     @Test
@@ -65,6 +65,37 @@ class VerificationServiceImplTest {
         verify(sender, never()).enqueue(eq("+905559999999"), anyString());
         verify(requestRepository, times(2)).save(any(VerificationRequest.class));
         verify(verificationRepository, times(2)).save(any(PhoneVerification.class));
+    }
+
+    @Test
+    void normalModeNeverReturnsTheCode() {
+        when(userRepository.existsByPhone(PHONE)).thenReturn(false);
+        assertThat(service.start(PHONE, VerificationPurpose.REGISTER, IP)).isEmpty();
+    }
+
+    @Test
+    void testModeReturnsTheRegistrationCodeAndSendsNothing() {
+        VerificationServiceImpl testMode = new VerificationServiceImpl(verificationRepository, requestRepository,
+                userRepository, sender, new VerificationProperties(Duration.ofMinutes(5), 3, 3, 10, 200, true));
+
+        String code = testMode.start(PHONE, VerificationPurpose.REGISTER, IP).orElseThrow();
+
+        verify(sender, never()).enqueue(anyString(), anyString());
+        assertThat(code).matches("\\d{6}");
+        ArgumentCaptor<PhoneVerification> saved = ArgumentCaptor.forClass(PhoneVerification.class);
+        verify(verificationRepository).save(saved.capture());
+        assertThat(VerificationCodes.matches(saved.getValue().getCodeHash(), PHONE, VerificationPurpose.REGISTER, code))
+                .isTrue();
+    }
+
+    @Test
+    void testModeNeverReturnsPasswordResetCodes() {
+        VerificationServiceImpl testMode = new VerificationServiceImpl(verificationRepository, requestRepository,
+                userRepository, sender, new VerificationProperties(Duration.ofMinutes(5), 3, 3, 10, 200, true));
+        when(userRepository.existsByPhone(PHONE)).thenReturn(true);
+
+        assertThat(testMode.start(PHONE, VerificationPurpose.PASSWORD_RESET, IP)).isEmpty();
+        verify(sender).enqueue(eq(PHONE), anyString());
     }
 
     @Test

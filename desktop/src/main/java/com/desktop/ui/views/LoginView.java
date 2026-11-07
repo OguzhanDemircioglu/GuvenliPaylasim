@@ -735,13 +735,18 @@ public final class LoginView extends VBox {
         busyFlag(sendCode).set(true);
         showStatus(registerStatus, "Kod gönderiliyor…", false);
         String phone = registerPhone.getText();
-        Async.run(() -> {
-                    auth.startRegistration(phone);
-                    return null;
-                },
-                ignored -> {
+        Async.run(() -> auth.startRegistration(phone),
+                testCode -> {
                     busyFlag(sendCode).set(false);
                     Cooldown.start(sendCode, Cooldown.CODE_SECONDS, true);
+                    if (testCode.isPresent()) {
+                        // Sunucu test modunda: WhatsApp'a mesaj gitmedi, kod cevapta geldi.
+                        registerCode.setText(testCode.get());
+                        showStatus(registerStatus, "TEST MODU: WhatsApp mesajı gönderilmedi, kod otomatik yazıldı.",
+                                false);
+                        registerSubmit.requestFocus();
+                        return;
+                    }
                     showStatus(registerStatus, "Kod WhatsApp'a gönderildi; 5 dakika geçerlidir. Numara zaten kayıtlıysa "
                             + "kod gelmez, giriş yapın ya da parolanızı sıfırlayın.", false);
                     registerCode.requestFocus();

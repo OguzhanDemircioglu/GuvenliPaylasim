@@ -28,7 +28,7 @@ public class VerificationServiceImpl implements VerificationService {
 
     @Override
     @Transactional
-    public void start(String phone, VerificationPurpose purpose, String ip) {
+    public java.util.Optional<String> start(String phone, VerificationPurpose purpose, String ip) {
         Instant now = Instant.now();
         enforceLimits(phone, ip, now);
         requestRepository.save(new VerificationRequest(phone, ip, now));
@@ -44,11 +44,27 @@ public class VerificationServiceImpl implements VerificationService {
         verification.setCreatedAt(now);
         verificationRepository.save(verification);
 
+        // SADECE TEST: kayıt kodu gönderilmez, istemciye döner (kayıtlı numarada da; kayıt zaten reddedilir).
+        // Parola sıfırlamada asla: kod dönseydi herkes başkasının hesabını ele geçirebilirdi.
+        if (properties.testMode() && purpose == VerificationPurpose.REGISTER) {
+            log.warn("Verification TEST MODE: registration code returned to the client, no message sent");
+            return java.util.Optional.of(code);
+        }
+
         // Buraya kadar her numara için aynı işler yapıldı. Mesaj sadece uygunsa ve istek thread'inden ayrı gider.
         boolean registered = userRepository.existsByPhone(phone);
         boolean eligible = purpose == VerificationPurpose.REGISTER ? !registered : registered;
         if (eligible) {
             sender.enqueue(phone, message(purpose, code));
+        }
+        return java.util.Optional.empty();
+    }
+
+    @jakarta.annotation.PostConstruct
+    void warnIfTestMode() {
+        if (properties.testMode()) {
+            log.warn("VERIFICATION_TEST_MODE is ON: phone ownership is NOT verified at registration. "
+                    + "Turn it off before real users.");
         }
     }
 

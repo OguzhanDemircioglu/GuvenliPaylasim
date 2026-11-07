@@ -7,8 +7,9 @@ public interface VerificationService {
      * olmasın aynı işler yapılır ve aynı cevap döner (Crypto_Design §7.2). Sınır aşılırsa 429.
      *
      * @param phone E.164
+     * @return sadece test modunda ve kayıtta üretilen kod (mesaj gönderilmez); diğer her durumda boş
      */
-    void start(String phone, VerificationPurpose purpose, String ip);
+    java.util.Optional<String> start(String phone, VerificationPurpose purpose, String ip);
 
     /**
      * Kodu doğrular ve tüketir. Yanlışsa deneme sayılır (ayrı transaction'da kalıcı olur); hak biterse kod silinir.

@@ -31,6 +31,10 @@ public final class Dto {
     public record ChangePasswordRequest(String currentPassword, String newPassword, KeyBundle keys) {
     }
 
+    /** {@code testCode}: sadece sunucu test modundayken (VERIFICATION_TEST_MODE) dolu; WhatsApp'a mesaj gitmez. */
+    public record VerificationStart(String testCode) {
+    }
+
     public record PhoneRequest(String phone) {
     }
 

@@ -11,6 +11,7 @@ import com.server.modules.auth.dto.SessionInfo;
 import com.server.modules.user.Phones;
 import com.server.modules.user.UserService;
 import com.server.modules.verification.VerificationMessages;
+import com.server.modules.verification.dto.VerificationStartResponse;
 import com.server.modules.verification.VerificationPurpose;
 import com.server.modules.verification.VerificationService;
 import com.server.security.CurrentUser;
@@ -50,7 +51,8 @@ public class AuthController {
     }
 
     @PostMapping("/register/start")
-    public ApiResponse<Void> registerStart(@Valid @RequestBody PhoneRequest request, HttpServletRequest httpRequest) {
+    public ApiResponse<VerificationStartResponse> registerStart(@Valid @RequestBody PhoneRequest request,
+                                                                HttpServletRequest httpRequest) {
         return startVerification(request, VerificationPurpose.REGISTER, httpRequest);
     }
 
@@ -61,7 +63,7 @@ public class AuthController {
     }
 
     @PostMapping("/password-reset/start")
-    public ApiResponse<Void> passwordResetStart(@Valid @RequestBody PhoneRequest request,
+    public ApiResponse<VerificationStartResponse> passwordResetStart(@Valid @RequestBody PhoneRequest request,
                                                 HttpServletRequest httpRequest) {
         return startVerification(request, VerificationPurpose.PASSWORD_RESET, httpRequest);
     }
@@ -92,10 +94,11 @@ public class AuthController {
         return ApiResponse.success(GlobalMessages.RECORD_UPDATED, null);
     }
 
-    private ApiResponse<Void> startVerification(PhoneRequest request, VerificationPurpose purpose,
-                                                HttpServletRequest httpRequest) {
-        verificationService.start(Phones.toE164(request.phone()), purpose, ClientInfo.from(httpRequest).ip());
-        return ApiResponse.success(VerificationMessages.CODE_SENT, null);
+    private ApiResponse<VerificationStartResponse> startVerification(PhoneRequest request, VerificationPurpose purpose,
+                                                                     HttpServletRequest httpRequest) {
+        String testCode = verificationService.start(Phones.toE164(request.phone()), purpose,
+                ClientInfo.from(httpRequest).ip()).orElse(null);
+        return ApiResponse.success(VerificationMessages.CODE_SENT, new VerificationStartResponse(testCode));
     }
 
     private ApiResponse<SessionInfo> respond(AuthResult result, HttpServletResponse httpResponse) {

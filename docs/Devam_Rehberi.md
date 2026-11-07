@@ -65,7 +65,9 @@ README'nin v1 bölümleri 2.0.0 ile düzeltildi. v2 kodlanırken §7, §8, Secur
 - Güncelleme imza anahtarı hâlâ düz dosya (acil madde, Hatırlatmalar).
 - Security.md test planında eksik: uç noktaların sistematik IDOR testi, OWASP Dependency-Check, fuzz, sızma testi.
 - Gerçek kullanıcıya açılmadan önce: kayıtlı SMS gönderen adı ya da Meta onaylı WhatsApp hesabı (şu an WhatsApp
-  sandbox; sadece sandbox'a katılmış numaralar kod alır), KVKK (sunucu Türkiye dışında).
+  sandbox; sadece sandbox'a katılmış numaralar kod alır), KVKK (sunucu Türkiye dışında), **`VERIFICATION_TEST_MODE`
+  kapalı olmalı** (açıkken kayıt kodu WhatsApp'a gitmez, uygulamaya döner; telefon sahipliği doğrulanmaz; Security S8).
+  Test modunu sadece 2.0.4 ve sonrası ya da kaynaktan çalışan uygulama tanır; 2.0.3 kodu göstermez.
 
 ### Başka bilgisayarda (evde) çalışmaya başlamak
 - `git pull` (dal: `main`). `v2` dalı birleştirildi, artık kullanılmıyor.
