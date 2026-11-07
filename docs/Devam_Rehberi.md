@@ -51,6 +51,11 @@ yayında. Testler: sunucu 160, masaüstü 72; hepsi geçiyor.
 - **Railway'de `FORWARD_HEADERS_STRATEGY=native` olmalı** (kontrol edilmedi). Yoksa sunucu bütün istekleri Railway
   proxy'sinden gelmiş sayar: IP başına sınırlar (saatte 10 doğrulama kodu, giriş kilidi) herkes için tek sınır olur.
 
+- **Mac desteği (teslimden sonra, 2026-11-08 kararı):** şu an sadece Windows. Gerekenler: "Bu Cihaza Güven" için
+  macOS Anahtar Zinciri (DPAPI yerine), ekran koruması için pencere paylaşım ayarı (`ScreenGuard`), dış kaynak
+  etiketi için karantina etiketi (`WebMark`), güncelleyicide MSI yerine `.dmg`/`.zip`, paketin Mac'te ya da GitHub
+  Actions macOS makinesinde derlenmesi, Apple imzası ve notarization (yıllık 99 $ geliştirici hesabı). Tahmini 1–2 gün.
+
 ### Başka bilgisayarda çalışmaya başlamak
 
 - `git clone` / `git pull` (dal: `main`).
