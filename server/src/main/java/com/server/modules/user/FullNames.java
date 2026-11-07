@@ -11,7 +11,7 @@ public final class FullNames {
     public static final String PATTERN = "^\\p{L}[\\p{L} .'\\-]*$";
     /** 2–3 kelime, tek boşlukla; her kelime harfle başlar. */
     public static final String WORDS_PATTERN = "^\\p{L}[\\p{L}.'\\-]*( \\p{L}[\\p{L}.'\\-]*){1,2}$";
-    public static final int MAX_LENGTH = 100;
+    public static final int MAX_LENGTH = 30;
 
     private FullNames() {
     }

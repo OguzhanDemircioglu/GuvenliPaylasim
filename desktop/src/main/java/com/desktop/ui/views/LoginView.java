@@ -5,6 +5,7 @@ import atlantafx.base.controls.PasswordTextField;
 import com.desktop.api.ApiException;
 import com.desktop.config.AppConfig;
 import com.desktop.service.AuthService;
+import com.desktop.service.PasswordStrength;
 import com.desktop.service.Phones;
 import com.desktop.service.Session;
 import com.desktop.ui.Async;
@@ -131,9 +132,12 @@ public final class LoginView extends VBox {
      */
     private void bindButtons() {
         BooleanBinding loginReady = Bindings.createBooleanBinding(
-                () -> Phones.normalize(loginPhone.getText()) != null && !loginPassword.getPassword().isEmpty(),
+                () -> Phones.normalize(loginPhone.getText()) != null
+                        && PasswordStrength.composition(loginPassword.getPassword()) == null,
                 loginPhone.textProperty(), loginPassword.passwordProperty());
         loginSubmit.disableProperty().bind(busyFlag(loginSubmit).or(loginReady.not()));
+        loginPassword.passwordProperty().addListener(obs -> showLoginHint());
+        loginPhone.textProperty().addListener(obs -> showLoginHint());
 
         BooleanBinding formReady = Bindings.createBooleanBinding(() -> registerFormProblem() == null,
                 registerName.textProperty(), registerPhone.textProperty(), registerPassword.passwordProperty(),
@@ -149,6 +153,21 @@ public final class LoginView extends VBox {
         for (Observable field : List.of(registerName.textProperty(), registerPhone.textProperty(),
                 registerPassword.passwordProperty(), registerRepeat.passwordProperty(), noticeRead.selectedProperty())) {
             field.addListener(obs -> showFormHint());
+        }
+    }
+
+    private String loginHint;
+
+    /** Parola yazılmış ama kurala uymuyorsa giriş düğmesinin neden kapalı olduğu yazılır. */
+    private void showLoginHint() {
+        String password = loginPassword.getPassword();
+        String problem = password.isEmpty() ? null : PasswordStrength.composition(password);
+        if (problem != null) {
+            loginHint = problem;
+            showStatus(loginStatus, problem, true);
+        } else if (loginHint != null && loginHint.equals(loginStatus.getText())) {
+            loginHint = null;
+            showStatus(loginStatus, null, false);
         }
     }
 
@@ -332,7 +351,7 @@ public final class LoginView extends VBox {
         Node title = title("Kayıt ol");
         Node name = floating("Ad soyad", registerName, Material2OutlinedMZ.PERSON_OUTLINE);
         Node phone = floating("Cep telefonu (5xx) xxx xx xx", registerPhone, Material2OutlinedMZ.PHONE_ANDROID);
-        Node password = floating("Parola (en az 12 karakter, harf ve rakam)", registerPassword, null);
+        Node password = floating("Parola (12–20; büyük, küçük harf, rakam, sembol)", registerPassword, null);
         Node repeat = floating("Parola (tekrar)", registerRepeat, null);
         Node code = floating("WhatsApp kodu", registerCode, null);
         registerCode.setRight(sendCode);
@@ -750,7 +769,7 @@ public final class LoginView extends VBox {
         TextField code = Inputs.digits(new TextField(), 6);
         code.setPromptText("WhatsApp kodu (6 hane)");
         PasswordTextField password = new PasswordTextField();
-        password.setPromptText("Yeni parola (en az 12 karakter, harf ve rakam)");
+        password.setPromptText("Yeni parola (12–20; büyük, küçük harf, rakam, sembol)");
         PasswordTextField repeat = new PasswordTextField();
         repeat.setPromptText("Yeni parola (tekrar)");
         TextField totp = new TextField();

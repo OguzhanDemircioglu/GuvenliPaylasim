@@ -40,6 +40,13 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   doğrulaması koruma sağlar (S7).
 
 ### S2. Veritabanını çalan
+- **Parola kuralı (2026-11-07):** 12–20 karakter; en az bir büyük harf, küçük harf, rakam ve özel karakter (boşluk
+  özel sayılmaz). Kural girişte de aranır (o tarihte aktif kullanıcı yoktu); yeni parolada (kayıt, sıfırlama, profil)
+  ayrıca zayıf parola kontrolü (`PasswordStrength`). **Kural sadece istemcide uygulanır:** sunucu parolayı hiç görmez
+  (sadece türevini), bu yüzden bileşimini denetleyemez; denetleyebilmesi için parolanın sunucuya gitmesi gerekirdi.
+  En az 12 bilinçli olarak korundu: parola özel anahtar paketinin tek kilidi; sunucu ele geçirilirse (S3) paket çevrimdışı
+  denemeye açıktır. Not: 20 karakter üst sınırı teknik olarak gerekmez (sunucuya giden türev sabit uzunlukta); uzun
+  parola cümlelerini engeller, kullanıcı kararıyla konuldu.
 - **Garanti:** İçeriği, davet kodlarını ve özel anahtarları göremez; parolaları kendi bilgisayarında deneyemez.
 - **Risk:** Özel anahtar paketi parolayla kilitlidir ve tuz (telefon) bilinir. Sadece bu kilit olsaydı DB'yi çalan
   zayıf parolaları çevrimdışı kırabilirdi.

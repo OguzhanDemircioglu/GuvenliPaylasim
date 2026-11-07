@@ -19,6 +19,7 @@ public final class Inputs {
     private static final Pattern FULL_NAME = Pattern.compile(WORD + "( " + WORD + "){1,2}");
     private static final java.util.Locale TR = java.util.Locale.forLanguageTag("tr");
     public static final int NAME_MAX_WORDS = 3;
+    public static final int NAME_MAX_LENGTH = 30;
 
     private Inputs() {
     }
@@ -62,7 +63,8 @@ public final class Inputs {
 
     /** Yazma sırasında kabul edilen ara durumlar (sonda tek boşluk olabilir, tek kelime olabilir). */
     static boolean typableName(String text) {
-        if (text.length() > 100 || !NAME.matcher(text).matches() || text.startsWith(" ") || text.contains("  ")) {
+        if (text.length() > NAME_MAX_LENGTH || !NAME.matcher(text).matches() || text.startsWith(" ")
+                || text.contains("  ")) {
             return false;
         }
         String[] words = text.split(" ", -1);
@@ -108,8 +110,8 @@ public final class Inputs {
         if (name.isEmpty()) {
             return "Ad soyad zorunludur.";
         }
-        if (name.length() > 100) {
-            return "Ad soyad en fazla 100 karakter olabilir.";
+        if (name.length() > NAME_MAX_LENGTH) {
+            return "Ad soyad en fazla " + NAME_MAX_LENGTH + " karakter olabilir.";
         }
         if (!NAME.matcher(name).matches()) {
             return "Ad soyadda sadece harf, boşluk, kesme, nokta ve tire kullanılabilir.";

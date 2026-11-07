@@ -159,8 +159,9 @@ master = PBKDF2-HMAC-SHA256(parola, tuz = "guvenli-paylasim/v2|" + "+905XXXXXXXX
 İleride değiştirilebilir: istemci parolayı bildiği için yeni numarayla `authSecret`'ı ve özel anahtar paketini yeniden
 üretebilir; bu ayrı bir iş olarak bırakılır.
 
-- **Parola şartı:** en az 12 karakter; yaygın parola ve sözlük listesiyle (Türkçe dahil) kontrol. Parola sunucuya
-  gitmediği için kontrol istemcide yapılır (Security S2).
+- **Parola şartı (2026-11-07):** 12–20 karakter; büyük harf, küçük harf, rakam ve özel karakter (girişte de aranır);
+  yeni parolada ayrıca yaygın parola ve sözlük listesiyle (Türkçe dahil) kontrol. Parola sunucuya gitmediği için
+  kontrol istemcide yapılır (Security S2). Ad soyad en fazla 30 karakter (istemci ve sunucu).
 - **Sunucuda ikinci kilit:** özel anahtar paketi ve `authSecret` özeti, veritabanına yazılmadan önce veritabanı
   dışında tutulan bir sunucu anahtarıyla AES-256-GCM ile bir kez daha şifrelenir. Sadece DB dökümünü ele geçiren
   biri parola deneyemez (Security S2). Biçim `"s1:" + Base64(nonce | şifreli | etiket)`, AAD kolon adı

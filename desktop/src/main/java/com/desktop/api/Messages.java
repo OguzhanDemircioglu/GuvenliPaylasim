@@ -41,7 +41,7 @@ public final class Messages {
             Map.entry("user_phone_required", "Cep telefonu zorunludur."),
             Map.entry("user_phone_invalid", "Cep telefonunu (5xx) xxx xx xx biçiminde yazın."),
             Map.entry("user_full_name_required", "Ad soyad zorunludur."),
-            Map.entry("user_full_name_too_long", "Ad soyad en fazla 100 karakter olabilir."),
+            Map.entry("user_full_name_too_long", "Ad soyad en fazla 30 karakter olabilir."),
             Map.entry("user_full_name_invalid", "Ad soyadda sadece harf, boşluk, kesme, nokta ve tire kullanılabilir."),
             Map.entry("user_full_name_words", "Adınızı ve soyadınızı yazın: en az iki, en fazla üç kelime."),
 

@@ -14,7 +14,7 @@ import java.util.Set;
 /**
  * Zayıf parola kontrolü (docs/Security.md S2). Parola sunucuya gitmediği için kontrol bu bilgisayarda yapılır.
  * <p>
- * En az 12 karakter ve harf + rakam kuralından geçen zayıf parolalar çoğunlukla şu türdendir: bilinen bir kelime ya da
+ * Önce uzunluk ve karakter türü kuralı ({@link #composition}). Bu kuraldan geçen zayıf parolalar çoğunlukla şu türdendir: bilinen bir kelime ya da
  * isim artı yıl/rakam ({@code Galatasaray1905}), klavye ya da sıra dizileri ({@code 1q2w3e4r5t6y}), aynı karakterin
  * tekrarı, kişinin kendi adı ya da telefonu. Kontrol, parolanın harf kısmını Türkçe harfleri sadeleştirip ve rakamla
  * yazılmış harfleri ({@code 0→o, 1→i, 3→e, 4→a, 5→s, 7→t, @→a, $→s}) çözüp gömülü sözlükle karşılaştırır.
@@ -23,7 +23,13 @@ import java.util.Set;
  */
 public final class PasswordStrength {
 
-    static final int MIN_LENGTH = 12;
+    /**
+     * Uzunluk ve karakter türü kuralı (2026-11-07 kararı): 12–20 karakter; büyük, küçük harf, rakam, özel karakter.
+     * Parola özel anahtarların tek kilidi olduğu için en az 12 korunur (Security.md S2).
+     */
+    public static final int MIN_LENGTH = 12;
+    public static final int MAX_LENGTH = 20;
+    public static final String RULE = "12–20 karakter; büyük harf, küçük harf, rakam ve özel karakter";
     private static final Set<String> WORDS = load();
     /** Klavye satırları ve sıralar; tersleri de aranır. */
     private static final List<String> SEQUENCES = List.of(
@@ -40,11 +46,9 @@ public final class PasswordStrength {
      * @param personal kişinin adı soyadı, telefonu gibi parolada geçmemesi gereken bilgiler (null olabilir)
      */
     public static String check(String password, String... personal) {
-        if (password.length() < MIN_LENGTH) {
-            return "Parola en az " + MIN_LENGTH + " karakter olmalıdır.";
-        }
-        if (password.chars().noneMatch(Character::isDigit) || password.chars().noneMatch(Character::isLetter)) {
-            return "Parola hem harf hem rakam içermelidir.";
+        String composition = composition(password);
+        if (composition != null) {
+            return composition;
         }
         if (password.chars().distinct().count() < 6) {
             return "Parolada aynı karakterler çok fazla tekrar ediyor.";
@@ -69,6 +73,34 @@ public final class PasswordStrength {
             return "Parola çok bilinen bir kelime ya da isme rakam eklenmiş hali. Birbiriyle ilgisiz birkaç kelime kullanın.";
         }
         return null;
+    }
+
+    /**
+     * Sadece uzunluk ve karakter türleri: girişte de aranır (kurallar herkes için geçerli, 2026-11-07). Özel karakter:
+     * harf, rakam ya da boşluk olmayan her karakter. Uygunsa null, değilse eksik olanı söyleyen mesaj.
+     */
+    public static String composition(String password) {
+        if (password.length() < MIN_LENGTH || password.length() > MAX_LENGTH) {
+            return "Parola " + MIN_LENGTH + "–" + MAX_LENGTH + " karakter olmalıdır.";
+        }
+        List<String> missing = new java.util.ArrayList<>();
+        if (password.chars().noneMatch(Character::isUpperCase)) {
+            missing.add("büyük harf");
+        }
+        if (password.chars().noneMatch(Character::isLowerCase)) {
+            missing.add("küçük harf");
+        }
+        if (password.chars().noneMatch(Character::isDigit)) {
+            missing.add("rakam");
+        }
+        if (password.chars().noneMatch(PasswordStrength::isSpecial)) {
+            missing.add("özel karakter");
+        }
+        return missing.isEmpty() ? null : "Parolada en az bir " + String.join(", ", missing) + " olmalıdır.";
+    }
+
+    static boolean isSpecial(int c) {
+        return !Character.isLetterOrDigit(c) && !Character.isWhitespace(c);
     }
 
     /**

@@ -49,6 +49,8 @@ class FullNamesValidationTest {
         assertThat(messages(new UpdateNameRequest("<script> x"))).contains(UserMessages.FULL_NAME_INVALID);
         assertThat(messages(new UpdateNameRequest("-Ayşe Kaya"))).contains(UserMessages.FULL_NAME_INVALID);
         assertThat(messages(new UpdateNameRequest("Ayşe -Kaya"))).containsExactly(UserMessages.FULL_NAME_WORDS);
+        assertThat(messages(new UpdateNameRequest("Abdurrahman Muhammed Karaosmanoğlu")))
+                .contains(UserMessages.FULL_NAME_TOO_LONG);
         assertThat(messages(new UpdateNameRequest("A".repeat(50) + " " + "B".repeat(50))))
                 .contains(UserMessages.FULL_NAME_TOO_LONG);
     }

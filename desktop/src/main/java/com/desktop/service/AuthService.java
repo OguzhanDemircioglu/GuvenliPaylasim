@@ -220,8 +220,9 @@ public final class AuthService {
     }
 
     /**
-     * Parola kuralları istemcide uygulanır; sunucu parolanın kendisini hiç görmez (Security.md S2): en az 12 karakter,
-     * harf + rakam, yaygın kelime/isim, klavye dizisi ve kişisel bilgi kontrolü (PasswordStrength).
+     * Parola kuralları istemcide uygulanır; sunucu parolanın kendisini hiç görmez (Security.md S2): 12–20 karakter,
+     * büyük ve küçük harf, rakam, özel karakter; yaygın kelime/isim, klavye dizisi ve kişisel bilgi kontrolü
+     * (PasswordStrength).
      *
      * @param personal parolada geçmemesi gereken ad soyad ve telefon
      */

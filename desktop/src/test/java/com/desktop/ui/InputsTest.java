@@ -55,6 +55,9 @@ class InputsTest {
         assertNotNull(Inputs.nameError("5321234567"));
         assertNotNull(Inputs.nameError("-Ayşe Kaya"));
         assertNotNull(Inputs.nameError("A".repeat(60) + " " + "B".repeat(60)));
+        assertNotNull(Inputs.nameError("Abdurrahman Muhammed Karaosmanoğlu"), "34 karakter, en fazla 30");
+        assertNull(Inputs.nameError("Abdurrahman Karaosmanoğlu"), "25 karakter");
+        assertFalse(Inputs.typableName("Abdurrahman Muhammed Karaosmano"), "31. karakter girmez");
     }
 
     @Test
