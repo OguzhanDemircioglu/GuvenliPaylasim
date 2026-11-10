@@ -31,7 +31,7 @@ import java.util.Locale;
 @RequiredArgsConstructor
 public class TotpServiceImpl implements TotpService {
 
-    static final String ISSUER = "Güvenli Paylaşım";
+    static final String ISSUER = "Lockpost";
     static final int RECOVERY_CODE_COUNT = 10;
     private static final String CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
     private static final SecureRandom RANDOM = new SecureRandom();

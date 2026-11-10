@@ -63,7 +63,7 @@ final class WhyView extends ScrollPane {
 
     private static Node hero() {
         Label title = Ui.label("Belgeyi sadece muhatabı açabilir.", "hero-title");
-        Label text = Ui.label("Güvenli Paylaşım gerçek asimetrik şifreleme kullanır: belgeler gönderenin bilgisayarında "
+        Label text = Ui.label("Lockpost gerçek asimetrik şifreleme kullanır: belgeler gönderenin bilgisayarında "
                 + "şifrelenir ve imzalanır, sadece alıcının bilgisayarında çözülür. Arada kimse, sunucuyu yöneten "
                 + "dahil, içeriği göremez.", "hero-text");
         text.setWrapText(true);

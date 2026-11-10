@@ -92,7 +92,7 @@ public final class UpdateGate extends StackPane {
             // MSI başlatılırsa Windows reddeder ve uygulama boşuna kapanır; yerine kurulumsuz ZIP gösterilir.
             Label why = Ui.muted("Bu bilgisayarda Windows Akıllı Uygulama Denetimi açık ve kurulum dosyasını (MSI) "
                     + "engelliyor. Yeni sürümü kurulumsuz ZIP olarak indirin, bir klasöre çıkarın ve "
-                    + "GuvenliPaylasim.exe'yi çalıştırın. Hatırlanan oturumunuz ve ayarlarınız korunur.");
+                    + "Lockpost.exe'yi çalıştırın. Hatırlanan oturumunuz ve ayarlarınız korunur.");
             why.setWrapText(true);
             Button zip = Ui.primary("ZIP'i İndir", Material2OutlinedMZ.OPEN_IN_NEW);
             zip.setDefaultButton(true);

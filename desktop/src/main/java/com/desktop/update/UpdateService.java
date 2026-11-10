@@ -289,7 +289,7 @@ public final class UpdateService {
     private static HttpRequest.Builder request(String url) {
         return HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofMinutes(5))
-                .header("User-Agent", "GuvenliPaylasim-Updater");
+                .header("User-Agent", "Lockpost-Updater");
     }
 
     private static String embeddedPublicKey() throws IOException {

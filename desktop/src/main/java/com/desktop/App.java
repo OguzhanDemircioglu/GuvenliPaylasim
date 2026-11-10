@@ -60,7 +60,7 @@ public class App extends Application {
         Scene scene = new Scene(root);
         scene.getStylesheets().add(App.class.getResource("/com/desktop/app.css").toExternalForm());
         stage.setScene(scene);
-        stage.setTitle("Güvenli Paylaşım");
+        stage.setTitle("Lockpost");
         stage.getIcons().addAll(windowIcons());
         setCompact(true);
         stage.show();

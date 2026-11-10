@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="desktop/src/main/resources/com/desktop/icon.png" alt="Güvenli Paylaşım logosu" width="160">
+  <img src="desktop/src/main/resources/com/desktop/icon.png" alt="Lockpost logosu" width="160">
 </p>
 
-<h1 align="center">Güvenli Paylaşım</h1>
+<h1 align="center">Lockpost</h1>
 
 <p align="center">
   <b>Uçtan uca şifreli</b> dosya ve mesaj paylaşımı
@@ -31,7 +31,7 @@ anahtarlarınızı hiçbir zaman göremez.
 
 ## Nasıl çalışır?
 
-![Güvenli Paylaşım sistem yaşam döngüsü](docs/assets/sistem_yasam_dongusu.png)
+![Lockpost sistem yaşam döngüsü](docs/assets/sistem_yasam_dongusu.png)
 
 1. **Kayıt:** Ad soyad, cep telefonu ve şifre girilir; telefon WhatsApp'a gelen kodla doğrulanır. Şifreleme
    anahtarları bu sırada bilgisayarda üretilir.
@@ -82,7 +82,7 @@ tasarım: [Crypto_Design.md](docs/Crypto_Design.md) §2–§4, §7–§8.
 
 ## Neden güvenli?
 
-| Konu | Eski sistem (2016) | Güvenli Paylaşım |
+| Konu | Eski sistem (2016) | Lockpost |
 |---|---|---|
 | Anahtar paylaşımı | Anahtar alıcılara **SMS ile açık metin** gider | Paylaşılan şifre yok; herkesin kendi anahtar çifti var |
 | Anahtarın gücü | Kullanıcının yazdığı değer (`123`) | Her kutuya rastgele 256 bit AES anahtarı |
@@ -98,7 +98,7 @@ ekranında da var.
 ## Kurulum (kullanıcılar)
 
 1. Yukarıdaki **Windows için indir** düğmesiyle kurulumsuz ZIP'i indirin, bir klasöre çıkarın, içindeki
-   `GuvenliPaylasim.exe`'yi çalıştırın. Yönetici yetkisi ve ayrıca Java gerekmez; Windows ayarlarına dokunmanız
+   `Lockpost.exe`'yi çalıştırın (2.0.8 ve öncesinde `GuvenliPaylasim.exe`). Yönetici yetkisi ve ayrıca Java gerekmez; Windows ayarlarına dokunmanız
    gerekmez.
 2. **Kurulum dosyası tercih ederseniz:** alttaki **MSI ile kur** bağlantısından `.msi`'yi indirip açın; "Güvenli
    Paylaşım" Başlat menüsüne ve masaüstüne eklenir. Windows'ta Akıllı Uygulama Denetimi açıksa imzasız MSI
@@ -183,13 +183,13 @@ Veritabanı ya da Docker gerekmez. Son durum: sunucu 160, masaüstü 72 test, he
 2. `desktop\package.cmd` → `desktop/dist/` altında MSI ve kurulumsuz ZIP.
 3. `release.json`'u imzalayın (özel anahtar sadece sürümü yayımlayan bilgisayarda, git'te yok):
    ```bash
-   java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/GuvenliPaylasim-<sürüm>.msi <sürüm> release-keys/update-private-key.txt
+   java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/Lockpost-<sürüm>.msi <sürüm> release-keys/update-private-key.txt
    ```
 4. Sürümler ayrı, public [GuvenliPaylasim-releases](https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases)
    deposunda yayımlanır (kod deposu private olabilir). `v<sürüm>` release'ini orada açıp MSI, ZIP ve `release.json`'u
    ekleyin:
    ```bash
-   gh release create v<sürüm> -R OguzhanDemircioglu/GuvenliPaylasim-releases --title <sürüm> --notes-file notlar.md desktop/dist/GuvenliPaylasim-<sürüm>.msi desktop/dist/GuvenliPaylasim-<sürüm>-kurulumsuz.zip desktop/dist/release.json
+   gh release create v<sürüm> -R OguzhanDemircioglu/GuvenliPaylasim-releases --title <sürüm> --notes-file notlar.md desktop/dist/Lockpost-<sürüm>.msi desktop/dist/Lockpost-<sürüm>-kurulumsuz.zip desktop/dist/release.json
    ```
 5. Bu README'nin başındaki indirme bağlantılarını güncelleyin.
 

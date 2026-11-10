@@ -1,5 +1,5 @@
 @echo off
-rem Windows kurulum dosyasi (MSI) uretir: dist\GuvenliPaylasim-<surum>.msi
+rem Windows kurulum dosyasi (MSI) uretir: dist\Lockpost-<surum>.msi
 rem Gerekenler: JDK 25 (jpackage) ve WiX 3.14 (Projeler\.tools\wix3 ya da PATH'te).
 rem Kurulum kullanici basinadir: yonetici yetkisi istemez. Upgrade UUID sabittir; yeni surum eskisinin yerine gecer.
 rem Urun adi Turkce karakterlidir; WiX icin Turkce kod sayfasi (1254) src\main\jpackage\MsiInstallerStrings_en.wxl'dedir.
@@ -42,14 +42,12 @@ set "MODULES=java.base,java.compiler,java.datatransfer,java.xml,java.prefs,java.
   --resource-dir src\main\jpackage ^
   --dest dist || exit /b 1
 
-rem GitHub'a yuklenen dosya adi ASCII kalir (release.json bu adi kullanir).
-move /y "dist\Güvenli Paylaşım-%VERSION%.msi" "dist\GuvenliPaylasim-%VERSION%.msi" >nul || exit /b 1
-echo Kurulum dosyasi: %~dp0dist\GuvenliPaylasim-%VERSION%.msi
+echo Kurulum dosyasi: %~dp0dist\Lockpost-%VERSION%.msi
 
 rem Kurulumsuz ZIP: Akilli Uygulama Denetimi (Smart App Control) acik bilgisayarlar imzasiz MSI'i reddeder
 rem (hata 1625/1718), ama ayni uygulamanin kurulumsuz klasoru calisir. Kod imzalama sertifikasi olmadan tek yol bu.
 "%JAVA_HOME%\bin\jpackage" --type app-image ^
-  --name GuvenliPaylasim ^
+  --name Lockpost ^
   --app-version %VERSION% ^
   @src\main\jpackage-args\zip.args ^
   --input target\libs ^
@@ -59,6 +57,6 @@ rem (hata 1625/1718), ama ayni uygulamanin kurulumsuz klasoru calisir. Kod imzal
   --java-options "--enable-native-access=ALL-UNNAMED" ^
   --icon src\main\jpackage\GuvenliPaylasim.ico ^
   --dest dist\zip || exit /b 1
-powershell -NoProfile -Command "Compress-Archive -Path 'dist\zip\GuvenliPaylasim' -DestinationPath 'dist\GuvenliPaylasim-%VERSION%-kurulumsuz.zip' -Force" || exit /b 1
+powershell -NoProfile -Command "Compress-Archive -Path 'dist\zip\Lockpost' -DestinationPath 'dist\Lockpost-%VERSION%-kurulumsuz.zip' -Force" || exit /b 1
 rmdir /s /q dist\zip
-echo Kurulumsuz ZIP: %~dp0dist\GuvenliPaylasim-%VERSION%-kurulumsuz.zip
+echo Kurulumsuz ZIP: %~dp0dist\Lockpost-%VERSION%-kurulumsuz.zip

@@ -12,6 +12,7 @@ sifrem
 parolam
 guvenli
 guvenlipaylasim
+lockpost
 paylasim
 admin
 administrator

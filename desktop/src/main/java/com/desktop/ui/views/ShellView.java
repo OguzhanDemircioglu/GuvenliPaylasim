@@ -85,7 +85,7 @@ public final class ShellView extends BorderPane {
         // Uygulamanın kendi logosu (pencere ve kurulum simgesiyle aynı kalkan).
         ImageView mark = new ImageView(new Image(ShellView.class.getResourceAsStream("/com/desktop/icon-128.png"),
                 40, 40, true, true));
-        HBox brand = Ui.row(11, mark, Ui.column(0, Ui.label("Güvenli Paylaşım", "brand-title"),
+        HBox brand = Ui.row(11, mark, Ui.column(0, Ui.label("Lockpost", "brand-title"),
                 Ui.label("Uçtan Uca Şifreli", "brand-subtitle")));
         brand.setPadding(new Insets(0, 4, 8, 4));
 

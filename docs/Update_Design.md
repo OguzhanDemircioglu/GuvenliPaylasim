@@ -75,9 +75,9 @@ artifact'ından indirilir; aşağıdaki 2. ve 3. adım o dosyalarla yapılır (�
 ```bash
 # 1) Sürümü desktop/pom.xml'de artır; desktop\package.cmd → dist/ altında MSI ve kurulumsuz ZIP.
 # 2) İmzala: release.json kurulum dosyasının yanına yazılır
-java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/GuvenliPaylasim-2.0.8.msi 2.0.8 release-keys/update-private-key.txt
-# 3) Sürüm deposunda v2.0.8 etiketiyle release aç; MSI, ZIP ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
-gh release create v2.0.8 -R OguzhanDemircioglu/GuvenliPaylasim-releases --title 2.0.8 --notes-file notlar.md desktop/dist/GuvenliPaylasim-2.0.8.msi desktop/dist/GuvenliPaylasim-2.0.8-kurulumsuz.zip desktop/dist/release.json
+java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/Lockpost-2.0.9.msi 2.0.9 release-keys/update-private-key.txt
+# 3) Sürüm deposunda v2.0.9 etiketiyle release aç; MSI, ZIP ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
+gh release create v2.0.9 -R OguzhanDemircioglu/GuvenliPaylasim-releases --title 2.0.9 --notes-file notlar.md desktop/dist/Lockpost-2.0.9.msi desktop/dist/Lockpost-2.0.9-kurulumsuz.zip desktop/dist/release.json
 # 4) README'nin en üstündeki indirme bağlantılarındaki sürüm numaralarını güncelle.
 ```
 

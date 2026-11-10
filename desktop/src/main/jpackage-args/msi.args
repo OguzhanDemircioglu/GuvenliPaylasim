@@ -1,4 +1,4 @@
---name "Güvenli Paylaşım"
+--name "Lockpost"
 --vendor "Bilgi İşlem"
 --description "Uçtan uca şifreli dosya ve mesaj paylaşımı"
---win-menu-group "Güvenli Paylaşım"
+--win-menu-group "Lockpost"

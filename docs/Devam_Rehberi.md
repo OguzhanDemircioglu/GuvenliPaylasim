@@ -44,7 +44,10 @@ yayında. Testler: sunucu 160, masaüstü 72; hepsi geçiyor.
   (`.github/workflows/desktop-release.yml`), README'de "Code signing policy" ve gizlilik bölümü hazır. Kalan:
   GitHub'da MFA, https://signpath.org/apply başvurusu; onaydan sonra Actions değişkenleri
   `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_SIGNING_POLICY_SLUG` ve gizli `SIGNPATH_API_TOKEN`.
-  Kod deposu public kalmalı (kaynaktan doğrulanabilir üretim şartı). Şartlar: https://signpath.org/terms. Ücretli
+  Kod deposu public kalmalı (kaynaktan doğrulanabilir üretim şartı).
+- **Uygulama adı Lockpost** (2026-11-11, 2.0.9'dan itibaren): pencere, MSI/ZIP ve dosya adları (`Lockpost.exe`),
+  TOTP ve doğrulama mesajı. GitHub depoları, Java paketleri, sunucu adresi ve `%LOCALAPPDATA%\GuvenliPaylasim`
+  (hatırlanan oturum) aynı kaldı. Upgrade UUID değişmediği için MSI eski kurulumun yerine geçer. Şartlar: https://signpath.org/terms. Ücretli
   seçenek: Azure Trusted Signing.
 - **Anahtar yedekleri:** `release-keys/update-private-key.txt` (git'te yok) düz dosya; parolayla şifrelenmeli ya da
   donanım anahtarına taşınmalı ve çevrimdışı yedeklenmeli. Railway'deki `SERVER_SEAL_KEY` veritabanı yedeğinden ayrı

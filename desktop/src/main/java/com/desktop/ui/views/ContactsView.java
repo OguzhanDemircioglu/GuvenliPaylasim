@@ -110,7 +110,7 @@ final class ContactsView extends VBox {
             busy.set(true);
             String number = phone.getText();
             int hours = validity.getValue().hours();
-            String greeting = "Merhaba, sizi Güvenli Paylaşım'da kişi olarak ekledim.\n— " + context.session.fullName();
+            String greeting = "Merhaba, sizi Lockpost'ta kişi olarak ekledim.\n— " + context.session.fullName();
             // Kutunun ömrü (7 gün) kodun geçerlilik süresinden kısa olamaz.
             Async.run(() -> context.invites.send(DocumentContent.ofText(greeting), number, hours, 168, false),
                     sent -> {

@@ -101,7 +101,7 @@ public class VerificationServiceImpl implements VerificationService {
 
     private String message(VerificationPurpose purpose, String code) {
         String action = purpose == VerificationPurpose.REGISTER ? "kayıt" : "parola sıfırlama";
-        return "Güvenli Paylaşım " + action + " kodunuz: " + code + ". " + properties.codeTtl().toMinutes()
+        return "Lockpost " + action + " kodunuz: " + code + ". " + properties.codeTtl().toMinutes()
                 + " dakika geçerlidir. Bu kodu kimseyle paylaşmayın.";
     }
 
