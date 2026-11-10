@@ -4,6 +4,8 @@ rem Gerekenler: JDK 25 (jpackage) ve WiX 3.14 (Projeler\.tools\wix3 ya da PATH't
 rem Kurulum kullanici basinadir: yonetici yetkisi istemez. Upgrade UUID sabittir; yeni surum eskisinin yerine gecer.
 rem Urun adi Turkce karakterlidir; WiX icin Turkce kod sayfasi (1254) src\main\jpackage\MsiInstallerStrings_en.wxl'dedir.
 rem Bu dosya UTF-8 kaydedilir; chcp 65001 Turkce karakterlerin dogru okunmasini saglar.
+rem Turkce jpackage degerleri src\main\jpackage-args\*.args (UTF-8) icindedir: komut satiri argumanlari Java'ya
+rem sistem kod sayfasiyla gecer ve Ingilizce Windows'ta (GitHub Actions) Turkce harfler bozulur.
 setlocal
 chcp 65001 >nul
 rem IntelliJ'nin indirdigi JDK 25 (%USERPROFILE%\.jdks) de kullanilir; Projeler\.tools\jdk varsa o onceliklidir.
@@ -25,17 +27,15 @@ rem bu modul olmadan HTTPS istemcisi kurulamaz ve uygulama "Failed to launch JVM
 set "MODULES=java.base,java.compiler,java.datatransfer,java.xml,java.prefs,java.desktop,java.instrument,java.logging,java.management,java.security.sasl,java.naming,java.rmi,java.management.rmi,java.net.http,java.scripting,java.security.jgss,java.smartcardio,java.transaction.xa,java.sql,java.sql.rowset,java.xml.crypto,jdk.accessibility,jdk.internal.jvmstat,jdk.attach,jdk.internal.opt,jdk.zipfs,jdk.compiler,jdk.dynalink,jdk.httpserver,jdk.incubator.vector,jdk.internal.ed,jdk.internal.le,jdk.internal.md,jdk.jartool,jdk.javadoc,jdk.management,jdk.management.agent,jdk.jconsole,jdk.jdwp.agent,jdk.jdi,jdk.jfr,jdk.jshell,jdk.jsobject,jdk.management.jfr,jdk.net,jdk.nio.mapmode,jdk.sctp,jdk.security.auth,jdk.security.jgss,jdk.unsupported,jdk.unsupported.desktop,jdk.xml.dom,jdk.crypto.mscapi"
 
 "%JAVA_HOME%\bin\jpackage" --type msi ^
-  --name "Güvenli Paylaşım" ^
+  @src\main\jpackage-args\msi.args ^
   --app-version %VERSION% ^
-  --vendor "Bilgi İşlem" ^
-  --description "Uçtan uca şifreli dosya ve mesaj paylaşımı" ^
   --input target\libs ^
   --main-jar desktop-%VERSION%.jar ^
   --main-class com.desktop.Launcher ^
   --add-modules %MODULES% ^
   --java-options "--enable-native-access=ALL-UNNAMED" ^
   --win-per-user-install ^
-  --win-menu --win-menu-group "Güvenli Paylaşım" ^
+  --win-menu ^
   --win-shortcut ^
   --win-upgrade-uuid 6d1f3c2a-8b4e-4f7a-9c21-5e0b7a3d9f14 ^
   --icon src\main\jpackage\GuvenliPaylasim.ico ^
@@ -51,7 +51,7 @@ rem (hata 1625/1718), ama ayni uygulamanin kurulumsuz klasoru calisir. Kod imzal
 "%JAVA_HOME%\bin\jpackage" --type app-image ^
   --name GuvenliPaylasim ^
   --app-version %VERSION% ^
-  --vendor "Bilgi İşlem" ^
+  @src\main\jpackage-args\zip.args ^
   --input target\libs ^
   --main-jar desktop-%VERSION%.jar ^
   --main-class com.desktop.Launcher ^
