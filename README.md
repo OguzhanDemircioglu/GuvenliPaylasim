@@ -18,7 +18,7 @@
   <br>
   <sub>Kurulum dosyası tercih ederseniz:
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.8/GuvenliPaylasim-2.0.8.msi">MSI ile kur</a>
-  (Akıllı Uygulama Denetimi açıksa Windows engelleyebilir)</sub>
+  (Akıllı Uygulama Denetimi açıksa Windows engelleyebilir) · <a href="#code-signing-policy">Code signing policy</a></sub>
 </p>
 
 ---
@@ -217,6 +217,31 @@ Ayrıntı: [docs/Update_Design.md](docs/Update_Design.md).
 - **Anahtar yedekleri:** güncelleme imza anahtarı ve sunucudaki `SERVER_SEAL_KEY` çevrimdışı yedeklenmeli.
 - **Güvenlik testleri:** sistematik yetki (IDOR) testi, bağımlılık taraması, fuzz ve dışarıdan sızma testi
   ([Security.md](docs/Security.md)).
+
+## Code signing policy
+
+Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by
+[SignPath Foundation](https://signpath.org).
+
+- Kurulum dosyaları (MSI ve kurulumsuz ZIP) bu depodaki kaynaktan GitHub Actions'ta üretilir
+  ([desktop-release.yml](.github/workflows/desktop-release.yml)) ve her imza isteği elle onaylanır.
+- Committers and reviewers: [OguzhanDemircioglu](https://github.com/OguzhanDemircioglu)
+- Approvers: [OguzhanDemircioglu](https://github.com/OguzhanDemircioglu)
+
+## Gizlilik (Privacy policy)
+
+Uygulama yalnızca aşağıdaki durumlarda başka sistemlerle bağlantı kurar:
+
+- **Uygulama sunucusu** (demo: Railway): kayıt, giriş, belge ve mesaj gönderme gibi kullanıcının başlattığı
+  işlemler. Belgeler ve mesajlar cihazda şifrelenir; sunucu içeriklerini okuyamaz.
+- **Telefon doğrulaması:** kayıt ve şifre sıfırlamada telefon numarası, doğrulama kodunu iletmesi için Vonage'a
+  (WhatsApp) gönderilir.
+- **Güncelleme kontrolü:** açılışta GitHub'dan en son sürüm bilgisi okunur
+  ([GuvenliPaylasim-releases](https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases)); GitHub'a kullanıcıya
+  ait bilgi gönderilmez.
+
+Bunların dışında uygulama hiçbir bilgiyi başka bir sisteme göndermez. Kişisel verilerin işlenmesi KVKK aydınlatma
+metninde anlatılır (uygulamada kayıt ekranında).
 
 ## Lisans
 

@@ -68,6 +68,10 @@
 
 ## 4. Sürüm yayımlama
 
+SignPath onaylandıktan sonra MSI ve ZIP yerelde değil, GitHub Actions'ta üretilir ve kod imzası alır
+(`.github/workflows/desktop-release.yml`, `v*` etiketi ya da elle çalıştırma). İmzalı dosyalar `signed`
+artifact'ından indirilir; aşağıdaki 2. ve 3. adım o dosyalarla yapılır (özel anahtar CI'da durmaz). O zamana kadar:
+
 ```bash
 # 1) Sürümü desktop/pom.xml'de artır; desktop\package.cmd → dist/ altında MSI ve kurulumsuz ZIP.
 # 2) İmzala: release.json kurulum dosyasının yanına yazılır

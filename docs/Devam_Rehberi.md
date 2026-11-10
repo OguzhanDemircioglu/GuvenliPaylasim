@@ -40,8 +40,11 @@ yayında. Testler: sunucu 160, masaüstü 72; hepsi geçiyor.
   parantezli yerler (veri sorumlusu, iletişim, sunucu ülkesi, yurt dışı aktarım güvencesi); yurt dışı aktarım için
   KVKK m.9 (2024 değişikliği) ya da sunucuyu Türkiye'ye taşımak; gerekirse onayın sunucuda kaydı.
 - **Kod imzalama:** imzasız MSI'ı Akıllı Uygulama Denetimi reddediyor; şimdilik kurulumsuz ZIP. Ücretsiz seçenek
-  SignPath Foundation (ertelendi): `LICENSE` (Apache 2.0) eklendi, MSI/ZIP GitHub Actions'ta kaynaktan üretilmeli,
-  README'ye "Code signing policy", gizlilik politikası, GitHub'da MFA. Şartlar: https://signpath.org/terms. Ücretli
+  SignPath Foundation (2026-11-10 başlandı): `LICENSE` (Apache 2.0), MSI/ZIP GitHub Actions'ta kaynaktan
+  (`.github/workflows/desktop-release.yml`), README'de "Code signing policy" ve gizlilik bölümü hazır. Kalan:
+  GitHub'da MFA, https://signpath.org/apply başvurusu; onaydan sonra Actions değişkenleri
+  `SIGNPATH_ORGANIZATION_ID`, `SIGNPATH_PROJECT_SLUG`, `SIGNPATH_SIGNING_POLICY_SLUG` ve gizli `SIGNPATH_API_TOKEN`.
+  Kod deposu public kalmalı (kaynaktan doğrulanabilir üretim şartı). Şartlar: https://signpath.org/terms. Ücretli
   seçenek: Azure Trusted Signing.
 - **Anahtar yedekleri:** `release-keys/update-private-key.txt` (git'te yok) düz dosya; parolayla şifrelenmeli ya da
   donanım anahtarına taşınmalı ve çevrimdışı yedeklenmeli. Railway'deki `SERVER_SEAL_KEY` veritabanı yedeğinden ayrı

@@ -1,0 +1,77 @@
+# Masaüstü sürümünü kaynaktan üretir (MSI + kurulumsuz ZIP) ve SignPath Foundation ile kod imzası ister.
+# İmza adımı, SignPath ayarları (Settings → Secrets and variables → Actions) girilene kadar atlanır.
+# release.json (Ed25519) burada üretilmez: özel anahtar CI'da durmaz; imzalı MSI indirilip yerelde imzalanır
+# (docs/Update_Design.md §4).
+name: Desktop release
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      # Yerelde kullanılan WiX 3.14.1 (Projeler\.tools\wix3) ile aynı paket; özet sabitlenmiştir.
+      - name: Install WiX 3.14.1
+        shell: pwsh
+        run: |
+          $zip = "$env:RUNNER_TEMP\wix314-binaries.zip"
+          Invoke-WebRequest https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip -OutFile $zip
+          if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne '6AC824E1642D6F7277D0ED7EA09411A508F6116BA6FAE0AA5F2C7DAA2FF43D31') { throw 'WiX özeti uyuşmuyor' }
+          Expand-Archive $zip -DestinationPath "$env:RUNNER_TEMP\wix3"
+          "$env:RUNNER_TEMP\wix3" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+
+      - name: Test
+        working-directory: desktop
+        shell: cmd
+        run: mvnw.cmd -B -q test
+
+      - name: Package
+        shell: cmd
+        run: desktop\package.cmd
+
+      - name: Upload unsigned
+        id: upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: unsigned
+          path: |
+            desktop/dist/*.msi
+            desktop/dist/*-kurulumsuz.zip
+          if-no-files-found: error
+
+  sign:
+    needs: build
+    if: vars.SIGNPATH_ORGANIZATION_ID != ''
+    runs-on: windows-latest
+    steps:
+      - uses: signpath/github-action-submit-signing-request@v3
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: ${{ vars.SIGNPATH_PROJECT_SLUG }}
+          signing-policy-slug: ${{ vars.SIGNPATH_SIGNING_POLICY_SLUG }}
+          github-artifact-id: ${{ needs.build.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: signed
+          path: signed/
+          if-no-files-found: error
