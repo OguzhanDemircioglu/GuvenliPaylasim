@@ -1,6 +1,6 @@
 # Güncelleme Tasarımı — Güvenli Paylaşım
 
-> **Durum:** 2026-11-07 (masaüstü 2.0.5). Kod: `desktop/src/main/java/com/desktop/update/`.
+> **Durum:** 2026-11-10 (masaüstü 2.0.8). Kod: `desktop/src/main/java/com/desktop/update/`.
 
 ## 1. Akış
 
@@ -35,6 +35,11 @@
   anahtarla** (`…BDhP…`) çıktı. 1.0.5 kullananlar 2.0.0'ı bir kez elle kurar. Eski özel anahtar
   `release-keys/retired-1.0.4/` altında durur, artık kullanılmaz. Ders: özel anahtar tek bilgisayarda ve yedekli
   tutulur; yayından önce `sign` sonucu gömülü açık anahtarla doğrulanır.
+  **2.0.8 (2026-11-10):** üçüncü anahtarın özel kısmı sürümün hazırlandığı bilgisayarda yoktu; 2.0.8 yine ikinci
+  anahtarla (`…FnRb…`) imzalandı ve uygulamaya o gömüldü. 2.0.0–2.0.7 kullananlar 2.0.8'i bir kez elle kurar.
+- **Sürüm deposu.** 2.0.8'den itibaren uygulama sürümleri kod deposundan değil, ayrı ve public
+  `OguzhanDemircioglu/GuvenliPaylasim-releases` deposundan okur (`update.repository`); böylece kod deposu private
+  yapılabilir. 2.0.7 ve öncesi eski depoya bakar; o depo private olunca 404 alır ve "güncel" sayar.
 
 ## 2b. MSI engellenirse (Akıllı Uygulama Denetimi, 2026-11-07)
 
@@ -66,8 +71,9 @@
 ```bash
 # 1) Sürümü desktop/pom.xml'de artır; desktop\package.cmd → dist/ altında MSI ve kurulumsuz ZIP.
 # 2) İmzala: release.json kurulum dosyasının yanına yazılır
-java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/GuvenliPaylasim-2.0.6.msi 2.0.6 release-keys/update-private-key.txt
-# 3) GitHub'da v2.0.6 etiketiyle release aç; MSI, ZIP ve release.json'u ekle (gh release create ...). Açıklama sürüm notu olarak görünür.
+java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/GuvenliPaylasim-2.0.8.msi 2.0.8 release-keys/update-private-key.txt
+# 3) Sürüm deposunda v2.0.8 etiketiyle release aç; MSI, ZIP ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
+gh release create v2.0.8 -R OguzhanDemircioglu/GuvenliPaylasim-releases --title 2.0.8 --notes-file notlar.md desktop/dist/GuvenliPaylasim-2.0.8.msi desktop/dist/GuvenliPaylasim-2.0.8-kurulumsuz.zip desktop/dist/release.json
 # 4) README'nin en üstündeki indirme bağlantılarındaki sürüm numaralarını güncelle.
 ```
 

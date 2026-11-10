@@ -9,15 +9,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.7/GuvenliPaylasim-2.0.7-kurulumsuz.zip">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.8/GuvenliPaylasim-2.0.8-kurulumsuz.zip">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Sürüm 2.0.7 · Uygulama yeni sürümleri açılışta kendisi bulur ·
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
+  <sub>Sürüm 2.0.8 · Uygulama yeni sürümleri açılışta kendisi bulur ·
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases">Bütün sürümler</a></sub>
   <br>
   <sub>Kurulum dosyası tercih ederseniz:
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.7/GuvenliPaylasim-2.0.7.msi">MSI ile kur</a>
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.8/GuvenliPaylasim-2.0.8.msi">MSI ile kur</a>
   (Akıllı Uygulama Denetimi açıksa Windows engelleyebilir)</sub>
 </p>
 
@@ -185,7 +185,12 @@ Veritabanı ya da Docker gerekmez. Son durum: sunucu 160, masaüstü 72 test, he
    ```bash
    java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/GuvenliPaylasim-<sürüm>.msi <sürüm> release-keys/update-private-key.txt
    ```
-4. GitHub'da `v<sürüm>` release'i açıp MSI, ZIP ve `release.json`'u ekleyin.
+4. Sürümler ayrı, public [GuvenliPaylasim-releases](https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases)
+   deposunda yayımlanır (kod deposu private olabilir). `v<sürüm>` release'ini orada açıp MSI, ZIP ve `release.json`'u
+   ekleyin:
+   ```bash
+   gh release create v<sürüm> -R OguzhanDemircioglu/GuvenliPaylasim-releases --title <sürüm> --notes-file notlar.md desktop/dist/GuvenliPaylasim-<sürüm>.msi desktop/dist/GuvenliPaylasim-<sürüm>-kurulumsuz.zip desktop/dist/release.json
+   ```
 5. Bu README'nin başındaki indirme bağlantılarını güncelleyin.
 
 Ayrıntı: [docs/Update_Design.md](docs/Update_Design.md).

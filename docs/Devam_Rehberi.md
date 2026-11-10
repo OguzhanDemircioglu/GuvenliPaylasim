@@ -27,7 +27,8 @@ yayında. Testler: sunucu 160, masaüstü 72; hepsi geçiyor.
 | 2.0.3 | 2026-11-07 | Kod gönderme geri sayımı (300 sn), "Bu Cihaza Güven", logo, ad soyad 2–3 kelime, KVKK aydınlatma metni (taslak), düğmeler form geçerli olmadan kapalı, şifre 12–20 karakter + dört karakter türü |
 | 2.0.4 | 2026-11-07 | Verdana ve büyük yazılar, "Şifre" ifadesi, şifre alanı 20 karakter, uyarı yerleri ([UI_Standards.md](UI_Standards.md)), "Hesabımı Sil", kayıt test modu |
 | 2.0.6 | 2026-11-07 | Bakım: Gelen Kutusu listesi kendiliğinden yenilenir ("Yenile" kalktı). Sunucuda (deploy ile): Gönderilenler içerik okumadan listelenir, eksik indeksler, istek gövdesine 16 MB sınırı, numara başına toplam giriş denemesi sınırı (30/saat), Spring Boot 4.1.2 |
-| 2.0.7 | 2026-11-10 | Kurum içi TLS denetimi (ör. Fortinet): Windows güven deposu da okunur; kurum kökünün pin'i o makinede `GPS_SERVER_PINS` ile eklenirse bağlanılır, varsayılan sabitleme değişmez (Security S1) |
+| 2.0.7 | 2026-11-10 | Kurum içi TLS denetimi (ör. Fortinet): Windows güven deposu da okunur; kurum kökünün pin'i o makinede `GPS_SERVER_PINS` ile eklenirse bağlanılır, varsayılan sabitleme değişmez (Security S1). Yayımlanmadı, 2.0.8'e dahil |
+| 2.0.8 | 2026-11-10 | Güncellemeler ayrı, public `GuvenliPaylasim-releases` deposundan okunur (kod deposu private olabilsin diye). İmza anahtarı yine `…FnRb…` (Update_Design §2): 2.0.x kullananlar 2.0.8'i bir kez elle kurar |
 | 2.0.5 | 2026-11-07 | Geniş dosya türü listesi, programlar engellenir, alıcıya riskli dosya uyarısı ve dış kaynak etiketi (Security S4), **Kaydedilemez** belgeler (Crypto_Design §8.3.1), **Kişi Ekle**, tıklayınca açılan belge, kendiliğinden yenilenen Gönderilenler |
 
 ### Gerçek kullanıma geçmeden önce yapılacaklar
