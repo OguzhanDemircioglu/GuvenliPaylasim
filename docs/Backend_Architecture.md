@@ -3,7 +3,7 @@
 > **Durum:** v3 — 2026-10-18 (StarterApp şablonu). Bu doküman şablonun genel kurallarıdır (API sözleşmesi, hata
 > yönetimi, JWT, migration, loglama, konfigürasyon).
 >
-> **Güvenli Paylaşım için okuma notu (2026-11-07):** §1–§19 StarterApp'ten gelir. Şablondaki **roller, yetkiler,
+> **Lockpost için okuma notu (2026-11-07):** §1–§19 StarterApp'ten gelir. Şablondaki **roller, yetkiler,
 > menüler, birimler, MapStruct/`BaseService` örnekleri, soft delete ve yönetici hesabı bu projede yoktur** (v2'de
 > kaldırıldı). Bu projeye özgü ve güncel olan **§20**'dir; modül listesi [server/README.md](../server/README.md)'de.
 
@@ -831,7 +831,7 @@ Testler veritabanı ya da Docker gerektirmez; `./mvnw test` her makinede aynı s
 
 ---
 
-## 20. Güvenli Paylaşım'a özgü eklemeler
+## 20. Lockpost'a özgü eklemeler
 
 Bu proje StarterApp şablonundan türetildi; §5 (API sözleşmesi), §7 (hata yönetimi), §8 (JWT), §11 (migration),
 §14–§16 (loglama, konfigürasyon, deploy) geçerlidir. Aşağıdakiler bu projeye özgüdür (2026-11-07, v2).

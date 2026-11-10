@@ -1,4 +1,4 @@
-# Güncelleme Tasarımı — Güvenli Paylaşım
+# Güncelleme Tasarımı — Lockpost
 
 > **Durum:** 2026-11-10 (masaüstü 2.0.8). Kod: `desktop/src/main/java/com/desktop/update/`.
 

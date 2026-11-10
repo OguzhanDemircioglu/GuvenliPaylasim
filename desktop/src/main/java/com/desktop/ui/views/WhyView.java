@@ -96,7 +96,7 @@ final class WhyView extends ScrollPane {
         grid.setHgap(18);
 
         grid.addRow(0, Ui.label("KONU", "compare-header"), Ui.label("ESKİ SİSTEM", "compare-header"),
-                Ui.label("GÜVENLİ PAYLAŞIM", "compare-header"));
+                Ui.label("LOCKPOST", "compare-header"));
         for (int i = 0; i < COMPARISONS.length; i++) {
             Comparison c = COMPARISONS[i];
             HBox row = new HBox();

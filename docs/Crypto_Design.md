@@ -1,4 +1,4 @@
-# Şifreleme Tasarımı — Güvenli Paylaşım
+# Şifreleme Tasarımı — Lockpost
 
 > **Durum (2026-11-07):** **Güncel tasarım §7 ve §8'dir** ve tamamı kodlandı (masaüstü 2.0.5, sunucu Railway'de).
 > §1–§6 ilk prototipi (v1: e-posta, roller, birimler) anlatır; temel yapı (§3 anahtarlar, §4 belge şifreleme ve
@@ -11,7 +11,7 @@
 Eski "Güvenli Bilgi Paylaşım Sistemi" (kullanıcı kılavuzu, Haziran 2016) "asimetrik şifreleme" kullandığını söyler,
 ancak kılavuzdaki akış **parola tabanlı simetrik şifrelemedir**:
 
-| Konu | Eski sistem (kılavuza göre) | Güvenli Paylaşım |
+| Konu | Eski sistem (kılavuza göre) | Lockpost |
 |---|---|---|
 | Anahtar paylaşımı | Gönderen iki anahtar yazar; anahtarlar alıcılara **SMS ile açık metin** gider | Paylaşılan parola yoktur; her kişinin kendi anahtar çifti vardır |
 | Anahtarın gücü | Kullanıcının yazdığı değer (kılavuzdaki örnek: `123`, `abc`) | Her belgeye rastgele 256 bit AES anahtarı |

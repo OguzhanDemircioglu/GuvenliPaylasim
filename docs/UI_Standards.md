@@ -1,6 +1,6 @@
 # Arayüz ve Form Standartları
 
-> **Durum:** v1 — 2026-11-07. Güvenli Paylaşım'da (JavaFX masaüstü) uygulandı; StarterApp'e (Angular + NG-ZORRO) de
+> **Durum:** v1 — 2026-11-07. Lockpost'ta (JavaFX masaüstü) uygulandı; StarterApp'e (Angular + NG-ZORRO) de
 > aynı kurallarla uygulanacak. Kurallar teknolojiden bağımsızdır; her bölümün sonunda iki projeye özgü notlar var.
 > Bir kural değişecekse önce bu belge güncellenir, sonra kod.
 
@@ -28,7 +28,7 @@ formu gönderemez, ne eksik olduğunu doğru yerde ve doğru zamanda görür, me
 Hata mesajları sunucudan **anahtar** olarak gelir (`user_full_name_words`), metni istemci gösterir; aynı anahtar her
 yerde aynı metni verir.
 
-**Güvenli Paylaşım:** `desktop/.../api/Messages.java`. **StarterApp:** ngx-translate `tr.json` (Frontend_Architecture
+**Lockpost:** `desktop/.../api/Messages.java`. **StarterApp:** ngx-translate `tr.json` (Frontend_Architecture
 §10).
 
 ---
@@ -44,7 +44,7 @@ yerde aynı metni verir.
 - Yazı tipi ya da boyut değişince **bütün ekranlar** görüntüyle kontrol edilir (kesilen metin, taşan alan); sabit
   genişlikli sütunlar gerekirse büyütülür.
 
-**Güvenli Paylaşım:** `app.css` (`.root`, `.gps-button`), `Ui.button` (`gps-button` sınıfı + `minWidth = USE_PREF_SIZE`);
+**Lockpost:** `app.css` (`.root`, `.gps-button`), `Ui.button` (`gps-button` sınıfı + `minWidth = USE_PREF_SIZE`);
 giriş kartı 1000×600, ana pencere 1440×900. **StarterApp:** global `styles.scss` (`font-family`, `font-size`), NG-ZORRO
 tema değişkenleri (`@font-family`, `@font-size-base`), `nz-button` için `white-space: nowrap` ve `min-width: max-content`.
 
@@ -82,7 +82,7 @@ denetlenir; sunucu da (görebildiği her şeyi) denetler.
 - Yeni şifrede (kayıt, sıfırlama, profil) ayrıca zayıf şifre kontrolü: bilinen kelime/isim + yıl, klavye dizisi
   (`12345`, `qwerty`), tekrar, kişinin kendi adı ya da telefonu.
 - **Sunucu denetimi:** sunucu şifreyi görüyorsa (StarterApp: bcrypt) aynı kural sunucuda da uygulanır. Sunucu şifreyi
-  görmüyorsa (Güvenli Paylaşım: istemci şifreden türetilmiş değer gönderir) kural sadece istemcidedir ve bu belgelenir.
+  görmüyorsa (Lockpost: istemci şifreden türetilmiş değer gönderir) kural sadece istemcidedir ve bu belgelenir.
 - En az 12 karakter bilinçli bir alt sınırdır; düşürülmeden önce güvenlik etkisi konuşulur.
 
 ### 4.5 Dosya türleri ve risk
@@ -125,7 +125,7 @@ denetlenir; sunucu da (görebildiği her şeyi) denetler.
 
 Uyarı alanın altında yer kaplamaz; görünmediğinde düzeni kaydırmaz.
 
-**Güvenli Paylaşım:** `PasswordFields.limit`, `PasswordFields.hint`, `PasswordFields.bindHints`. **StarterApp:**
+**Lockpost:** `PasswordFields.limit`, `PasswordFields.hint`, `PasswordFields.bindHints`. **StarterApp:**
 Reactive Forms + `nz-form-control [nzErrorTip]`; şifre tekrarı için form grubu doğrulayıcısı (`passwordsMatch`);
 uyarının ne zaman görüneceği `dirty` (ilk karakter) ile belirlenir, `touched` ile değil.
 
@@ -147,7 +147,7 @@ düğme meşguldür ve tekrar basılamaz.
 | Adı Kaydet | Ad değişmiş ve kurallara uygun |
 | Hesabımı Kalıcı Olarak Sil | Şifre kurala uygun (+ iki adımlı doğrulama açıksa kod) |
 
-**Güvenli Paylaşım:** `disableProperty().bind(meşgul.or(geçersiz))`; düğme kodda doğrudan `setDisable` ile açılıp
+**Lockpost:** `disableProperty().bind(meşgul.or(geçersiz))`; düğme kodda doğrudan `setDisable` ile açılıp
 kapatılmaz. **StarterApp:** `[disabled]="form.invalid || loading()"`; `nzLoading` ile meşgul durumu.
 
 ---
@@ -167,7 +167,7 @@ kapatılmaz. **StarterApp:** `[disabled]="form.invalid || loading()"`; `nzLoadin
 
 - Giriş ve kayıt ekranında aynı adla bulunur; seçilirse uygulama 30 gün boyunca şifre sormadan açılır.
 - Seçilmeden yapılan giriş eski kaydı siler; "Güvenli Çıkış" kaydı siler; sunucu oturumu kabul etmezse kayıt silinir.
-- Kayıt işletim sisteminin korumalı deposunda tutulur. **Güvenli Paylaşım:** Windows DPAPI
+- Kayıt işletim sisteminin korumalı deposunda tutulur. **Lockpost:** Windows DPAPI
   (`%LOCALAPPDATA%\GuvenliPaylasim\remember.bin`). **StarterApp:** uzun ömürlü refresh token HttpOnly + Secure cookie'de;
   `localStorage`/`sessionStorage`'a token yazılmaz.
 - İpucu: "Ortak kullanılan bilgisayarda seçmeyin."

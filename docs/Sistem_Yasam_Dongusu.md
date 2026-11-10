@@ -1,11 +1,11 @@
-# Güvenli Paylaşım — Sistemin Yaşam Döngüsü
+# Lockpost — Sistemin Yaşam Döngüsü
 
 > Bu belge, sistemin teknik işleyişini baştan sona, sırayla anlatır. Görsel (yaşam döngüsü diyagramı) üretmek için
 > kaynak olarak hazırlandı; her aşama tek başına okunabilir. Ayrıntılı tasarım: [Crypto_Design.md](Crypto_Design.md).
 
 ## Genel bakış
 
-Güvenli Paylaşım, uçtan uca şifreli dosya ve mesaj paylaşım uygulamasıdır. Üç taraf vardır:
+Lockpost, uçtan uca şifreli dosya ve mesaj paylaşım uygulamasıdır. Üç taraf vardır:
 
 - **Gönderen:** Windows masaüstü uygulaması. Şifreleme ve imzalama burada yapılır.
 - **Sunucu:** Spring Boot + PostgreSQL. Sadece şifreli veriyi saklar ve doğru kişiye teslim eder. İçeriği, dosya

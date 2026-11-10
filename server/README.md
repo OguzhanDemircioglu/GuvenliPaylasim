@@ -1,6 +1,6 @@
 # server
 
-Güvenli Paylaşım'ın Spring Boot backend'i (StarterApp şablonundan türetildi). Şifreli kutuları, açık anahtarları,
+Lockpost'un Spring Boot backend'i (StarterApp şablonundan türetildi). Şifreli kutuları, açık anahtarları,
 davetleri ve kişileri tutar; içeriği göremez. Genel kurallar: [docs/Backend_Architecture.md](../docs/Backend_Architecture.md)
 (§20 bu projeye özgü). Şifreleme: [docs/Crypto_Design.md](../docs/Crypto_Design.md).
 

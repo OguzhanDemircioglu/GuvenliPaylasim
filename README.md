@@ -9,15 +9,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.8/GuvenliPaylasim-2.0.8-kurulumsuz.zip">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.9/Lockpost-2.0.9-kurulumsuz.zip">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Sürüm 2.0.8 · Uygulama yeni sürümleri açılışta kendisi bulur ·
+  <sub>Sürüm 2.0.9 · Uygulama yeni sürümleri açılışta kendisi bulur ·
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases">Bütün sürümler</a></sub>
   <br>
   <sub>Kurulum dosyası tercih ederseniz:
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.8/GuvenliPaylasim-2.0.8.msi">MSI ile kur</a>
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.9/Lockpost-2.0.9.msi">MSI ile kur</a>
   (Akıllı Uygulama Denetimi açıksa Windows engelleyebilir) · <a href="#code-signing-policy">Code signing policy</a></sub>
 </p>
 

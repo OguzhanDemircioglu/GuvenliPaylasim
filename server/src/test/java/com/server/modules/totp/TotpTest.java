@@ -49,8 +49,8 @@ class TotpTest {
 
     @Test
     void uriIsWhatAuthenticatorAppsExpect() {
-        assertThat(Totp.uri("Güvenli Paylaşım", "+905551234567", "JBSWY3DPEHPK3PXP")).isEqualTo(
-                "otpauth://totp/G%C3%BCvenli%20Payla%C5%9F%C4%B1m:%2B905551234567?secret=JBSWY3DPEHPK3PXP"
-                        + "&issuer=G%C3%BCvenli%20Payla%C5%9F%C4%B1m&algorithm=SHA1&digits=6&period=30");
+        assertThat(Totp.uri("Lockpost", "+905551234567", "JBSWY3DPEHPK3PXP")).isEqualTo(
+                "otpauth://totp/Lockpost:%2B905551234567?secret=JBSWY3DPEHPK3PXP"
+                        + "&issuer=Lockpost&algorithm=SHA1&digits=6&period=30");
     }
 }
