@@ -212,4 +212,7 @@ Ayrıntı: [docs/Update_Design.md](docs/Update_Design.md).
 - **Anahtar yedekleri:** güncelleme imza anahtarı ve sunucudaki `SERVER_SEAL_KEY` çevrimdışı yedeklenmeli.
 - **Güvenlik testleri:** sistematik yetki (IDOR) testi, bağımlılık taraması, fuzz ve dışarıdan sızma testi
   ([Security.md](docs/Security.md)).
-- **Lisans:** MIT kararlaştırıldı, `LICENSE` dosyası henüz eklenmedi.
+
+## Lisans
+
+[Apache License 2.0](LICENSE) altında dağıtılır. Telif bilgisi için [NOTICE](NOTICE).

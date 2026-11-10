@@ -39,7 +39,7 @@ yayında. Testler: sunucu 160, masaüstü 72; hepsi geçiyor.
   parantezli yerler (veri sorumlusu, iletişim, sunucu ülkesi, yurt dışı aktarım güvencesi); yurt dışı aktarım için
   KVKK m.9 (2024 değişikliği) ya da sunucuyu Türkiye'ye taşımak; gerekirse onayın sunucuda kaydı.
 - **Kod imzalama:** imzasız MSI'ı Akıllı Uygulama Denetimi reddediyor; şimdilik kurulumsuz ZIP. Ücretsiz seçenek
-  SignPath Foundation (ertelendi): `LICENSE` (karar MIT) eklenmeli, MSI/ZIP GitHub Actions'ta kaynaktan üretilmeli,
+  SignPath Foundation (ertelendi): `LICENSE` (Apache 2.0) eklendi, MSI/ZIP GitHub Actions'ta kaynaktan üretilmeli,
   README'ye "Code signing policy", gizlilik politikası, GitHub'da MFA. Şartlar: https://signpath.org/terms. Ücretli
   seçenek: Azure Trusted Signing.
 - **Anahtar yedekleri:** `release-keys/update-private-key.txt` (git'te yok) düz dosya; parolayla şifrelenmeli ya da
