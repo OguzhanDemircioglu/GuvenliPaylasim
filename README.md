@@ -9,15 +9,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.6/GuvenliPaylasim-2.0.6-kurulumsuz.zip">
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.7/GuvenliPaylasim-2.0.7-kurulumsuz.zip">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Sürüm 2.0.6 · Uygulama yeni sürümleri açılışta kendisi bulur ·
+  <sub>Sürüm 2.0.7 · Uygulama yeni sürümleri açılışta kendisi bulur ·
   <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases">Bütün sürümler</a></sub>
   <br>
   <sub>Kurulum dosyası tercih ederseniz:
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.6/GuvenliPaylasim-2.0.6.msi">MSI ile kur</a>
+  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim/releases/download/v2.0.7/GuvenliPaylasim-2.0.7.msi">MSI ile kur</a>
   (Akıllı Uygulama Denetimi açıksa Windows engelleyebilir)</sub>
 </p>
 

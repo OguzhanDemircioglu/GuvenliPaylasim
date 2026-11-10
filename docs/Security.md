@@ -38,6 +38,12 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   Bağlantı sadece TLS 1.3. Sabit tutmazsa "Sunucunun kimliği doğrulanamadı" hatası verilir. Ara sertifikalara
   sabitleme yapılmaz (yıllık değişirler). Güncelleme kanalı (GitHub) bu sabitlemenin dışındadır; orada imza
   doğrulaması koruma sağlar (S7).
+- **Kurum içi TLS denetimi (2026-11-10):** Bazı kurum ağları HTTPS'i kendi kökleriyle yeniden imzalar (ör. Fortinet);
+  bu durumda varsayılan sabitleme bağlantıyı reddeder. Windows'ta güven deposuna Windows güven deposu (Windows-ROOT)
+  da eklenir; bu kökler normal doğrulamayı geçer ama sabitlemeyi geçmez. O ağdan bağlanması gereken makinede kurum
+  kökünün pin'i `GPS_SERVER_PINS` ortam değişkenine (varsayılan pinlerle birlikte) eklenir. **Kabul:** o makinede
+  kurum güvenlik duvarı authSecret'ı ve oturum jetonlarını görebilir; parola, özel anahtarlar ve belge içerikleri
+  uçtan uca şifreli kaldığı için görünmez. Kalıcı çözüm, sunucu adresinin SSL denetiminden muaf tutulmasıdır.
 
 ### S2. Veritabanını çalan
 - **Parola kuralı (2026-11-07):** 12–20 karakter; en az bir büyük harf, küçük harf, rakam ve özel karakter (boşluk

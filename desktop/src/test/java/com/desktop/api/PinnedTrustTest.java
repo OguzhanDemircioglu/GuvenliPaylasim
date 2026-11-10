@@ -1,6 +1,5 @@
 package com.desktop.api;
 
-import com.desktop.config.AppConfig;
 import org.junit.jupiter.api.Test;
 
 import java.security.KeyStore;
@@ -22,7 +21,7 @@ class PinnedTrustTest {
 
     @Test
     void configuredPinsIncludeTheLetsEncryptRootsFromTheJdkTrustStore() throws Exception {
-        Set<String> configured = AppConfig.get().serverPins();
+        Set<String> configured = shippedPins();
         List<X509Certificate> isrg = roots().stream()
                 .filter(c -> c.getSubjectX500Principal().getName().contains("ISRG Root X")).toList();
 
@@ -35,7 +34,7 @@ class PinnedTrustTest {
 
     @Test
     void aPathThroughAnotherCertificateAuthorityDoesNotMatch() throws Exception {
-        Set<String> pins = AppConfig.get().serverPins();
+        Set<String> pins = shippedPins();
         List<X509Certificate> others = roots().stream()
                 .filter(c -> !c.getSubjectX500Principal().getName().contains("ISRG")).toList();
 
@@ -48,10 +47,34 @@ class PinnedTrustTest {
     }
 
     @Test
+    void windowsRootsAreTrustAnchorsButNotPinned() throws Exception {
+        org.junit.jupiter.api.Assumptions.assumeTrue(System.getProperty("os.name").startsWith("Windows"));
+        KeyStore windows = KeyStore.getInstance("Windows-ROOT");
+        windows.load(null, null);
+        KeyStore anchors = PinnedTrust.systemTrustStore();
+
+        for (String alias : Collections.list(windows.aliases())) {
+            assertTrue(anchors.getCertificateAlias(windows.getCertificate(alias)) != null, alias);
+        }
+        Set<String> pins = shippedPins();
+        assertFalse(roots().stream().anyMatch(c -> c.getSubjectX500Principal().getName().contains("Fortinet")
+                && PinnedTrust.matches(List.of(c), pins)));
+    }
+
+    @Test
     void pinListParsing() {
         assertEquals(Set.of("a", "b"), PinnedTrust.parse(" a, b ,,"));
         assertTrue(PinnedTrust.parse("  ").isEmpty());
         assertTrue(PinnedTrust.parse(null).isEmpty());
+    }
+
+    /** Uygulamayla dağıtılan pinler; makineye özel GPS_SERVER_PINS testi etkilemesin. */
+    private static Set<String> shippedPins() throws Exception {
+        java.util.Properties properties = new java.util.Properties();
+        try (var in = PinnedTrustTest.class.getResourceAsStream("/com/desktop/app.properties")) {
+            properties.load(new java.io.InputStreamReader(in, java.nio.charset.StandardCharsets.UTF_8));
+        }
+        return PinnedTrust.parse(properties.getProperty("server.pins"));
     }
 
     private static List<X509Certificate> roots() throws Exception {

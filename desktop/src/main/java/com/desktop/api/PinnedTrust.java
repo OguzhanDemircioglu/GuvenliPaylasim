@@ -84,10 +84,26 @@ public final class PinnedTrust {
         return path.stream().map(PinnedTrust::pin).anyMatch(pins::contains);
     }
 
+    /**
+     * Java güven deposu + Windows'ta Windows güven deposu (Windows-ROOT). Kurum ağları HTTPS'i kendi kökleriyle
+     * yeniden imzalayabilir (ör. Fortinet); o kök Windows'a kurulu olur. Bu kökler sadece normal doğrulamayı geçer,
+     * sabitlemeyi geçmez: kabul edilmesi için pin'inin {@code GPS_SERVER_PINS} ile o makinede eklenmesi gerekir.
+     */
     static KeyStore systemTrustStore() throws GeneralSecurityException, java.io.IOException {
         KeyStore store = KeyStore.getInstance(KeyStore.getDefaultType());
         try (InputStream in = Files.newInputStream(Path.of(System.getProperty("java.home"), "lib", "security", "cacerts"))) {
             store.load(in, null);
+        }
+        if (System.getProperty("os.name", "").startsWith("Windows")) {
+            KeyStore windows = KeyStore.getInstance("Windows-ROOT");
+            windows.load(null, null);
+            int index = 0;
+            for (String alias : java.util.Collections.list(windows.aliases())) {
+                java.security.cert.Certificate certificate = windows.getCertificate(alias);
+                if (certificate != null && store.getCertificateAlias(certificate) == null) {
+                    store.setCertificateEntry("windows-root-" + index++, certificate);
+                }
+            }
         }
         return store;
     }
