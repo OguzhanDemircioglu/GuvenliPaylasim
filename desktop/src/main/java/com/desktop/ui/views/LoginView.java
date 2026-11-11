@@ -357,6 +357,7 @@ public final class LoginView extends VBox {
                 + "Anahtarlarınız Windows hesabınıza bağlı olarak şifreli saklanır; ortak kullanılan bilgisayarda "
                 + "seçmeyin. Güvenli çıkış yaparsanız kayıt silinir."));
         noticeRead.getStyleClass().add("auth-check");
+        noticeRead.setSelected(true);
         Hyperlink notice = new Hyperlink("Aydınlatma Metnini");
         notice.getStyleClass().add("auth-link");
         notice.setOnAction(e -> showNotice());
