@@ -1,0 +1,89 @@
+# OWASP ZAP API taraması (Security.md §5): sunucu GitHub makinesinde gerçek PostgreSQL ile çalışır, bir test kullanıcısı
+# açılır ve ZAP OpenAPI tanımındaki bütün uç noktaları bu kullanıcının oturumuyla tarar (pasif + aktif saldırılar).
+# Canlı sunucuya dokunmaz. Rapor "zap_scan" artifact'ında; issue açılmaz. Elle çalıştırılır.
+name: Security scan
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zap:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      SPRING_PROFILES_ACTIVE: dev
+      DB_URL: jdbc:postgresql://localhost:5432/postgres
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_SCHEMA: gps_v2
+      DEV_LOGIN_ENABLED: 'false'
+      TEST_MODE: 'true'
+      JWT_KEY_ID: scan
+      JWT_PRIVATE_KEY_PATH: /tmp/keys/private.pem
+      JWT_PUBLIC_KEY_PATH: /tmp/keys/public.pem
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Build
+        working-directory: server
+        run: sh mvnw -B -q package -DskipTests
+
+      - name: Start server
+        run: |
+          mkdir -p /tmp/keys
+          openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out /tmp/keys/private.pem
+          openssl rsa -in /tmp/keys/private.pem -pubout -out /tmp/keys/public.pem
+          export SERVER_SEAL_KEY=$(openssl rand -base64 32)
+          nohup java -jar server/target/server-*.jar > /tmp/server.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -sf http://localhost:8080/actuator/health && exit 0
+            sleep 2
+          done
+          cat /tmp/server.log
+          exit 1
+
+      - name: Create scan user
+        run: |
+          key() { openssl genpkey -algorithm "$1" | openssl pkey -pubout -outform DER | base64 -w0; }
+          PHONE=5550000001
+          CODE=$(curl -sf -H 'content-type: application/json' -d "{\"phone\":\"$PHONE\"}" \
+            http://localhost:8080/api/auth/register/start | jq -r .data.testCode)
+          curl -sf -H 'content-type: application/json' -d "{\"phone\":\"$PHONE\",\"code\":\"$CODE\",
+            \"fullName\":\"Tarama Kullanıcısı\",\"password\":\"scan-password-123456\",
+            \"keys\":{\"encryptionPublicKey\":\"$(key X25519)\",\"signingPublicKey\":\"$(key ED25519)\",
+            \"privateKeyBundle\":\"b\"}}" http://localhost:8080/api/auth/register/complete > /dev/null
+          TOKEN=$(curl -sf -H 'content-type: application/json' \
+            -d "{\"phone\":\"$PHONE\",\"password\":\"scan-password-123456\"}" \
+            http://localhost:8080/api/auth/login | jq -r .data.accessToken)
+          test -n "$TOKEN" && test "$TOKEN" != null
+          echo "::add-mask::$TOKEN"
+          echo "ZAP_AUTH_HEADER_VALUE=Bearer $TOKEN" >> "$GITHUB_ENV"
+
+      - name: ZAP API scan
+        uses: zaproxy/action-api-scan@v0.10.0
+        with:
+          target: http://localhost:8080/v3/api-docs
+          format: openapi
+          allow_issue_writing: false
+          fail_action: false
+          artifact_name: zap_scan
+          cmd_options: '-a'
+
+      - name: Server log
+        if: always()
+        run: tail -n 200 /tmp/server.log
