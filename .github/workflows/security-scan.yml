@@ -60,7 +60,7 @@ jobs:
       - name: Create scan user
         run: |
           key() { openssl genpkey -algorithm "$1" | openssl pkey -pubout -outform DER | base64 -w0; }
-          PHONE=5550000001
+          PHONE=5559876543
           CODE=$(curl -sf -H 'content-type: application/json' -d "{\"phone\":\"$PHONE\"}" \
             http://localhost:8080/api/auth/register/start | jq -r .data.testCode)
           curl -sf -H 'content-type: application/json' -d "{\"phone\":\"$PHONE\",\"code\":\"$CODE\",
