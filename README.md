@@ -209,7 +209,7 @@ Ayrıntı: [docs/Update_Design.md](docs/Update_Design.md).
 ### Gerçek kullanıma geçmeden önce
 
 - **Kod imzalama sertifikası:** olmadan Akıllı Uygulama Denetimi MSI'ı reddeder (şimdilik ZIP ile çözülüyor).
-- **Doğrulama mesajı:** test modu kapatılmalı (`VERIFICATION_TEST_MODE`); kayıtlı SMS gönderen adı ya da Meta onaylı
+- **Doğrulama mesajı:** test modu kapatılmalı (`TEST_MODE`); kayıtlı SMS gönderen adı ya da Meta onaylı
   WhatsApp hesabı alınmalı (şu an WhatsApp sandbox).
 - **KVKK:** aydınlatma metni taslak; avukat incelemesi ve sunucunun yeri (Railway Türkiye dışında).
 - **Anahtar yedekleri:** güncelleme imza anahtarı ve sunucudaki `SERVER_SEAL_KEY` çevrimdışı yedeklenmeli.

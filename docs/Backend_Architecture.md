@@ -841,7 +841,7 @@ Bu proje StarterApp şablonundan türetildi; §5 (API sözleşmesi), §7 (hata y
   numarasıdır (`5XXXXXXXXX`), değiştirilemez (şifre telefonla türetilir).
 - **Kayıt ve sıfırlama:** `register/start|complete`, `password-reset/start|complete`; telefon WhatsApp koduyla
   doğrulanır (`verification` + `notification`). `start` kayıtlı ve kayıtsız numarada aynı yanıtı aynı sürede verir.
-  `VERIFICATION_TEST_MODE=true` iken sadece kayıtta kod cevapta döner.
+  `TEST_MODE=true` iken sadece kayıtta kod cevapta döner.
 - **Şifre:** istemci gerçek şifreyi göndermez, telefon tuzlu türetilmiş `authSecret` gönderir. Sunucu bunu bcrypt'ler
   ve `SERVER_SEAL_KEY` ile ikinci kez kilitler (`ServerSeal`, V003). Şifre kuralları istemcidedir.
 - **Modüller:** `auth`, `verification`, `notification`, `totp`, `user`, `key`, `invite`, `contact`, `document`

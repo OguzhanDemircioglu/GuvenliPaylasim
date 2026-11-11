@@ -68,7 +68,7 @@ app:
     per-ip-hourly: 10
     daily-limit: ${VERIFICATION_DAILY_LIMIT:200}
     # SADECE TEST: kayıt kodu gönderilmez, cevapta döner (VerificationProperties.testMode). Gerçek kullanıcıdan önce kapalı.
-    test-mode: ${VERIFICATION_TEST_MODE:false}
+    test-mode: ${TEST_MODE:false}
   # simulated: kod sadece log'a yazılır | vonage: Vonage Messages API (SMS ya da WhatsApp)
   messaging:
     provider: ${MESSAGING_PROVIDER:simulated}

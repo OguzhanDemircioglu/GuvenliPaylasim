@@ -157,7 +157,7 @@ kapatılmaz. **StarterApp:** `[disabled]="form.invalid || loading()"`; `nzLoadin
 - "Kod Gönder"den sonra **300 saniye** (kodun geçerlilik süresi) geri sayılır; bu sürede düğme kapalıdır. Dar yerde
   sadece kalan süre (`4:58`), düğmede `Tekrar Gönder (4:58)`; süre bitince "Tekrar Gönder".
 - Sunucuda numara/IP başına saatlik sınır ve günlük tavan vardır; istemci sınırı sunucunun yerine geçmez.
-- **Test modu** (`VERIFICATION_TEST_MODE`, varsayılan kapalı): kayıt kodu mesajla gönderilmez, cevapta döner ve alana
+- **Test modu** (`TEST_MODE`, varsayılan kapalı): kayıt kodu mesajla gönderilmez, cevapta döner ve alana
   yazılır; ekranda "TEST MODU" yazar. **Sadece kayıtta**; şifre sıfırlama kodu asla dönmez (hesap ele geçirme olurdu).
   Gerçek kullanıcıdan önce kapatılır.
 

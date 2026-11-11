@@ -63,7 +63,7 @@ public class VerificationServiceImpl implements VerificationService {
     @jakarta.annotation.PostConstruct
     void warnIfTestMode() {
         if (properties.testMode()) {
-            log.warn("VERIFICATION_TEST_MODE is ON: phone ownership is NOT verified at registration. "
+            log.warn("TEST_MODE is ON: phone ownership is NOT verified at registration. "
                     + "Turn it off before real users.");
         }
     }

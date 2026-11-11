@@ -35,7 +35,7 @@ yayında. Testler: sunucu 160, masaüstü 72; hepsi geçiyor.
 
 ### Gerçek kullanıma geçmeden önce yapılacaklar
 
-- **Doğrulama mesajı:** Railway'de `VERIFICATION_TEST_MODE` kapatılmalı (açıkken telefon sahipliği doğrulanmaz,
+- **Doğrulama mesajı:** Railway'de `TEST_MODE` kapatılmalı (açıkken telefon sahipliği doğrulanmaz,
   Security S8). Türkiye'ye SMS için Vonage'da kayıtlı gönderen adı ya da Meta onaylı WhatsApp Business hesabı
   gerekir (ayrıntı: "Demo kurulumu").
 - **KVKK:** `desktop/src/main/resources/com/desktop/aydinlatma-metni.txt` TASLAK. Avukat incelemesi; köşeli
@@ -165,7 +165,7 @@ Uygulama bütün saldırı testlerine sokulacak; geçemezse anlamı kalmaz. Bu y
 ## Demo kurulumu (Railway)
 
 > 2026-11-06'da kuruldu; aynı gün `v2` `main`'e birleştirildi (`51e8ed6`). Railway'de çalışan kod **v2**'dir.
-> Masaüstü 1.0.5 (v1) bu sunucuyla çalışmaz. 2026-11-07'den beri `VERIFICATION_TEST_MODE=true` (kayıt kodu
+> Masaüstü 1.0.5 (v1) bu sunucuyla çalışmaz. 2026-11-07'den beri `TEST_MODE=true` (kayıt kodu
 > uygulamaya döner; gerçek kullanımdan önce kapatılmalı).
 
 | Konu | Değer |
