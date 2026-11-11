@@ -76,11 +76,24 @@ class SecurityErrorResponsesTest {
     }
 
     @Test
-    void errorControllerFallsBackTo500() {
-        ResponseEntity<ApiResponse<Void>> response = new ApiErrorController().error(new MockHttpServletRequest());
+    void errorControllerFallsBackTo500ForANonErrorStatus() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setAttribute(RequestDispatcher.ERROR_STATUS_CODE, 200);
+
+        ResponseEntity<ApiResponse<Void>> response = new ApiErrorController().error(request);
 
         assertThat(response.getStatusCode().value()).isEqualTo(500);
         assertThat(response.getBody().message()).isEqualTo(GlobalMessages.UNEXPECTED_ERROR);
+    }
+
+    /** /error'u doğrudan çağırmak (ZAP bulgusu) 500 ve ERROR log'u üretmez. */
+    @Test
+    void directCallToTheErrorPageIsNotFound(CapturedOutput output) {
+        ResponseEntity<ApiResponse<Void>> response = new ApiErrorController().error(new MockHttpServletRequest());
+
+        assertThat(response.getStatusCode().value()).isEqualTo(404);
+        assertThat(response.getBody().message()).isEqualTo(GlobalMessages.URL_NOT_FOUND);
+        assertThat(output).doesNotContain("ERROR");
     }
 
     @Test

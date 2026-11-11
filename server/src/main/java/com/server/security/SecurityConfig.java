@@ -40,6 +40,10 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // İstemci masaüstü uygulamasıdır; tarayıcıda başka bir sitenin bu cevapları yüklemesine izin yok.
+                .headers(headers -> headers.crossOriginResourcePolicy(policy -> policy.policy(
+                        org.springframework.security.web.header.writers.CrossOriginResourcePolicyHeaderWriter
+                                .CrossOriginResourcePolicy.SAME_ORIGIN)))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, PUBLIC_AUTH_PATHS.toArray(String[]::new)).permitAll()
                         .requestMatchers("/actuator/health/**", "/error").permitAll()

@@ -23,6 +23,22 @@ class InputAcceptanceTest extends AcceptanceTest {
     }
 
     @Test
+    void callingTheErrorPageDirectlyIsANotFoundNotAServerError() throws Exception {
+        for (String method : new String[]{"GET", "POST", "DELETE", "PATCH"}) {
+            expect(call(method, "/error", null, null, randomIp()), 404);
+        }
+    }
+
+    @Test
+    void responsesForbidCrossOriginLoading() throws Exception {
+        Account user = register();
+        MvcResult result = call("GET", "/api/keys/me", null, user);
+
+        assertThat(result.getResponse().getHeader("Cross-Origin-Resource-Policy")).isEqualTo("same-origin");
+        assertThat(result.getResponse().getHeader("X-Content-Type-Options")).isEqualTo("nosniff");
+    }
+
+    @Test
     void nonNumericIdIsRejected() throws Exception {
         Account user = register();
         MvcResult result = call("GET", "/api/documents/abc", null, user);

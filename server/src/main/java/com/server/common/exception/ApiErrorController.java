@@ -31,9 +31,13 @@ public class ApiErrorController implements ErrorController {
 
     @RequestMapping("${server.error.path:/error}")
     public ResponseEntity<ApiResponse<Void>> error(HttpServletRequest request) {
-        HttpStatus status = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE) instanceof Integer code
-                ? HttpStatus.resolve(code)
-                : null;
+        Object code = request.getAttribute(RequestDispatcher.ERROR_STATUS_CODE);
+        if (code == null) {
+            // /error doğrudan çağrıldı (hata yönlendirmesi değil): sıradan bulunamayan adres gibi; ERROR log'u yazılmaz.
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(StatusMessages.forStatus(HttpStatus.NOT_FOUND)));
+        }
+        HttpStatus status = code instanceof Integer value ? HttpStatus.resolve(value) : null;
         if (status == null || !status.isError()) {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
         }

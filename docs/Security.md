@@ -185,4 +185,5 @@ test" listesi bu belgenin ekine yazılır.
 | Güncelleme (S7) | İmzasız, daha eski ve süresi dolmuş bildirim reddedilir |
 | İstemci (S6) | Oturum kapatıldıktan sonra diskte jeton ya da anahtar yok |
 | Bağımlılıklar | OWASP Dependency-Check her derlemede; yüksek önemli bulgu derlemeyi durdurur. **Elle tarandı (2026-11-11, OSV):** sunucu 115 + masaüstü 18 çalışma zamanı bağımlılığında bilinen açık yok; otomatik tarama henüz derlemede değil |
+| Otomatik tarama (DAST) | OWASP ZAP API taraması, oturumlu, bütün OpenAPI uç noktaları (`.github/workflows/security-scan.yml`, elle çalıştırılır; canlıya dokunmaz). **İlk sonuç (2026-11-12):** 121 kontrol geçti, orta/yüksek bulgu yok; iki düşük bulgu düzeltildi: `/error` doğrudan çağrılınca 500 ve ERROR log'u (artık 404), `Cross-Origin-Resource-Policy` başlığı eksik (artık `same-origin`) |
 | Son aşama | Dışarıdan sızma testi |
