@@ -152,7 +152,8 @@ Uygulama kullanıcıya basit görünür; asıl iş arka plandadır. Bütün sald
   **sistem geneli günlük tavan** (aşılınca SMS durur, alarm verilir). SMS kuyruktan gönderilir.
 - **Test modu (2026-11-07, `TEST_MODE`, varsayılan kapalı):** açıkken kayıt kodu gönderilmez, cevapta
   istemciye döner ve uygulama alana yazar; **telefon sahipliği doğrulanmaz** (biri başkasının numarasıyla kayıt
-  olabilir). Sadece kayıtta geçerli; parola sıfırlama kodu asla dönmez (hesap ele geçirme olurdu). Açıkken sunucu her
+  olabilir). 2026-11-11'den beri parola sıfırlama kodu da döner: **açıkken numarayı bilen herkes o hesabın parolasını
+  sıfırlayabilir** (TOTP açık hesap hariç; sıfırlama gelen kutularını da siler). Açıkken sunucu her
   başlangıçta uyarı loglar, uygulama "TEST MODU" yazar. **Gerçek kullanıcıdan önce kapatılmalı.**
 
 ## 4. Kapsam dışı (kabul edilen)

@@ -89,13 +89,13 @@ class VerificationServiceImplTest {
     }
 
     @Test
-    void testModeNeverReturnsPasswordResetCodes() {
+    void testModeReturnsThePasswordResetCodeAndSendsNothing() {
         VerificationServiceImpl testMode = new VerificationServiceImpl(verificationRepository, requestRepository,
                 userRepository, sender, new VerificationProperties(Duration.ofMinutes(5), 3, 3, 10, 200, true));
-        when(userRepository.existsByPhone(PHONE)).thenReturn(true);
 
-        assertThat(testMode.start(PHONE, VerificationPurpose.PASSWORD_RESET, IP)).isEmpty();
-        verify(sender).enqueue(eq(PHONE), anyString());
+        assertThat(testMode.start(PHONE, VerificationPurpose.PASSWORD_RESET, IP)).hasValueSatisfying(
+                code -> assertThat(code).hasSize(6));
+        verify(sender, never()).enqueue(anyString(), anyString());
     }
 
     @Test

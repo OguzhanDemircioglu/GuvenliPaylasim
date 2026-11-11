@@ -127,7 +127,7 @@ Tam liste: [.env.example](.env.example). En önemlileri:
 | `JWT_*` | RS256 anahtarları (Railway'de PEM değişkenleri, başlangıçta dosyaya yazılır) |
 | `SERVER_SEAL_KEY` | Şifre özetleri ve anahtar paketleri için ikinci kilit (32 bayt, Base64). **Kaybolursa bütün hesaplar açılamaz; ayrı yedeklenmeli** |
 | `MESSAGING_PROVIDER`, `VONAGE_*` | Doğrulama mesajı (Vonage WhatsApp/SMS) |
-| `TEST_MODE` | `true` iken kayıt kodu mesajla gitmez, cevapta döner. Sadece demo; gerçek kullanımda `false` |
+| `TEST_MODE` | `true` iken kayıt ve parola sıfırlama kodu mesajla gitmez, cevapta döner. Sadece demo; gerçek kullanımda `false` |
 
 ## Kurallar (özet)
 

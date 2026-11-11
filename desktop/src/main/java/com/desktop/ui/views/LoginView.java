@@ -809,13 +809,16 @@ public final class LoginView extends VBox {
                 return;
             }
             busyFlag(codeButton).set(true);
-            Async.run(() -> {
-                        auth.startPasswordReset(phone.getText());
-                        return null;
-                    },
-                    ignored -> {
+            Async.run(() -> auth.startPasswordReset(phone.getText()),
+                    testCode -> {
                         busyFlag(codeButton).set(false);
                         Cooldown.start(codeButton, Cooldown.CODE_SECONDS);
+                        if (testCode.isPresent()) {
+                            // Sunucu test modunda: WhatsApp'a mesaj gitmedi, kod cevapta geldi.
+                            code.setText(testCode.get());
+                            showStatus(status, "TEST MODU: WhatsApp mesajı gönderilmedi, kod otomatik yazıldı.", false);
+                            return;
+                        }
                         showStatus(status, "Kod WhatsApp'a gönderildi; 5 dakika geçerlidir. Numara kayıtlı değilse kod "
                                 + "gelmez.", false);
                         code.requestFocus();

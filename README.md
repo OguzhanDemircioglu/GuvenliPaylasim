@@ -105,7 +105,7 @@ ekranında da var.
    reddedilebilir; o durumda ZIP'i kullanın.
 
 Uygulama demo sunucusuna (`https://guvenlipaylasim.up.railway.app`) bağlanır. Demo sunucusu **test modunda**:
-kayıt kodu WhatsApp'a gitmez, uygulamaya kendiliğinden yazılır.
+kayıt ve şifre sıfırlama kodu WhatsApp'a gitmez, uygulamaya kendiliğinden yazılır.
 
 ---
 

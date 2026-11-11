@@ -12,8 +12,8 @@ import java.time.Duration;
  * @param perPhoneHourly numara başına saatte en fazla kod isteği
  * @param perIpHourly    IP başına saatte en fazla kod isteği
  * @param dailyLimit     sistem geneli günlük tavan; aşılınca kod gönderimi durur ve hata loglanır
- * @param testMode       SADECE TEST: kayıt kodu WhatsApp'a gönderilmez, cevapta istemciye döner. Telefon sahipliği
- *                       doğrulanmaz; gerçek kullanıcıdan önce kapatılmalı. Parola sıfırlamada hiç etkisi yoktur.
+ * @param testMode       SADECE TEST: kayıt ve parola sıfırlama kodu WhatsApp'a gönderilmez, cevapta istemciye döner.
+ *                       Telefon sahipliği doğrulanmaz; gerçek kullanıcıdan önce kapatılmalı.
  */
 @ConfigurationProperties("app.verification")
 public record VerificationProperties(Duration codeTtl, int maxAttempts, int perPhoneHourly, int perIpHourly,

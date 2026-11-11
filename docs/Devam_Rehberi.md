@@ -14,7 +14,7 @@ yayında. Testler: sunucu 160, masaüstü 72; hepsi geçiyor.
 | Sunucu | Railway, `https://guvenlipaylasim.up.railway.app`; `main`'e her push deploy eder (aşağıda "Demo kurulumu") |
 | Veritabanı | Railway Postgres (sunucuyla aynı proje, özel ağ). Aiven artık kullanılmıyor |
 | Masaüstü | 2.0.5 (GitHub release `v2.0.5`: MSI, kurulumsuz ZIP, imzalı `release.json`; zorunlu değil) |
-| Doğrulama mesajı | Vonage WhatsApp sandbox; Railway'de **test modu açık** (kayıt kodu uygulamaya döner) |
+| Doğrulama mesajı | Vonage WhatsApp sandbox; Railway'de **test modu açık** (kayıt ve şifre sıfırlama kodu uygulamaya döner) |
 | v1 (rollü, birimli prototip) | Masaüstü 1.0.5; v2 sunucusuna bağlanamaz, kullanılmıyor |
 
 ### Sürüm geçmişi (masaüstü)

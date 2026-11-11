@@ -44,10 +44,11 @@ public class VerificationServiceImpl implements VerificationService {
         verification.setCreatedAt(now);
         verificationRepository.save(verification);
 
-        // SADECE TEST: kayıt kodu gönderilmez, istemciye döner (kayıtlı numarada da; kayıt zaten reddedilir).
-        // Parola sıfırlamada asla: kod dönseydi herkes başkasının hesabını ele geçirebilirdi.
-        if (properties.testMode() && purpose == VerificationPurpose.REGISTER) {
-            log.warn("Verification TEST MODE: registration code returned to the client, no message sent");
+        // SADECE TEST: kayıt ve parola sıfırlama kodu gönderilmez, istemciye döner (her numara için aynı davranış).
+        // Açıkken numarayı bilen herkes o hesabın parolasını sıfırlayabilir (TOTP açık hesap hariç); gerçek
+        // kullanıcıdan önce kapatılır.
+        if (properties.testMode()) {
+            log.warn("Verification TEST MODE: {} code returned to the client, no message sent", purpose);
             return java.util.Optional.of(code);
         }
 
@@ -63,7 +64,7 @@ public class VerificationServiceImpl implements VerificationService {
     @jakarta.annotation.PostConstruct
     void warnIfTestMode() {
         if (properties.testMode()) {
-            log.warn("TEST_MODE is ON: phone ownership is NOT verified at registration. "
+            log.warn("TEST_MODE is ON: phone ownership is NOT verified at registration or password reset. "
                     + "Turn it off before real users.");
         }
     }

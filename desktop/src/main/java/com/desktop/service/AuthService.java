@@ -138,9 +138,15 @@ public final class AuthService {
         return login(normalized, derived, null);
     }
 
-    /** Kayıtlı telefona WhatsApp ile sıfırlama kodu gönderilir. Numara kayıtlı değilse kod gitmez ama cevap aynıdır. */
-    public void startPasswordReset(String phone) {
-        new ApiClient(serverUrl).post("/api/auth/password-reset/start", new Dto.PhoneRequest(requirePhone(phone)), ANY);
+    /**
+     * Kayıtlı telefona WhatsApp ile sıfırlama kodu gönderilir. Numara kayıtlı değilse kod gitmez ama cevap aynıdır.
+     * Sunucu test modundaysa mesaj gitmez, kod cevapta döner.
+     */
+    public java.util.Optional<String> startPasswordReset(String phone) {
+        Dto.VerificationStart started = new ApiClient(serverUrl).post("/api/auth/password-reset/start",
+                new Dto.PhoneRequest(requirePhone(phone)), new TypeReference<>() {
+                });
+        return java.util.Optional.ofNullable(started == null ? null : started.testCode());
     }
 
     /**
