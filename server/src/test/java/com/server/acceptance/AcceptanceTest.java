@@ -88,7 +88,7 @@ abstract class AcceptanceTest {
 
     /** Yeni numara, gerçek X25519/Ed25519 açık anahtarlar; kayıt ve giriş HTTP üzerinden. */
     protected Account register() throws Exception {
-        String phone = "5" + BLOCK + String.format("%07d", NUMBERS.incrementAndGet());
+        String phone = freshPhone();
         String ip = randomIp();
         MvcResult started = call("POST", "/api/auth/register/start", "{\"phone\":\"" + phone + "\"}", null, ip);
         String code = JsonPath.read(body(started), "$.data.testCode");
@@ -164,6 +164,11 @@ abstract class AcceptanceTest {
         }
     }
 
+    /** Daha önce kullanılmamış numara, istekte yazıldığı biçimde ({@code 5XXXXXXXXX}). */
+    protected static String freshPhone() {
+        return "5" + BLOCK + String.format("%07d", NUMBERS.incrementAndGet());
+    }
+
     protected static String randomIp() {
         return "10." + RANDOM.nextInt(256) + "." + RANDOM.nextInt(256) + "." + (RANDOM.nextInt(254) + 1);
     }
@@ -176,6 +181,12 @@ abstract class AcceptanceTest {
         byte[] bytes = new byte[length];
         RANDOM.nextBytes(bytes);
         return bytes;
+    }
+
+    /** Gerçek X25519 ve Ed25519 açık anahtarlarıyla geçerli bir anahtar paketi (JSON). */
+    protected static String validKeysJson() throws java.security.GeneralSecurityException {
+        return "{\"encryptionPublicKey\":\"%s\",\"signingPublicKey\":\"%s\",\"privateKeyBundle\":\"b\"}"
+                .formatted(publicKey("X25519"), publicKey("Ed25519"));
     }
 
     private static String publicKey(String algorithm) throws java.security.GeneralSecurityException {
