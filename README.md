@@ -9,15 +9,15 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.9/Lockpost-2.0.9-kurulumsuz.zip">
+  <a href="https://github.com/OguzhanDemircioglu/Lockpost/releases/download/v2.0.10/Lockpost-2.0.10-kurulumsuz.zip">
     <img src="docs/assets/download-windows.svg" alt="Windows için indir" width="560">
   </a>
   <br>
-  <sub>Sürüm 2.0.9 · Uygulama yeni sürümleri açılışta kendisi bulur ·
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases">Bütün sürümler</a></sub>
+  <sub>Sürüm 2.0.10 · Uygulama yeni sürümleri açılışta kendisi bulur ·
+  <a href="https://github.com/OguzhanDemircioglu/Lockpost/releases">Bütün sürümler</a></sub>
   <br>
   <sub>Kurulum dosyası tercih ederseniz:
-  <a href="https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases/releases/download/v2.0.9/Lockpost-2.0.9.msi">MSI ile kur</a>
+  <a href="https://github.com/OguzhanDemircioglu/Lockpost/releases/download/v2.0.10/Lockpost-2.0.10.msi">MSI ile kur</a>
   (Akıllı Uygulama Denetimi açıksa Windows engelleyebilir) · <a href="#code-signing-policy">Code signing policy</a></sub>
 </p>
 
@@ -185,11 +185,9 @@ Veritabanı ya da Docker gerekmez. Son durum: sunucu 160, masaüstü 72 test, he
    ```bash
    java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/Lockpost-<sürüm>.msi <sürüm> release-keys/update-private-key.txt
    ```
-4. Sürümler ayrı, public [GuvenliPaylasim-releases](https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases)
-   deposunda yayımlanır (kod deposu private olabilir). `v<sürüm>` release'ini orada açıp MSI, ZIP ve `release.json`'u
-   ekleyin:
+4. Bu depoda `v<sürüm>` release'ini açıp MSI, ZIP ve `release.json`'u ekleyin:
    ```bash
-   gh release create v<sürüm> -R OguzhanDemircioglu/GuvenliPaylasim-releases --title <sürüm> --notes-file notlar.md desktop/dist/Lockpost-<sürüm>.msi desktop/dist/Lockpost-<sürüm>-kurulumsuz.zip desktop/dist/release.json
+   gh release create v<sürüm> --title <sürüm> --notes-file notlar.md desktop/dist/Lockpost-<sürüm>.msi desktop/dist/Lockpost-<sürüm>-kurulumsuz.zip desktop/dist/release.json
    ```
 5. Bu README'nin başındaki indirme bağlantılarını güncelleyin.
 
@@ -237,7 +235,7 @@ Uygulama yalnızca aşağıdaki durumlarda başka sistemlerle bağlantı kurar:
 - **Telefon doğrulaması:** kayıt ve şifre sıfırlamada telefon numarası, doğrulama kodunu iletmesi için Vonage'a
   (WhatsApp) gönderilir.
 - **Güncelleme kontrolü:** açılışta GitHub'dan en son sürüm bilgisi okunur
-  ([GuvenliPaylasim-releases](https://github.com/OguzhanDemircioglu/GuvenliPaylasim-releases)); GitHub'a kullanıcıya
+  ([Lockpost sürümleri](https://github.com/OguzhanDemircioglu/Lockpost/releases)); GitHub'a kullanıcıya
   ait bilgi gönderilmez.
 
 Bunların dışında uygulama hiçbir bilgiyi başka bir sisteme göndermez. Kişisel verilerin işlenmesi KVKK aydınlatma

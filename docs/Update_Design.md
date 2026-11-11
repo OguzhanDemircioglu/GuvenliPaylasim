@@ -37,7 +37,12 @@
   tutulur; yayından önce `sign` sonucu gömülü açık anahtarla doğrulanır.
   **2.0.8 (2026-11-10):** üçüncü anahtarın özel kısmı sürümün hazırlandığı bilgisayarda yoktu; 2.0.8 yine ikinci
   anahtarla (`…FnRb…`) imzalandı ve uygulamaya o gömüldü. 2.0.0–2.0.7 kullananlar 2.0.8'i bir kez elle kurar.
-- **Sürüm deposu.** 2.0.8'den itibaren uygulama sürümleri kod deposundan değil, ayrı ve public
+- **Sürüm deposu.** 2.0.10'dan itibaren sürümler yine kod deposunda (`OguzhanDemircioglu/Lockpost`, eski adı
+  `GuvenliPaylasim`) yayımlanır ve oradan okunur; kod deposu SignPath için public kalır. 2.0.8–2.0.9 ayrı
+  `OguzhanDemircioglu/GuvenliPaylasim-releases` deposuna bakar; 2.0.10 o depoda da yayımlandı ki bu sürümler geçebilsin.
+  2.0.0–2.0.7 eski depo adına bakar, GitHub yeniden adlandırılan depoya yönlendirir; bu sürümler `…BDhP…` anahtarını
+  beklediği için yeni sürümün imzasını reddeder, elle kurulmaları gerekir.
+- **Eski not (2.0.8).** 2.0.8'den itibaren uygulama sürümleri kod deposundan değil, ayrı ve public
   `OguzhanDemircioglu/GuvenliPaylasim-releases` deposundan okur (`update.repository`); böylece kod deposu private
   yapılabilir. 2.0.7 ve öncesi eski depoya bakar; o depo private olunca 404 alır ve "güncel" sayar.
 
@@ -75,9 +80,9 @@ artifact'ından indirilir; aşağıdaki 2. ve 3. adım o dosyalarla yapılır (�
 ```bash
 # 1) Sürümü desktop/pom.xml'de artır; desktop\package.cmd → dist/ altında MSI ve kurulumsuz ZIP.
 # 2) İmzala: release.json kurulum dosyasının yanına yazılır
-java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/Lockpost-2.0.9.msi 2.0.9 release-keys/update-private-key.txt
-# 3) Sürüm deposunda v2.0.9 etiketiyle release aç; MSI, ZIP ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
-gh release create v2.0.9 -R OguzhanDemircioglu/GuvenliPaylasim-releases --title 2.0.9 --notes-file notlar.md desktop/dist/Lockpost-2.0.9.msi desktop/dist/Lockpost-2.0.9-kurulumsuz.zip desktop/dist/release.json
+java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/Lockpost-2.0.11.msi 2.0.11 release-keys/update-private-key.txt
+# 3) Kod deposunda v2.0.11 etiketiyle release aç; MSI, ZIP ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
+gh release create v2.0.11 -R OguzhanDemircioglu/Lockpost --title 2.0.11 --notes-file notlar.md desktop/dist/Lockpost-2.0.11.msi desktop/dist/Lockpost-2.0.11-kurulumsuz.zip desktop/dist/release.json
 # 4) README'nin en üstündeki indirme bağlantılarındaki sürüm numaralarını güncelle.
 ```
 
