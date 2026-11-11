@@ -179,7 +179,7 @@ Veritabanı ya da Docker gerekmez. Son durum: sunucu 160, masaüstü 72 test, he
 
 ### Yeni sürüm yayımlama
 
-1. `desktop/pom.xml`'de sürümü artırın.
+1. `desktop/pom.xml`'de sürümü artırın. Son hane 9'u geçmez: 2.1.9'dan sonra 2.2.0 gelir.
 2. `desktop\package.cmd` → `desktop/dist/` altında MSI ve kurulumsuz ZIP.
 3. `release.json`'u imzalayın (özel anahtar sadece sürümü yayımlayan bilgisayarda, git'te yok):
    ```bash

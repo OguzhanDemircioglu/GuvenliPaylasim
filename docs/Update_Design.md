@@ -78,11 +78,11 @@ SignPath onaylandıktan sonra MSI ve ZIP yerelde değil, GitHub Actions'ta üret
 artifact'ından indirilir; aşağıdaki 2. ve 3. adım o dosyalarla yapılır (özel anahtar CI'da durmaz). O zamana kadar:
 
 ```bash
-# 1) Sürümü desktop/pom.xml'de artır; desktop\package.cmd → dist/ altında MSI ve kurulumsuz ZIP.
+# 1) Sürümü desktop/pom.xml'de artır (son hane 9'u geçmez: 2.1.9'dan sonra 2.2.0); desktop\package.cmd → dist/ altında MSI ve kurulumsuz ZIP.
 # 2) İmzala: release.json kurulum dosyasının yanına yazılır
-java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/Lockpost-2.0.11.msi 2.0.11 release-keys/update-private-key.txt
-# 3) Kod deposunda v2.0.11 etiketiyle release aç; MSI, ZIP ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
-gh release create v2.0.11 -R OguzhanDemircioglu/Lockpost --title 2.0.11 --notes-file notlar.md desktop/dist/Lockpost-2.0.11.msi desktop/dist/Lockpost-2.0.11-kurulumsuz.zip desktop/dist/release.json
+java -cp desktop/target/classes com.desktop.update.ReleaseTool sign desktop/dist/Lockpost-2.1.0.msi 2.1.0 release-keys/update-private-key.txt
+# 3) Kod deposunda v2.1.0 etiketiyle release aç; MSI, ZIP ve release.json'u ekle. Açıklama sürüm notu olarak görünür.
+gh release create v2.1.0 -R OguzhanDemircioglu/Lockpost --title 2.1.0 --notes-file notlar.md desktop/dist/Lockpost-2.1.0.msi desktop/dist/Lockpost-2.1.0-kurulumsuz.zip desktop/dist/release.json
 # 4) README'nin en üstündeki indirme bağlantılarındaki sürüm numaralarını güncelle.
 ```
 
