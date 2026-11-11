@@ -41,6 +41,27 @@ public interface LoginAttemptRepository extends JpaRepository<LoginAttempt, Stri
              WHERE attempt_key = :key""")
     void incrementFailure(String key, Instant now, Instant blockedUntil, int maxAttempts);
 
+    /**
+     * Denemeyi, sonucu beklenmeden atomik olarak sayar ve yeni sayıyı döner (LoginAttemptService). Engel süresi
+     * dolmuşsa sayaç 1'den başlar; sayı maxAttempts'e ulaşınca blocked_until yazılır. Tek komut olduğu için eş zamanlı
+     * istekler aynı sayıyı göremez.
+     */
+    @Transactional
+    @Query(nativeQuery = true, value = """
+            INSERT INTO login_attempts AS a (attempt_key, fail_count, blocked_until, updated_at)
+            VALUES (:key, 1, NULL, :now)
+            ON CONFLICT (attempt_key) DO UPDATE SET
+                fail_count = CASE
+                    WHEN a.blocked_until <= :now THEN 1
+                    ELSE a.fail_count + 1 END,
+                blocked_until = CASE
+                    WHEN a.blocked_until <= :now THEN NULL
+                    WHEN a.fail_count + 1 >= :maxAttempts THEN :blockedUntil
+                    ELSE a.blocked_until END,
+                updated_at = :now
+            RETURNING fail_count""")
+    int countAttempt(String key, Instant now, Instant blockedUntil, int maxAttempts);
+
     @Transactional
     @Modifying
     @Query("delete from LoginAttempt a where a.updatedAt < :before")

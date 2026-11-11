@@ -14,26 +14,21 @@ public class LoginAttemptServiceImpl implements LoginAttemptService {
     private final LoginProtectionProperties properties;
 
     @Override
-    public void ensureNotBlocked(String attemptKey) {
+    public void countAttempt(String attemptKey) {
+        count(attemptKey, properties.maxAttempts());
+    }
+
+    @Override
+    public void countPhoneAttempt(String phone) {
+        count(LoginAttemptService.phoneKey(phone), properties.phoneMaxAttempts());
+    }
+
+    /** Sayı tek SQL komutunda artar ve okunur; eş zamanlı isteklerden sadece ilk {@code maxAttempts} tanesi geçer. */
+    private void count(String attemptKey, int maxAttempts) {
         Instant now = Instant.now();
-        if (repository.findById(attemptKey).filter(attempt -> attempt.isBlocked(now)).isPresent()) {
+        if (repository.countAttempt(attemptKey, now, now.plus(properties.blockDuration()), maxAttempts) > maxAttempts) {
             throw new LoginBlockedException(AuthMessages.LOGIN_BLOCKED);
         }
-    }
-
-    @Override
-    public void recordFailure(String attemptKey) {
-        recordFailure(attemptKey, properties.maxAttempts());
-    }
-
-    @Override
-    public void recordPhoneFailure(String phone) {
-        recordFailure(LoginAttemptService.phoneKey(phone), properties.phoneMaxAttempts());
-    }
-
-    private void recordFailure(String attemptKey, int maxAttempts) {
-        Instant now = Instant.now();
-        repository.recordFailure(attemptKey, now, now.plus(properties.blockDuration()), maxAttempts);
     }
 
     @Override

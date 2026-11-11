@@ -7,28 +7,27 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.beans.BeanUtils;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Brute-force koruması: engel kontrolü, yanlış denemenin süre ve sınırla kaydedilmesi, başarılı girişte temizleme.
+ * Brute-force koruması: deneme parola kontrolünden önce sayılır, sınırı aşan deneme reddedilir, başarılı denemede
+ * sayaç silinir. Sayımın eş zamanlı isteklerde doğru çalıştığı gerçek PostgreSQL ile ConcurrencyAcceptanceTest'te.
  */
 @ExtendWith(MockitoExtension.class)
 class LoginAttemptServiceImplTest {
 
-    private static final String KEY = "10.0.0.1_ayse.yilmaz@gps.local";
+    private static final String KEY = "10.0.0.1_+905551234567";
     private static final Duration BLOCK = Duration.ofHours(1);
 
     @Mock
@@ -42,44 +41,42 @@ class LoginAttemptServiceImplTest {
     }
 
     @Test
-    void activeBlockRejectsLogin() {
-        when(repository.findById(KEY)).thenReturn(Optional.of(attempt(Instant.now().plusSeconds(600))));
+    void attemptsUpToTheLimitAreAllowed() {
+        when(repository.countAttempt(eq(KEY), any(), any(), eq(5))).thenReturn(1, 5);
 
-        assertThatThrownBy(() -> service.ensureNotBlocked(KEY))
+        assertThatCode(() -> service.countAttempt(KEY)).doesNotThrowAnyException();
+        assertThatCode(() -> service.countAttempt(KEY)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void attemptOverTheLimitIsRejected() {
+        when(repository.countAttempt(eq(KEY), any(), any(), eq(5))).thenReturn(6);
+
+        assertThatThrownBy(() -> service.countAttempt(KEY))
                 .isInstanceOf(LoginBlockedException.class)
                 .hasMessage(AuthMessages.LOGIN_BLOCKED);
     }
 
     @Test
-    void expiredBlockOrNoRecordAllowsLogin() {
-        when(repository.findById(KEY)).thenReturn(Optional.of(attempt(Instant.now().minusSeconds(1))));
-        assertThatCode(() -> service.ensureNotBlocked(KEY)).doesNotThrowAnyException();
-
-        when(repository.findById(KEY)).thenReturn(Optional.of(attempt(null)));
-        assertThatCode(() -> service.ensureNotBlocked(KEY)).doesNotThrowAnyException();
-
-        when(repository.findById(KEY)).thenReturn(Optional.empty());
-        assertThatCode(() -> service.ensureNotBlocked(KEY)).doesNotThrowAnyException();
-    }
-
-    @Test
-    void failureIsRecordedWithBlockDurationAndLimit() {
+    void attemptIsCountedWithBlockDuration() {
         Instant before = Instant.now();
+        when(repository.countAttempt(eq(KEY), any(), any(), anyInt())).thenReturn(1);
 
-        service.recordFailure(KEY);
+        service.countAttempt(KEY);
 
         ArgumentCaptor<Instant> now = ArgumentCaptor.forClass(Instant.class);
         ArgumentCaptor<Instant> blockedUntil = ArgumentCaptor.forClass(Instant.class);
-        verify(repository).recordFailure(eq(KEY), now.capture(), blockedUntil.capture(), eq(5));
+        verify(repository).countAttempt(eq(KEY), now.capture(), blockedUntil.capture(), eq(5));
         assertThat(now.getValue()).isAfterOrEqualTo(before);
         assertThat(blockedUntil.getValue()).isEqualTo(now.getValue().plus(BLOCK));
     }
 
     @Test
-    void numberWideFailuresUseTheHigherLimit() {
-        service.recordPhoneFailure("+905551234567");
+    void numberWideAttemptsUseTheHigherLimit() {
+        when(repository.countAttempt(eq("phone_+905551234567"), any(), any(), eq(30))).thenReturn(30, 31);
 
-        verify(repository).recordFailure(eq("phone_+905551234567"), any(), any(), eq(30));
+        assertThatCode(() -> service.countPhoneAttempt("+905551234567")).doesNotThrowAnyException();
+        assertThatThrownBy(() -> service.countPhoneAttempt("+905551234567")).isInstanceOf(LoginBlockedException.class);
     }
 
     @Test
@@ -87,13 +84,5 @@ class LoginAttemptServiceImplTest {
         service.clear(KEY);
 
         verify(repository).deleteById(KEY);
-    }
-
-    private static LoginAttempt attempt(Instant blockedUntil) {
-        LoginAttempt attempt = BeanUtils.instantiateClass(LoginAttempt.class);
-        ReflectionTestUtils.setField(attempt, "attemptKey", KEY);
-        ReflectionTestUtils.setField(attempt, "failCount", 5);
-        ReflectionTestUtils.setField(attempt, "blockedUntil", blockedUntil);
-        return attempt;
     }
 }

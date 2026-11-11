@@ -42,11 +42,10 @@ public class AccountDeletionService {
     @Transactional(noRollbackFor = BusinessException.class)
     public void delete(Long userId, String password, String totpCode) {
         String attemptKey = "delete_" + userId;
-        loginAttemptService.ensureNotBlocked(attemptKey);
+        loginAttemptService.countAttempt(attemptKey);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(GlobalMessages.RECORD_NOT_FOUND));
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            loginAttemptService.recordFailure(attemptKey);
             throw new BusinessException(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         }
         if (user.isTotpEnabled()) {
@@ -54,7 +53,6 @@ public class AccountDeletionService {
                 throw new BusinessException(AuthMessages.TOTP_REQUIRED);
             }
             if (!totpService.verifyWithin(user, totpCode.trim())) {
-                loginAttemptService.recordFailure(attemptKey);
                 throw new BusinessException(AuthMessages.TOTP_INVALID);
             }
         }

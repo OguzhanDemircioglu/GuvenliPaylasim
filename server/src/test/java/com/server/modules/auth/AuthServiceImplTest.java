@@ -113,8 +113,9 @@ class AuthServiceImplTest {
         assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "wrong", null), CLIENT))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage(AuthMessages.INVALID_CREDENTIALS);
-        verify(loginAttemptService).recordFailure(ATTEMPT_KEY);
-        verify(loginAttemptService).recordPhoneFailure(PHONE);
+        verify(loginAttemptService).countAttempt(ATTEMPT_KEY);
+        verify(loginAttemptService, never()).clear(ATTEMPT_KEY);
+        verify(loginAttemptService).countPhoneAttempt(PHONE);
         verify(sessionRepository, never()).save(any());
     }
 
@@ -122,7 +123,7 @@ class AuthServiceImplTest {
     void numberBlockedAcrossAllIpsIsRejected() {
         // Strict stubbing: IP_numara anahtarıyla yapılan ilk kontrol de bu stub'a takılmasın.
         org.mockito.Mockito.lenient().doThrow(new LoginBlockedException(AuthMessages.LOGIN_BLOCKED))
-                .when(loginAttemptService).ensureNotBlocked(LoginAttemptService.phoneKey(PHONE));
+                .when(loginAttemptService).countPhoneAttempt(PHONE);
 
         assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", null), CLIENT))
                 .isInstanceOf(LoginBlockedException.class);
@@ -138,12 +139,13 @@ class AuthServiceImplTest {
                 .hasMessage(AuthMessages.INVALID_CREDENTIALS);
         // Kayıtlı olmayan numarada da şifre kontrolü yapılır (zamanlama farkı olmasın).
         verify(passwordEncoder).matches(eq("secret"), any());
-        verify(loginAttemptService).recordFailure(ATTEMPT_KEY);
+        verify(loginAttemptService).countAttempt(ATTEMPT_KEY);
+        verify(loginAttemptService, never()).clear(ATTEMPT_KEY);
     }
 
     @Test
     void blockedLoginIsRejectedEvenWithCorrectPassword() {
-        doThrow(new LoginBlockedException(AuthMessages.LOGIN_BLOCKED)).when(loginAttemptService).ensureNotBlocked(ATTEMPT_KEY);
+        doThrow(new LoginBlockedException(AuthMessages.LOGIN_BLOCKED)).when(loginAttemptService).countAttempt(ATTEMPT_KEY);
 
         assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", null), CLIENT))
                 .isInstanceOf(LoginBlockedException.class)
@@ -295,13 +297,14 @@ class AuthServiceImplTest {
                 .hasMessage(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         verify(keyService, never()).saveOnPasswordChange(any(), any());
         verify(sessionRepository, never()).revokeAllByUserIdExcept(any(), any(), any());
-        verify(loginAttemptService).recordFailure("password_" + USER_ID);
+        verify(loginAttemptService).countAttempt("password_" + USER_ID);
+        verify(loginAttemptService, never()).clear("password_" + USER_ID);
     }
 
     @Test
     void changePasswordIsRefusedWhileBlocked() {
         doThrow(new LoginBlockedException(AuthMessages.LOGIN_BLOCKED))
-                .when(loginAttemptService).ensureNotBlocked("password_" + USER_ID);
+                .when(loginAttemptService).countAttempt("password_" + USER_ID);
 
         assertThatThrownBy(() -> service.changePassword(USER_ID, SESSION_ID,
                 new ChangePasswordRequest("old-secret", "new-secret", new KeyBundleRequest("enc", "sig", "bundle"))))
@@ -348,7 +351,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    void totpUserWithoutCodeIsAskedForItAndNotCountedAsFailure() {
+    void totpUserWithoutCodeIsAskedForItAndCountersStay() {
         User user = user();
         user.setTotpEnabled(true);
         when(userRepository.findByPhone(PHONE)).thenReturn(Optional.of(user));
@@ -357,7 +360,7 @@ class AuthServiceImplTest {
         assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", null), CLIENT))
                 .isInstanceOf(UnauthorizedException.class)
                 .hasMessage(AuthMessages.TOTP_REQUIRED);
-        verify(loginAttemptService, never()).recordFailure(any());
+        verify(loginAttemptService, never()).clear(any());
         verify(sessionRepository, never()).save(any());
     }
 
@@ -371,7 +374,8 @@ class AuthServiceImplTest {
 
         assertThatThrownBy(() -> service.login(new LoginRequest(PHONE_INPUT, "secret", "000000"), CLIENT))
                 .hasMessage(AuthMessages.TOTP_INVALID);
-        verify(loginAttemptService).recordFailure(ATTEMPT_KEY);
+        verify(loginAttemptService).countAttempt(ATTEMPT_KEY);
+        verify(loginAttemptService, never()).clear(ATTEMPT_KEY);
         verify(sessionRepository, never()).save(any());
     }
 

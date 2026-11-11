@@ -18,6 +18,11 @@ public interface InviteRepository extends JpaRepository<Invite, Long> {
                and i.acceptedAt is null and i.expiresAt > :now""")
     Optional<Invite> findRedeemable(String phone, String verifierHash, Instant now);
 
+    /** Satır kilidiyle okur: kabul, doğrulama, ret ve iptal aynı davet üzerinde sırayla işlenir (iki kez kabul olmaz). */
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("select i from Invite i where i.id = :id")
+    Optional<Invite> findLockedById(Long id);
+
     long countBySenderIdAndCreatedAtAfter(Long senderId, Instant after);
 
     /** Kabul edilmemiş, süresi dolmamış davetlerin toplam boyutu (kota, SendQuota). */

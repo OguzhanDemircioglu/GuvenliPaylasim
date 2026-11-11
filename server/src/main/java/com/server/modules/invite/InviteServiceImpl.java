@@ -134,7 +134,7 @@ public class InviteServiceImpl implements InviteService {
     @Transactional
     public InviteAcceptedResponse accept(Long recipientId, Long inviteId, InviteAcceptRequest request) {
         User recipient = userRepository.findById(recipientId).orElseThrow(InviteServiceImpl::notFound);
-        Invite invite = repository.findById(inviteId)
+        Invite invite = repository.findLockedById(inviteId)
                 .filter(i -> i.getRecipientPhone().equals(recipient.getPhone()))
                 .filter(i -> i.getAcceptedAt() == null && i.getExpiresAt().isAfter(Instant.now()))
                 .orElseThrow(InviteServiceImpl::notFound);
@@ -209,14 +209,14 @@ public class InviteServiceImpl implements InviteService {
     @Override
     @Transactional
     public void cancel(Long senderId, Long inviteId) {
-        Invite invite = repository.findById(inviteId)
+        Invite invite = repository.findLockedById(inviteId)
                 .filter(i -> i.getSenderId().equals(senderId) && i.getAcceptedAt() == null)
                 .orElseThrow(InviteServiceImpl::notFound);
         repository.delete(invite);
     }
 
     private Invite awaitingVerification(Long senderId, Long inviteId) {
-        return repository.findById(inviteId)
+        return repository.findLockedById(inviteId)
                 .filter(i -> i.getSenderId().equals(senderId) && i.getAcceptedAt() != null && i.getCompletedAt() == null)
                 .orElseThrow(InviteServiceImpl::notFound);
     }

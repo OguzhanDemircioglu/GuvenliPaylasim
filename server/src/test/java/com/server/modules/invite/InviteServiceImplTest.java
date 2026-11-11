@@ -173,7 +173,7 @@ class InviteServiceImplTest {
     @Test
     void acceptMovesTheBoxToTheInboxAndAddsBothSidesAsContacts() {
         Invite invite = pendingInvite();
-        when(repository.findById(10L)).thenReturn(Optional.of(invite));
+        when(repository.findLockedById(10L)).thenReturn(Optional.of(invite));
         when(documentService.createFromInvite(ALI, AYSE, DocumentKind.TEXT, invite.getPayload(), "signature",
                 "wrapped-for-ayse", invite.getBoxExpiresAt(), true)).thenReturn(100L);
 
@@ -190,7 +190,7 @@ class InviteServiceImplTest {
 
     @Test
     void acceptOfSomeoneElsesInviteLooksLikeItDoesNotExist() {
-        when(repository.findById(10L)).thenReturn(Optional.of(pendingInvite()));
+        when(repository.findLockedById(10L)).thenReturn(Optional.of(pendingInvite()));
 
         assertThatThrownBy(() -> service.accept(MALLORY, 10L, accept(Fingerprints.of(aliKey))))
                 .isInstanceOf(NotFoundException.class);
@@ -200,7 +200,7 @@ class InviteServiceImplTest {
 
     @Test
     void acceptWithAFingerprintThatIsNotTheSendersCurrentKeyIsRejected() {
-        when(repository.findById(10L)).thenReturn(Optional.of(pendingInvite()));
+        when(repository.findLockedById(10L)).thenReturn(Optional.of(pendingInvite()));
 
         assertThatThrownBy(() -> service.accept(AYSE, 10L, accept(Fingerprints.of(ayseKey))))
                 .hasMessage(ContactMessages.FINGERPRINT_MISMATCH);
@@ -212,7 +212,7 @@ class InviteServiceImplTest {
     @Test
     void verifyStoresTheRecipientsFingerprintOnlyIfItMatchesTheirCurrentKey() {
         Invite invite = acceptedInvite();
-        when(repository.findById(10L)).thenReturn(Optional.of(invite));
+        when(repository.findLockedById(10L)).thenReturn(Optional.of(invite));
 
         assertThatThrownBy(() -> service.verify(ALI, 10L, new InviteVerifyRequest(Fingerprints.of(aliKey), "sig")))
                 .hasMessage(ContactMessages.FINGERPRINT_MISMATCH);
@@ -224,7 +224,7 @@ class InviteServiceImplTest {
 
     @Test
     void onlyTheSenderCanVerifyOrReject() {
-        when(repository.findById(10L)).thenReturn(Optional.of(acceptedInvite()));
+        when(repository.findLockedById(10L)).thenReturn(Optional.of(acceptedInvite()));
 
         assertThatThrownBy(() -> service.verify(MALLORY, 10L, new InviteVerifyRequest(Fingerprints.of(ayseKey), "s")))
                 .isInstanceOf(NotFoundException.class);
@@ -234,7 +234,7 @@ class InviteServiceImplTest {
     @Test
     void rejectRemovesThePendingContact() {
         Invite invite = acceptedInvite();
-        when(repository.findById(10L)).thenReturn(Optional.of(invite));
+        when(repository.findLockedById(10L)).thenReturn(Optional.of(invite));
 
         service.reject(ALI, 10L);
 
@@ -245,7 +245,7 @@ class InviteServiceImplTest {
     @Test
     void cancelOnlyForOwnNotYetAcceptedInvite() {
         Invite invite = pendingInvite();
-        when(repository.findById(10L)).thenReturn(Optional.of(invite));
+        when(repository.findLockedById(10L)).thenReturn(Optional.of(invite));
 
         assertThatThrownBy(() -> service.cancel(AYSE, 10L)).isInstanceOf(NotFoundException.class);
         service.cancel(ALI, 10L);

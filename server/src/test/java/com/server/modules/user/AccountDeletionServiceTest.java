@@ -63,7 +63,8 @@ class AccountDeletionServiceTest {
 
         assertThatThrownBy(() -> service.delete(7L, "wrong", null))
                 .isInstanceOf(BusinessException.class).hasMessage(AuthMessages.CURRENT_PASSWORD_INCORRECT);
-        verify(loginAttemptService).recordFailure("delete_7");
+        verify(loginAttemptService).countAttempt("delete_7");
+        verify(loginAttemptService, never()).clear("delete_7");
         verify(jdbc, never()).update(anyString(), any(Object[].class));
     }
 

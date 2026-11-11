@@ -88,8 +88,13 @@ public class VerificationServiceImpl implements VerificationService {
         verificationRepository.delete(verification);
     }
 
-    /** Sınır cevapları numaranın kayıtlı olup olmadığına bağlı değildir. */
+    /**
+     * Sınır cevapları numaranın kayıtlı olup olmadığına bağlı değildir. Aynı numara ve aynı IP için istekler kilitle
+     * sırayla işlenir (önce numara, sonra IP; sıra hep aynı olduğu için kilitlenme olmaz).
+     */
     private void enforceLimits(String phone, String ip, Instant now) {
+        requestRepository.lock("verification_phone:" + phone);
+        requestRepository.lock("verification_ip:" + ip);
         if (requestRepository.countByCreatedAtAfter(now.minus(DAY)) >= properties.dailyLimit()) {
             log.error("Verification daily limit ({}) reached; no more codes are sent today", properties.dailyLimit());
             throw rateLimited();

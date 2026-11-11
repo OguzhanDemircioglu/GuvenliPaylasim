@@ -74,24 +74,21 @@ public class AuthServiceImpl implements AuthService {
         String phone = Phones.toE164(request.phone());
         String attemptKey = client.ip() + "_" + phone;
         String phoneKey = LoginAttemptService.phoneKey(phone);
-        loginAttemptService.ensureNotBlocked(attemptKey);
-        loginAttemptService.ensureNotBlocked(phoneKey);
+        // Deneme parola kontrolünden önce sayılır (eş zamanlı istekler sınırı aşamaz); başarılıysa sayaçlar silinir.
+        loginAttemptService.countAttempt(attemptKey);
+        loginAttemptService.countPhoneAttempt(phone);
 
         Optional<User> user = userRepository.findByPhone(phone);
         String passwordHash = user.map(User::getPassword).orElse(dummyPasswordHash);
         if (!passwordEncoder.matches(request.password(), passwordHash) || user.isEmpty()) {
-            loginAttemptService.recordFailure(attemptKey);
-            loginAttemptService.recordPhoneFailure(phone);
             throw new UnauthorizedException(AuthMessages.INVALID_CREDENTIALS);
         }
         if (user.get().isTotpEnabled()) {
-            // Parola doğru. Kod yoksa istemci sorar ve tekrar dener; yanlış kod parola gibi sayılır (5 deneme).
+            // Parola doğru. Kod yoksa istemci sorar ve tekrar dener (bu da bir deneme sayılır); yanlış kod parola gibi.
             if (request.totpCode() == null || request.totpCode().isBlank()) {
                 throw new UnauthorizedException(AuthMessages.TOTP_REQUIRED);
             }
             if (!totpService.verify(user.get().getId(), request.totpCode())) {
-                loginAttemptService.recordFailure(attemptKey);
-                loginAttemptService.recordPhoneFailure(phone);
                 throw new UnauthorizedException(AuthMessages.TOTP_INVALID);
             }
         }
@@ -163,11 +160,10 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void changePassword(Long userId, Long currentSessionId, ChangePasswordRequest request) {
         String attemptKey = "password_" + userId;
-        loginAttemptService.ensureNotBlocked(attemptKey);
+        loginAttemptService.countAttempt(attemptKey);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(GlobalMessages.RECORD_NOT_FOUND));
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
-            loginAttemptService.recordFailure(attemptKey);
             throw new BusinessException(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         }
         loginAttemptService.clear(attemptKey);
