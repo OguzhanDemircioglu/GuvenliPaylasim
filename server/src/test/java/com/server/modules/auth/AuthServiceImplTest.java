@@ -78,7 +78,8 @@ class AuthServiceImplTest {
         service = new AuthServiceImpl(userRepository, sessionRepository, loginAttemptService,
                 accessTokenIssuer, passwordEncoder,
                 new SessionProperties(Duration.ofDays(90), Duration.ofSeconds(30), false), keyService,
-                verificationService, documentService, totpService);
+                verificationService, documentService, totpService,
+                org.springframework.transaction.support.TransactionOperations.withoutTransaction());
     }
 
     @Test

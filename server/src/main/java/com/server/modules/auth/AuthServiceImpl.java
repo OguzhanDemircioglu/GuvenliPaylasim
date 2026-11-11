@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionOperations;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -44,6 +45,7 @@ public class AuthServiceImpl implements AuthService {
     private final VerificationService verificationService;
     private final DocumentService documentService;
     private final TotpService totpService;
+    private final TransactionOperations transactions;
     /** Kayıtlı olmayan numaralarda da şifre kontrolü yapılır; cevap süresinden kullanıcının varlığı anlaşılmasın. */
     private final String dummyPasswordHash;
 
@@ -52,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
                            AccessTokenIssuer accessTokenIssuer, PasswordEncoder passwordEncoder,
                            SessionProperties properties, KeyService keyService,
                            VerificationService verificationService, DocumentService documentService,
-                           TotpService totpService) {
+                           TotpService totpService, TransactionOperations transactions) {
         this.userRepository = userRepository;
         this.sessionRepository = sessionRepository;
         this.loginAttemptService = loginAttemptService;
@@ -63,6 +65,7 @@ public class AuthServiceImpl implements AuthService {
         this.verificationService = verificationService;
         this.documentService = documentService;
         this.totpService = totpService;
+        this.transactions = transactions;
         this.dummyPasswordHash = passwordEncoder.encode("dummy-password-for-timing");
     }
 
@@ -152,9 +155,12 @@ public class AuthServiceImpl implements AuthService {
                 .ifPresent(session -> sessionRepository.revoke(session.getId(), Instant.now()));
     }
 
-    /** Mevcut parola yanlış denemeleri sayılır; sınır aşılınca bir saat kilitlenir ("Hesabımı sil" ile aynı). */
+    /**
+     * Mevcut parola yanlış denemeleri sayılır; sınır aşılınca bir saat kilitlenir ("Hesabımı sil" ile aynı). Deneme
+     * kaydı login gibi transaction dışındadır (exception ile geri alınmasın); değişikliğin kendisi tek transaction'dır
+     * ve anahtar kontrolü reddederse parola da değişmez.
+     */
     @Override
-    @Transactional(noRollbackFor = BusinessException.class)
     public void changePassword(Long userId, Long currentSessionId, ChangePasswordRequest request) {
         String attemptKey = "password_" + userId;
         loginAttemptService.ensureNotBlocked(attemptKey);
@@ -165,9 +171,13 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         }
         loginAttemptService.clear(attemptKey);
-        user.setPassword(passwordEncoder.encode(request.newPassword()));
-        keyService.saveOnPasswordChange(userId, request.keys());
-        sessionRepository.revokeAllByUserIdExcept(userId, currentSessionId, Instant.now());
+        transactions.executeWithoutResult(status -> {
+            User current = userRepository.findById(userId)
+                    .orElseThrow(() -> new NotFoundException(GlobalMessages.RECORD_NOT_FOUND));
+            current.setPassword(passwordEncoder.encode(request.newPassword()));
+            keyService.saveOnPasswordChange(userId, request.keys());
+            sessionRepository.revokeAllByUserIdExcept(userId, currentSessionId, Instant.now());
+        });
     }
 
     @Override
