@@ -294,6 +294,19 @@ class AuthServiceImplTest {
                 .hasMessage(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         verify(keyService, never()).saveOnPasswordChange(any(), any());
         verify(sessionRepository, never()).revokeAllByUserIdExcept(any(), any(), any());
+        verify(loginAttemptService).recordFailure("password_" + USER_ID);
+    }
+
+    @Test
+    void changePasswordIsRefusedWhileBlocked() {
+        doThrow(new LoginBlockedException(AuthMessages.LOGIN_BLOCKED))
+                .when(loginAttemptService).ensureNotBlocked("password_" + USER_ID);
+
+        assertThatThrownBy(() -> service.changePassword(USER_ID, SESSION_ID,
+                new ChangePasswordRequest("old-secret", "new-secret", new KeyBundleRequest("enc", "sig", "bundle"))))
+                .isInstanceOf(LoginBlockedException.class);
+        verify(passwordEncoder, never()).matches(any(), any());
+        verify(keyService, never()).saveOnPasswordChange(any(), any());
     }
 
     @Test

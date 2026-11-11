@@ -152,14 +152,19 @@ public class AuthServiceImpl implements AuthService {
                 .ifPresent(session -> sessionRepository.revoke(session.getId(), Instant.now()));
     }
 
+    /** Mevcut parola yanlış denemeleri sayılır; sınır aşılınca bir saat kilitlenir ("Hesabımı sil" ile aynı). */
     @Override
-    @Transactional
+    @Transactional(noRollbackFor = BusinessException.class)
     public void changePassword(Long userId, Long currentSessionId, ChangePasswordRequest request) {
+        String attemptKey = "password_" + userId;
+        loginAttemptService.ensureNotBlocked(attemptKey);
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException(GlobalMessages.RECORD_NOT_FOUND));
         if (!passwordEncoder.matches(request.currentPassword(), user.getPassword())) {
+            loginAttemptService.recordFailure(attemptKey);
             throw new BusinessException(AuthMessages.CURRENT_PASSWORD_INCORRECT);
         }
+        loginAttemptService.clear(attemptKey);
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         keyService.saveOnPasswordChange(userId, request.keys());
         sessionRepository.revokeAllByUserIdExcept(userId, currentSessionId, Instant.now());
