@@ -31,6 +31,7 @@ yayında. Testler: sunucu 160, masaüstü 72; hepsi geçiyor.
 | 2.0.8 | 2026-11-10 | Güncellemeler ayrı, public `GuvenliPaylasim-releases` deposundan okunur (kod deposu private olabilsin diye). İmza anahtarı yine `…FnRb…` (Update_Design §2): 2.0.x kullananlar 2.0.8'i bir kez elle kurar |
 | 2.0.9 | 2026-11-11 | Uygulamanın adı Lockpost |
 | 2.0.10 | 2026-11-11 | Güncellemeler yine kod deposundan (`OguzhanDemircioglu/Lockpost`) okunur; ayrı sürüm deposu artık kullanılmaz (Update_Design §2) |
+| 2.1.0 | 2026-11-12 | Kayıtta aydınlatma kutusu varsayılan işaretli; test modunda sıfırlama kodu otomatik dolar |
 | 2.0.5 | 2026-11-07 | Geniş dosya türü listesi, programlar engellenir, alıcıya riskli dosya uyarısı ve dış kaynak etiketi (Security S4), **Kaydedilemez** belgeler (Crypto_Design §8.3.1), **Kişi Ekle**, tıklayınca açılan belge, kendiliğinden yenilenen Gönderilenler |
 
 ### Gerçek kullanıma geçmeden önce yapılacaklar
